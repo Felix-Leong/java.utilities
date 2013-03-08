@@ -1,0 +1,108 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>de.ebf</groupId>
+	<artifactId>java.utilities</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>EBF Java utilities Maven repository</name>
+	<description>contains utility libraries</description>
+
+	<properties>
+		<github.global.server>github</github.global.server>
+	</properties>
+
+	<distributionManagement>
+		<repository>
+			<id>internal.repo</id>
+			<name>Temporary Staging Repository</name>
+			<url>file://${project.build.directory}/site</url>
+		</repository>
+	</distributionManagement>
+
+
+	<!-- configure the site-maven-plugin to upload from your temporary staging repo to your -->
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.4</version>
+				<configuration>
+					<source>1.7</source>
+					<target>1.7</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>com.github.github</groupId>
+				<artifactId>site-maven-plugin</artifactId>
+				<version>0.7</version>
+				<configuration>
+					<message>Maven artifacts for ${project.version}</message>  				<!-- git commit message -->
+					<noJekyll>true</noJekyll>                                  				<!-- disable webpage processing -->
+					<!-- <outputDirectory>file://${project.build.directory}/mvn-repo</outputDirectory> 	matches distribution management repository url above -->
+					<branch>refs/heads/master</branch>                       				<!-- remote branch name -->
+					<includes>
+						<include>**/*</include>
+					</includes>
+					<repositoryName>ebf.java.utilities</repositoryName>     				<!-- github repo name -->
+					<repositoryOwner>ebf</repositoryOwner>    								<!-- github username -->
+				</configuration>
+				<executions>
+					<!-- run site-maven-plugin's 'site' target as part of the build's normal 'deploy' phase -->
+					<execution>
+						<goals>
+							<goal>site</goal>
+						</goals>
+						<phase>deploy</phase>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+
+	<dependencies>
+		<dependency>
+			<groupId>commons-configuration</groupId>
+			<artifactId>commons-configuration</artifactId>
+			<version>1.9</version>
+		</dependency>
+		<!-- provides AES encryption -->
+		<dependency>
+			<groupId>org.bouncycastle</groupId>
+			<artifactId>bcprov-jdk16</artifactId>
+			<version>1.46</version>
+		</dependency>
+		<!-- Log4J Logging -->
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+			<version>1.7.2</version>
+		</dependency>
+		<!-- Apache HTTP Client -->
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.2.3</version>
+		</dependency>
+		<!-- javax.mail is required to send mails -->
+		<dependency>
+			<groupId>javax.mail</groupId>
+			<artifactId>mail</artifactId>
+			<version>1.4.6</version>
+		</dependency>
+		<dependency>
+			<groupId>javax</groupId>
+			<artifactId>javaee-api</artifactId>
+			<version>6.0</version>
+			<scope>provided</scope>
+		</dependency>
+		<!-- this allows us to host this project as maven repository on github -->
+		<dependency>
+			<groupId>com.github.github</groupId>
+			<artifactId>site-maven-plugin</artifactId>
+			<version>0.7</version>
+			<type>maven-plugin</type>
+		</dependency>
+	</dependencies>
+</project>
