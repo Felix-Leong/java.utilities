@@ -44,7 +44,7 @@
 					<includes>
 						<include>**/*</include>
 					</includes>
-					<repositoryName>ebf.java.utilities</repositoryName>     				<!-- github repo name -->
+					<repositoryName>java.utilities.maven</repositoryName>	  				<!-- github repo name -->
 					<repositoryOwner>ebf</repositoryOwner>    								<!-- github username -->
 				</configuration>
 				<executions>
