@@ -10,6 +10,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -21,6 +22,7 @@ import org.apache.http.client.params.CookiePolicy;
 import org.apache.http.client.params.HttpClientParams;
 import org.apache.http.client.protocol.ClientContext;
 import org.apache.http.conn.ClientConnectionManager;
+import org.apache.http.conn.scheme.PlainSocketFactory;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.scheme.SchemeRegistry;
 import org.apache.http.conn.ssl.SSLSocketFactory;
@@ -48,6 +50,10 @@ public class HttpUtil {
         }
 		return false;
 	}
+	
+	public static HttpResponse get(String url) throws Exception {
+		return get(url, null, null);
+	}
 
 	public static HttpResponse get(String url, String user, String pass) throws Exception{
 		URI uri = new URI(url);
@@ -59,21 +65,24 @@ public class HttpUtil {
 		DefaultHttpClient httpClient = getNewHttpClient();
 		
 	    try {
-	        httpClient.getCredentialsProvider().setCredentials(
+	    	BasicHttpContext localcontext = new BasicHttpContext();
+
+	    	if (!StringUtils.isEmpty(user) && !StringUtils.isEmpty(pass)){
+	    		httpClient.getCredentialsProvider().setCredentials(
 	                new AuthScope(httpGet2.getURI().getHost(), httpGet2.getURI().getPort()),
 	                new UsernamePasswordCredentials(user, pass));
-	
-	        // Create AuthCache instance
-	        AuthCache authCache = new BasicAuthCache();
-	        // Generate BASIC scheme object and add it to the local auth cache
-	        BasicScheme basicAuth = new BasicScheme();
-	        authCache.put(new HttpHost(httpGet2.getURI().getHost()), basicAuth);
-	
-	        // Add AuthCache to the execution context
-	        BasicHttpContext localcontext = new BasicHttpContext();
-	        localcontext.setAttribute(ClientContext.AUTH_CACHE, authCache);
-	
-        	HttpResponse response = httpClient.execute(httpGet2, localcontext);
+		        // Create AuthCache instance
+		        AuthCache authCache = new BasicAuthCache();
+		        // Generate BASIC scheme object and add it to the local auth cache
+		        BasicScheme basicAuth = new BasicScheme();
+		        authCache.put(new HttpHost(httpGet2.getURI().getHost()), basicAuth);
+		        
+		        // Add AuthCache to the execution context
+		        localcontext.setAttribute(ClientContext.AUTH_CACHE, authCache);
+			        
+	    	}
+
+	    	HttpResponse response = httpClient.execute(httpGet2, localcontext);
             
         	if (response.getStatusLine().getStatusCode()!=HttpStatus.SC_OK){
         		log.warn("Got invalid HTTP response code for URL "+url+" "+response.getStatusLine().getStatusCode());
@@ -107,10 +116,10 @@ public class HttpUtil {
 			} }, new SecureRandom());
 			
 			SSLSocketFactory sf = new SSLSocketFactory(sslContext);
-			Scheme httpsScheme = new Scheme("https", 443, sf);
 			SchemeRegistry schemeRegistry = new SchemeRegistry();
-			schemeRegistry.register(httpsScheme);
-			
+			schemeRegistry.register(new Scheme("https", 443, sf));
+			schemeRegistry.register(new Scheme("http", 80, PlainSocketFactory.getSocketFactory()));
+						
 			ClientConnectionManager cm = new BasicClientConnectionManager(schemeRegistry);
 			DefaultHttpClient httpClient = new DefaultHttpClient(cm);
 			
@@ -126,5 +135,4 @@ public class HttpUtil {
 		}
 		return null;
 	}
-
 }
