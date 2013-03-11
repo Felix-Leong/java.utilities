@@ -17,6 +17,7 @@ import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.AuthCache;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.params.CookiePolicy;
 import org.apache.http.client.params.HttpClientParams;
 import org.apache.http.client.protocol.ClientContext;
 import org.apache.http.conn.ClientConnectionManager;
@@ -84,7 +85,7 @@ public class HttpUtil {
 	        // When HttpClient instance is no longer needed,
 	        // shut down the connection manager to ensure
 	        // immediate deallocation of all system resources
-	        httpClient.getConnectionManager().shutdown();
+	        //httpClient.getConnectionManager().shutdown();
 	    }
 	}
 	
@@ -116,6 +117,7 @@ public class HttpUtil {
 			final HttpParams params = new BasicHttpParams();
 			HttpClientParams.setRedirecting(params, DEFAULT_FOLLOW_REDIRECTS);
 			HttpClientParams.setConnectionManagerTimeout(params, DEFAULT_CONNECTION_TIMEOUT);
+			HttpClientParams.setCookiePolicy(params, CookiePolicy.IGNORE_COOKIES);
 			httpClient.setParams(params);
 			return httpClient;
 		} catch (NoSuchAlgorithmException | KeyManagementException e) {
