@@ -31,6 +31,7 @@ import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.BasicClientConnectionManager;
 import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.log4j.Logger;
@@ -40,7 +41,7 @@ public class HttpUtil {
 	private static final Logger log = Logger.getLogger(HttpUtil.class);
 	
 	/* DEFAULT HTTP CLIENT VALUES */
-	private static final Long DEFAULT_CONNECTION_TIMEOUT 			= 30000L;
+	private static final int DEFAULT_CONNECTION_TIMEOUT 			= 20000;
 	private static final boolean DEFAULT_FOLLOW_REDIRECTS 			= true;
 	
 	public static boolean isAvailable(String url, String user, String pass) throws Exception{
@@ -88,8 +89,6 @@ public class HttpUtil {
         		log.warn("Got invalid HTTP response code for URL "+url+" "+response.getStatusLine().getStatusCode());
         	}
     		return response;
-            //HttpEntity entity = response.getEntity();
-            //EntityUtils.consume(entity);
 	    } finally {
 	        // When HttpClient instance is no longer needed,
 	        // shut down the connection manager to ensure
@@ -125,8 +124,9 @@ public class HttpUtil {
 			
 			final HttpParams params = new BasicHttpParams();
 			HttpClientParams.setRedirecting(params, DEFAULT_FOLLOW_REDIRECTS);
-			HttpClientParams.setConnectionManagerTimeout(params, DEFAULT_CONNECTION_TIMEOUT);
 			HttpClientParams.setCookiePolicy(params, CookiePolicy.IGNORE_COOKIES);
+			HttpConnectionParams.setConnectionTimeout(params, DEFAULT_CONNECTION_TIMEOUT);
+			HttpConnectionParams.setSoTimeout(params, DEFAULT_CONNECTION_TIMEOUT);
 			httpClient.setParams(params);
 			return httpClient;
 		} catch (NoSuchAlgorithmException | KeyManagementException e) {
