@@ -25,13 +25,13 @@ import org.apache.log4j.Logger;
 public class MailUtils {
 	
 	private static final Logger log = Logger.getLogger(MailUtils.class);
-	private static final String SMTP_SERVER 	= Config.instance.getString("smtp_server");
-	private static final String SMTP_PORT	 	= Config.instance.getString("smtp_port");
-	private static final String SMTP_USER 		= Config.instance.getString("smtp_user");
-	private static final String SMTP_PASS 		= Config.instance.getString("smtp_pass");
-	private static final String SMTP_SENDERMAIL	= Config.instance.getString("smtp_user_mail");
-	private static final String SMTP_SENDERNAME = Config.instance.getString("smtp_user_name");
-	private static final String SMTP_BCC_MAIL = Config.instance.getString("smtp_bcc_mail");
+	private static final String SMTP_SERVER 	= Config.instance.getString("smtp.server");
+	private static final String SMTP_PORT	 	= Config.instance.getString("smtp.port");
+	private static final String SMTP_USER 		= Config.instance.getString("smtp.user");
+	private static final String SMTP_PASS 		= Config.instance.getString("smtp.pass");
+	private static final String SMTP_SENDERMAIL	= Config.instance.getString("smtp.user.mail");
+	private static final String SMTP_SENDERNAME = Config.instance.getString("smtp.user.name");
+	private static final String SMTP_BCC_MAIL = Config.instance.getString("smtp.bcc.mail");
 	
 	private static final String SMTP_USER_DEFAULT = "${smtp.user}";
 	private static final String SMTP_PASS_DEFAULT = "${smtp.pass}";
@@ -62,6 +62,10 @@ public class MailUtils {
 		} else {
 			session = Session.getDefaultInstance(props);
 		}
+	}
+	
+	public static boolean sendMail(String replyTo, List<String> recipients, String subject, String body){
+		return MailUtils.sendMail(replyTo, recipients, subject, body, null);
 	}
 	
 	public static boolean sendMail(String replyTo, List<String> recipients, String subject, String body, String htmlBody){

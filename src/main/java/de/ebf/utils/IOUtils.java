@@ -1,10 +1,12 @@
 package de.ebf.utils;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 
 public class IOUtils {
 
@@ -22,6 +24,16 @@ public class IOUtils {
 
 	public static void deleteFromDisk(String path) {
 		new File(path).delete();
+	}
+
+	public static String readFile(String string) throws IOException {
+		 BufferedReader reader = new BufferedReader(new InputStreamReader(IOUtils.class.getClassLoader().getResourceAsStream(string)));
+		 StringBuffer buffer = new StringBuffer();
+		 String line;
+		 while ((line = reader.readLine()) != null) {
+			 buffer.append(line);
+		 }
+		 return buffer.toString();
 	}
 
 }
