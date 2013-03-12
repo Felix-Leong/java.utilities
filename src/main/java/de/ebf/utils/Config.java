@@ -10,7 +10,7 @@ public class Config {
 	
 	static{
 		try {
-			//AbstractConfiguration.setDefaultListDelimiter(',');
+			AbstractConfiguration.setDefaultListDelimiter(';');
 			instance = new PropertiesConfiguration("LocalSettings.properties");
 		} catch (ConfigurationException e) {
 			throw new RuntimeException("Unable to read required config file "+e);
