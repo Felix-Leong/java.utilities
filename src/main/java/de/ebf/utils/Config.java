@@ -6,15 +6,16 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 
 public class Config {
 	
-	public static AbstractConfiguration instance;
+	public static PropertiesConfiguration instance;
 	
 	static{
 		try {
 			AbstractConfiguration.setDefaultListDelimiter(';');
-			instance = new PropertiesConfiguration("LocalSettings.properties");
+			instance = new PropertiesConfiguration();
+			instance.setEncoding("UTF-8");
+			instance.load("LocalSettings.properties");
 		} catch (ConfigurationException e) {
 			throw new RuntimeException("Unable to read required config file "+e);
 		}
-	}
-	
+	}	
 }
