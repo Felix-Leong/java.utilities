@@ -18,8 +18,7 @@ public class Bundle {
 	public static final String KEY_UNKNOWN_USER 						= "unknownUser";
 	public static final String KEY_INVALID_FIELD 						= "invalidField";
 	public static final String KEY_INVALID_MOBILE_IRON_CREDENTIALS 		= "invalidMobileIronCredentials";
-	public static final String KEY_ERROR_CHECKING_XTC					= "errorCheckingXTC";
-	public static final String KEY_SERVER_RETURNED						= "serverReturned";
+	public static final String KEY_MASTER_SIM_REQUIRES_GP_NUMBER 		= "masterSimRequiresSimNumber";
 	
 	private static ResourceBundle bundle = ResourceBundle.getBundle("messages");
 
