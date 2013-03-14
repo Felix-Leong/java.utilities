@@ -10,6 +10,8 @@ public class FormatUtils {
 	public static final SimpleDateFormat DATE_FORMAT_METRIC = new SimpleDateFormat("yyyy-MM-dd");
 	public static final SimpleDateFormat DATETIME_FORMAT_METRIC = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	
+	private static final String DEFAULT_COUNTRY_CODE = "49";
+	
 	private static final Logger log = Logger.getLogger(FormatUtils.class);
 	
 	public static String readableFileSize(Long size) {
@@ -19,7 +21,7 @@ public class FormatUtils {
 	    return new DecimalFormat("#,##0.#").format(size/Math.pow(1024, digitGroups)) + " " + units[digitGroups];
 	}
 	
-	public static String toMSISDN(String phonenumber, String masterSIM, String defaultCountryCode){
+	public static String toMSISDN(String phonenumber, String masterSIM){
 		String msisdn=phonenumber;
 		try{
 			if(msisdn.substring(0,1).equals("+")){
@@ -27,18 +29,18 @@ public class FormatUtils {
 			}else if(msisdn.substring(0,2).equals("00")){
 				msisdn=msisdn.substring(2);
 			}else if(msisdn.substring(0,1).equals("0")){
-				msisdn=defaultCountryCode+msisdn.substring(1);
+				msisdn=DEFAULT_COUNTRY_CODE+msisdn.substring(1);
 			}else if(msisdn.substring(0,2).equals("17") || msisdn.substring(0,2).equals("16") || msisdn.substring(0,2).equals("15")){
-				msisdn=defaultCountryCode+msisdn;
+				msisdn=DEFAULT_COUNTRY_CODE+msisdn;
 			}else{
 				try{
-					long chk=Long.parseLong(msisdn);
+					Long.parseLong(msisdn);
 				}catch(Exception ex){
 					msisdn=masterSIM;
 				}			
 			}			
 		}catch(Exception ex){
-			ex.printStackTrace();
+			log.error(ex);
 		}
 		log.debug("toMSISDN: "+phonenumber+" -> "+msisdn);
 		return msisdn;
