@@ -16,4 +16,4 @@ How to deploy
 
 This will package the project into a jar and upload it to the configured github maven repository currently located at:
 
-		https://github.com/ebf/java.utilities.maven
+ [https://github.com/ebf/java.utilities.maven](https://github.com/ebf/java.utilities.maven)
