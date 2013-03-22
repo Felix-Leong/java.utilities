@@ -1,6 +1,7 @@
 package de.ebf.utils;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
@@ -35,6 +36,7 @@ public class MailUtils {
 	
 	private static final String SMTP_USER_DEFAULT = "${smtp.user}";
 	private static final String SMTP_PASS_DEFAULT = "${smtp.pass}";
+	public static final String NOREPLY 			  = "noreply@ebf.de";
 	
 	private static Session session;
 	static{
@@ -118,6 +120,14 @@ public class MailUtils {
 			log.error("Exception while sending email: "+mex);
 		}
 		return false;
+	}
+
+	public static boolean sendMail(String replyTo, String mail, String subject, String body) {
+		return sendMail(replyTo, Arrays.asList(new String[]{mail}), subject, body);
+	}
+	
+	public static boolean sendMail(String replyTo, String mail, String subject, String body, String htmlBody) {
+		return sendMail(replyTo, Arrays.asList(new String[]{mail}), subject, body, htmlBody);
 	}
 
 }
