@@ -9,6 +9,7 @@ import java.security.cert.X509Certificate;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpHost;
@@ -134,5 +135,9 @@ public class HttpUtil {
 			e.printStackTrace();
 		}
 		return null;
+	}
+
+	public static String getBaseUrl(HttpServletRequest request) {
+		return request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+request.getContextPath();
 	}
 }
