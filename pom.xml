@@ -6,6 +6,7 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<name>EBF Java utilities Maven repository</name>
 	<description>contains utility libraries</description>
+   <packaging>jar</packaging>
 
 	<properties>
 		<github.global.server>github</github.global.server>
@@ -93,19 +94,24 @@
 			<artifactId>mail</artifactId>
 			<version>1.4.6</version>
 		</dependency>
-		<dependency>
+	 <dependency>
+	  <groupId>org.jsoup</groupId>
+	  <artifactId>jsoup</artifactId>
+	  <version>1.7.2</version>
+	 </dependency>
+	 <dependency>
 			<groupId>javax</groupId>
 			<artifactId>javaee-api</artifactId>
 			<version>6.0</version>
 			<scope>provided</scope>
 		</dependency>
 		<!-- this allows us to host this project as maven repository on github -->
-		<dependency>
+<!--		<dependency>
 			<groupId>com.github.github</groupId>
 			<artifactId>site-maven-plugin</artifactId>
 			<version>0.7</version>
 			<type>maven-plugin</type>
-		</dependency>
+		</dependency>-->
 		<!-- Spring -->
 		<dependency>
 			<groupId>org.hibernate</groupId>
@@ -131,6 +137,12 @@
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-orm</artifactId>
 			<version>${org.springframework.version}</version>
+		</dependency>
+      <!-- Squeakysand simplifies Taglib development  -->
+		<dependency>
+			<groupId>com.squeakysand.jsp</groupId>
+			<artifactId>squeakysand-jsp-taglib</artifactId>
+			<version>0.4.0</version>
 		</dependency>
 	</dependencies>
 </project>
