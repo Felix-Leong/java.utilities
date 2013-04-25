@@ -11,16 +11,19 @@ import org.apache.commons.lang.StringUtils;
 
 public class IOUtils {
 
-   public static void saveToDisk(InputStream inputStream, String path) throws IOException {
+   public static int saveToDisk(InputStream inputStream, String path) throws IOException {
       BufferedInputStream bis = new BufferedInputStream(inputStream);
       FileOutputStream fis = new FileOutputStream(path);
       int readBytes = 0;
+      int totalBytes = 0;
       byte[] buffer = new byte[10000];
       while ((readBytes = bis.read(buffer, 0, 10000)) != -1) {
          fis.write(buffer, 0, readBytes);
+         totalBytes += readBytes;
       }
       bis.close();
       fis.close();
+      return totalBytes;
    }
 
    public static void deleteFromDisk(String path) {
