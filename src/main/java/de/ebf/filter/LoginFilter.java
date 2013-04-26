@@ -52,7 +52,7 @@ public class LoginFilter implements Filter {
             } else {
                Object user = session.getAttribute("user");
                if (user == null) {
-                  String sessionRequestURI = (String) httpRequest.getSession().getAttribute("requestURI");
+                  String sessionRequestURI = (String) session.getAttribute("requestURI");
                   if (sessionRequestURI == null) {
                      String requestURI = httpRequest.getRequestURI();
                      int index = requestURI.indexOf(contextPath);
