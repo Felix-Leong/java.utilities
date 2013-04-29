@@ -12,15 +12,15 @@ import java.util.List;
  */
 public interface Auth<User> {
 
-   public User createOrUpdateUser(String username, String password) throws RuntimeException;
+   public User createOrUpdateUser(String username, String password) throws AuthException;
 
-   public User authenticate(String username, String password) throws IllegalArgumentException;
+   public User authenticate(String username, String password) throws AuthException;
 
-   public User getUser(String username) throws IllegalArgumentException;
+   public User getUser(String username) throws AuthException;
 
-   public User resetPassword(String username, String newPassword) throws IllegalArgumentException;
+   public User resetPassword(String username, String newPassword) throws AuthException;
 
-   public boolean deleteUser(String username) throws IllegalArgumentException;
+   public boolean deleteUser(String username) throws AuthException;
 
-   public List<User> getAllUsers();
+   public List<User> getAllUsers() throws AuthException;
 }

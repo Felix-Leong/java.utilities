@@ -11,6 +11,7 @@ public class LdapUser extends AbstractUser {
    private String phone;
    private String UUID;
    private String userDN;
+   private String uid;
 
    void setPhone(String phone) {
       this.phone = phone;
@@ -34,5 +35,13 @@ public class LdapUser extends AbstractUser {
 
    public String getUserDN() {
       return userDN;
+   }
+
+   void setUid(String uid) {
+      this.uid = uid;
+   }
+
+   public String getUid() {
+      return uid;
    }
 }
