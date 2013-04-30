@@ -12,7 +12,6 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import org.apache.log4j.Logger;
 
 public class LoginFilter implements Filter {
@@ -43,30 +42,30 @@ public class LoginFilter implements Filter {
          contextPath = HttpUtil.getContextPath(httpRequest);
          request.setAttribute("contextPath", contextPath);
 
-         HttpSession session = httpRequest.getSession();
-         String servletPath = httpRequest.getServletPath();
-         if (!exclusionPattern.matcher(servletPath).matches()) {
-            if (session == null) {
-               log.info("Redirecting [" + servletPath + "] to login page due to empty session.");
-               redirectToLogin(response);
-            } else {
-               Object user = session.getAttribute("user");
-               if (user == null) {
-                  String sessionRequestURI = (String) session.getAttribute("requestURI");
-                  if (sessionRequestURI == null) {
-                     String requestURI = httpRequest.getRequestURI();
-                     int index = requestURI.indexOf(contextPath);
-                     if (index != -1) {
-                        requestURI = requestURI.substring(index + contextPath.length());
-                     }
-                     httpRequest.getSession().setAttribute("requestURI", requestURI);
-                  }
-                  log.info("Redirecting [" + servletPath + "] to login page due to missing user session object");
-                  redirectToLogin(response);
-                  return;
-               }
-            }
-         }
+//         HttpSession session = httpRequest.getSession();
+//         String servletPath = httpRequest.getServletPath();
+//         if (!exclusionPattern.matcher(servletPath).matches()) {
+//            if (session == null) {
+//               log.info("Redirecting [" + servletPath + "] to login page due to empty session.");
+//               redirectToLogin(response);
+//            } else {
+//               Object user = session.getAttribute("user");
+//               if (user == null) {
+//                  String sessionRequestURI = (String) session.getAttribute("requestURI");
+//                  if (sessionRequestURI == null) {
+//                     String requestURI = httpRequest.getRequestURI();
+//                     int index = requestURI.indexOf(contextPath);
+//                     if (index != -1) {
+//                        requestURI = requestURI.substring(index + contextPath.length());
+//                     }
+//                     httpRequest.getSession().setAttribute("requestURI", requestURI);
+//                  }
+//                  log.info("Redirecting [" + servletPath + "] to login page due to missing user session object");
+//                  redirectToLogin(response);
+//                  return;
+//               }
+//            }
+//         }
          filterChain.doFilter(request, response);
       }
    }
