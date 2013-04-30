@@ -8,21 +8,18 @@ import de.ebf.utils.auth.AbstractUser;
  */
 public class LdapUser extends AbstractUser {
 
+   private String DN;
    private String phone;
    private String UUID;
-   private String userDN;
    private String uid;
+   private String password;
 
-   void setPhone(String phone) {
+   public void setPhone(String phone) {
       this.phone = phone;
    }
 
-   void setUUID(String UUID) {
+   public void setUUID(String UUID) {
       this.UUID = UUID;
-   }
-
-   void setUserDN(String userDN) {
-      this.userDN = userDN;
    }
 
    public String getPhone() {
@@ -33,15 +30,27 @@ public class LdapUser extends AbstractUser {
       return UUID;
    }
 
-   public String getUserDN() {
-      return userDN;
-   }
-
-   void setUid(String uid) {
+   public void setUid(String uid) {
       this.uid = uid;
    }
 
    public String getUid() {
       return uid;
+   }
+
+   public String getPassword() {
+      return password;
+   }
+
+   public void setPassword(String password) {
+      this.password = password;
+   }
+
+   public String getDN() {
+      return DN;
+   }
+
+   public void setDN(String DN) {
+      this.DN = DN;
    }
 }

@@ -12,7 +12,9 @@ import java.util.List;
  */
 public interface Auth<User> {
 
-   public User createOrUpdateUser(String username, String password) throws AuthException;
+   public User createUser(String username) throws AuthException;
+
+   public User updateUser(User user) throws AuthException;
 
    public User authenticate(String username, String password) throws AuthException;
 
@@ -20,7 +22,7 @@ public interface Auth<User> {
 
    public User resetPassword(String username, String newPassword) throws AuthException;
 
-   public boolean deleteUser(String username) throws AuthException;
+   public boolean deleteUser(String id) throws AuthException;
 
    public List<User> getAllUsers() throws AuthException;
 }
