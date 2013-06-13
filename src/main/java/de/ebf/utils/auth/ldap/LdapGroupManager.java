@@ -22,7 +22,6 @@ import com.unboundid.ldap.sdk.SearchResultEntry;
 import com.unboundid.ldap.sdk.SearchScope;
 import de.ebf.utils.auth.AuthException;
 import de.ebf.utils.auth.GroupManager;
-import de.ebf.utils.auth.User;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -60,6 +59,15 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
       try {
          LDAPConnection connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass());
          return getGroupByAttribute(connection, LdapUtil.ATTR_CN, groupName);
+      } catch (LDAPException ex) {
+         throw new LdapException(ex);
+      }
+   }
+   
+   public LdapGroup getGroupByUUID(String UUID) throws LdapException {
+      try {
+         LDAPConnection connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass());
+         return getGroupByAttribute(connection, LdapUtil.ATTR_ENTRYUUID, UUID);
       } catch (LDAPException ex) {
          throw new LdapException(ex);
       }

@@ -5,12 +5,13 @@
 package de.ebf.utils.auth.ldap;
 
 import de.ebf.utils.auth.AbstractGroup;
+import java.util.jar.Attributes;
 
 /**
  *
  * @author Dominik
  */
-public class LdapGroup extends AbstractGroup{
+public class LdapGroup extends AbstractGroup implements Comparable<LdapGroup>{
    
    String UUID;
    String DN;
@@ -29,5 +30,10 @@ public class LdapGroup extends AbstractGroup{
 
    public void setDN(String DN) {
       this.DN = DN;
+   }
+
+   @Override
+   public int compareTo(LdapGroup o) {
+      return this.getName().compareTo(o.getName());
    }
 }
