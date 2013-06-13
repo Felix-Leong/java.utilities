@@ -1,0 +1,189 @@
+package de.ebf.utils.auth.ldap;
+
+import com.unboundid.ldap.sdk.AddRequest;
+import com.unboundid.ldap.sdk.DeleteRequest;
+import com.unboundid.ldap.sdk.Entry;
+import com.unboundid.ldap.sdk.Filter;
+import com.unboundid.ldap.sdk.LDAPConnection;
+import com.unboundid.ldap.sdk.LDAPException;
+import com.unboundid.ldap.sdk.LDAPResult;
+import com.unboundid.ldap.sdk.Modification;
+import com.unboundid.ldap.sdk.ModificationType;
+import com.unboundid.ldap.sdk.ModifyDNRequest;
+import com.unboundid.ldap.sdk.ModifyRequest;
+import com.unboundid.ldap.sdk.ResultCode;
+import com.unboundid.ldap.sdk.SearchResult;
+import com.unboundid.ldap.sdk.SearchResultEntry;
+import com.unboundid.ldap.sdk.SearchScope;
+import de.ebf.utils.auth.UserManager;
+import de.ebf.utils.auth.AuthException;
+import java.util.ArrayList;
+import java.util.List;
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+import org.springframework.stereotype.Component;
+
+/**
+ *
+ * @author dwissk
+ */
+@Component
+public class LdapUserManager implements UserManager<LdapUser> {
+
+   private static final Logger log = Logger.getLogger(LdapUserManager.class);
+   
+   @Override
+   public LdapUser createUser(String username) throws AuthException {
+      try {
+         Entry entry = new Entry(LdapUtil.getDN(username));
+         entry.addAttribute(LdapUtil.ATTR_OBJECTCLASS, LdapUtil.ATTR_OBJECTCLASS_USER);
+         entry.addAttribute(LdapUtil.ATTR_SN, username);
+         AddRequest addRequest = new AddRequest(entry);
+         LDAPConnection connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass());
+         LDAPResult ldapResult = connection.add(addRequest);
+         if (ldapResult.getResultCode() == (ResultCode.SUCCESS)) {
+            return getUser(username);
+         } else {
+            throw new LdapException("Adding user returned LDAP result code " + ldapResult.getResultCode());
+         }
+      } catch (LDAPException e) {
+         throw new LdapException(e);
+      }
+   }
+
+   @Override
+   public LdapUser updateUser(LdapUser user) throws AuthException {
+      try {
+         LDAPConnection connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass());
+         List<Modification> mods = new ArrayList<>();
+         LdapUser currentUser = getUserByAttribute(connection, LdapUtil.ATTR_ENTRYUUID, user.getUUID());
+
+         if (!StringUtils.isEmpty(user.getName())) {
+            if (!currentUser.getName().equals(user.getName())) {
+               ModifyDNRequest modifyDNRequest = new ModifyDNRequest(currentUser.getDN(), "cn=" + user.getName(), true);
+               LDAPResult ldapResult = connection.modifyDN(modifyDNRequest);
+               if (ldapResult.getResultCode() != (ResultCode.SUCCESS)) {
+                  throw new LdapException("Renaming user returned LDAP result code " + ldapResult.getResultCode());
+               }
+            }
+         }
+         if (!StringUtils.isEmpty(user.getMail())) {
+            mods.add(new Modification(ModificationType.REPLACE, LdapUtil.ATTR_MAIL, user.getMail()));
+         }
+
+         if (!StringUtils.isEmpty(user.getPassword())) {
+            resetPassword(currentUser.getName(), user.getPassword());
+         }
+         if (mods.size() > 0) {
+            ModifyRequest modifyRequest = new ModifyRequest(currentUser.getDN(), mods);
+            LDAPResult ldapResult = connection.modify(modifyRequest);
+            if (ldapResult.getResultCode() != ResultCode.SUCCESS) {
+               throw new LdapException("Updating user returned LDAP result code " + ldapResult.getResultCode());
+            }
+         }
+         return getUserByAttribute(connection, LdapUtil.ATTR_ENTRYUUID, user.getUUID());
+      } catch (LDAPException e) {
+         throw new LdapException(e);
+      }
+   }
+
+   @Override
+   public LdapUser authenticate(String userName, String password) throws LdapException {
+      return getUser(userName, userName, password);
+   }
+
+   @Override
+   public LdapUser getUser(String userName) throws LdapException {
+      return getUser(userName, LdapConfig.getUser(), LdapConfig.getPass());
+   }
+
+   @Override
+   public List<LdapUser> getAllUsers() throws LdapException {
+      try {
+         LDAPConnection connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass());
+         Filter userFilter = Filter.create("objectClass="+LdapUtil.ATTR_OBJECTCLASS_USER);
+         SearchResult searchResults = connection.search(LdapConfig.getContext(), SearchScope.SUB, userFilter, LdapUtil.ATTR_ALL);
+         if (searchResults.getEntryCount() > 0) {
+            List<LdapUser> users = new ArrayList<>();
+            for (SearchResultEntry entry : searchResults.getSearchEntries()) {
+               users.add(getLdapUser(entry));
+            }
+            return users;
+         } else {
+            throw new LdapException("Could not find an entry that matches given criteria.");
+         }
+      } catch (LDAPException e) {
+         throw new LdapException(e);
+      }
+   }
+
+   @Override
+   public LdapUser resetPassword(String username, String newPassword) throws LdapException {
+      try {
+         Modification modification = new Modification(ModificationType.REPLACE, "userPassword", newPassword);
+         LDAPConnection connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass());
+         LDAPResult ldapResult = connection.modify(LdapUtil.getDN(username), modification);
+         if (ldapResult.getResultCode() != ResultCode.SUCCESS) {
+            throw new LdapException("Error while resetting user password in LDAP: " + ldapResult.getResultCode());
+         }
+         return authenticate(username, newPassword);
+      } catch (LDAPException e) {
+         throw new LdapException(e);
+      }
+   }
+
+   @Override
+   public boolean deleteUser(String UUID) throws LdapException {
+      try {
+         LDAPConnection connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass());
+         LdapUser user = getUserByAttribute(connection, LdapUtil.ATTR_ENTRYUUID, UUID);
+         DeleteRequest deleteRequest = new DeleteRequest(user.getDN());
+         LDAPResult ldapResult = connection.delete(deleteRequest);
+         return (ldapResult.getResultCode() == ResultCode.SUCCESS);
+      } catch (LDAPException e) {
+         throw new LdapException(e);
+      }
+   }
+
+   private LdapUser getUser(String userName, String bindName, String bindPass) throws LdapException {
+      try {
+         LDAPConnection connection;
+         if (!StringUtils.isEmpty(bindName) && !StringUtils.isEmpty(bindPass)) {
+            connection = LdapUtil.getConnection(bindName, bindPass);
+         } else {
+            connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass());
+         }
+         return getUserByAttribute(connection, LdapUtil.ATTR_CN, userName);
+      } catch (LDAPException ex) {
+         throw new LdapException(ex);
+      }
+   }
+
+   private static LdapUser getLdapUser(SearchResultEntry entry) {
+      LdapUser user = new LdapUser();
+      user.setName(entry.getAttributeValue(LdapUtil.ATTR_CN));
+      user.setUid(entry.getAttributeValue(LdapUtil.ATTR_UID));
+      user.setMail(entry.getAttributeValue(LdapUtil.ATTR_MAIL));
+      user.setPhone(entry.getAttributeValue(LdapUtil.ATTR_TELEPHONE_NUMBER));
+      user.setUUID(entry.getAttributeValue(LdapUtil.ATTR_ENTRYUUID));
+      user.setDN(entry.getDN());
+      return user;
+   }
+
+   public static LdapUser getUserByAttribute(LDAPConnection connection, String attribute, String value) throws LdapException {
+        return getUserByFilter(connection, "(" + attribute + "=" + value + ")");
+   }
+   
+   public static LdapUser getUserByFilter(LDAPConnection connection, String filter) throws LdapException {
+      try {
+         SearchResult searchResults = connection.search(LdapConfig.getContext(), SearchScope.SUB, filter, LdapUtil.ATTR_ALL);
+         if (searchResults.getEntryCount() == 1) {
+            return getLdapUser(searchResults.getSearchEntries().get(0));
+         } else {
+            throw new LdapException("Unexpected number of LDAP search results: " + searchResults.getEntryCount());
+         }
+      } catch (LDAPException e) {
+         throw new LdapException(e);
+      }
+   }
+}

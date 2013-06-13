@@ -1,12 +1,13 @@
 package de.ebf.utils.auth.ldap;
 
 import de.ebf.utils.auth.AbstractUser;
+import java.util.Objects;
 
 /**
  *
  * @author dwissk
  */
-public class LdapUser extends AbstractUser {
+public class LdapUser extends AbstractUser{
 
    private String DN;
    private String phone;
@@ -52,5 +53,31 @@ public class LdapUser extends AbstractUser {
 
    public void setDN(String DN) {
       this.DN = DN;
+   }
+
+   @Override
+   public int hashCode() {
+      int hash = 7;
+      hash = 73 * hash + Objects.hashCode(this.DN);
+      hash = 73 * hash + Objects.hashCode(this.UUID);
+      return hash;
+   }
+
+   @Override
+   public boolean equals(Object obj) {
+      if (obj == null) {
+         return false;
+      }
+      if (getClass() != obj.getClass()) {
+         return false;
+      }
+      final LdapUser other = (LdapUser) obj;
+      if (!Objects.equals(this.DN, other.DN)) {
+         return false;
+      }
+      if (!Objects.equals(this.UUID, other.UUID)) {
+         return false;
+      }
+      return true;
    }
 }

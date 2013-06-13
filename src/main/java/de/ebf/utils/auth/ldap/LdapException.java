@@ -6,13 +6,13 @@ import de.ebf.utils.auth.AuthException;
  *
  * @author dwissk
  */
-public class LdapAuthException extends AuthException {
+public class LdapException extends AuthException {
 
-   public LdapAuthException(String cause) {
+   public LdapException(String cause) {
       super(cause);
    }
 
-   public LdapAuthException(Exception e) {
+   public LdapException(Exception e) {
       super(e);
    }
 }

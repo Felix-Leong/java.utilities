@@ -2,7 +2,7 @@ package de.ebf.utils.auth.ldap;
 
 import de.ebf.utils.Config;
 
-public class LDAPConfig {
+public class LdapConfig {
 
    private static String server = Config.instance.getString("ldap.host");
    private static Integer port = Integer.parseInt(Config.instance.getString("ldap.port"));
@@ -15,7 +15,7 @@ public class LDAPConfig {
    }
 
    public static void setServer(String server) {
-      LDAPConfig.server = server;
+      LdapConfig.server = server;
    }
 
    public static String getContext() {
@@ -23,7 +23,7 @@ public class LDAPConfig {
    }
 
    public static void setContext(String context) {
-      LDAPConfig.context = context;
+      LdapConfig.context = context;
    }
 
    public static String getUser() {
@@ -31,7 +31,7 @@ public class LDAPConfig {
    }
 
    public static void setUser(String user) {
-      LDAPConfig.user = user;
+      LdapConfig.user = user;
    }
 
    public static String getPass() {
@@ -39,7 +39,7 @@ public class LDAPConfig {
    }
 
    public static void setPass(String pass) {
-      LDAPConfig.pass = pass;
+      LdapConfig.pass = pass;
    }
 
    public static Integer getPort() {

@@ -10,7 +10,7 @@ import java.util.List;
  *
  * @author dwissk
  */
-public interface Auth<User> {
+public interface UserManager<User> {
 
    public User createUser(String username) throws AuthException;
 
