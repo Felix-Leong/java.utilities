@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
@@ -31,8 +32,8 @@ import org.springframework.stereotype.Component;
 public class LdapUserManager implements UserManager<LdapUser> {
 
    private static final Logger log = Logger.getLogger(LdapUserManager.class);
-//   @Autowired
-//   private LdapGroupManager groupManager;
+   @Autowired
+   private LdapGroupManager groupManager;
 
    @Override
    public LdapUser createUser(String username) throws AuthException {
@@ -62,11 +63,39 @@ public class LdapUserManager implements UserManager<LdapUser> {
 
          if (!StringUtils.isEmpty(user.getName())) {
             if (!currentUser.getName().equals(user.getName())) {
+               List<LdapGroup> allGroups = groupManager.getAllGroups();
+
+
+
                ModifyDNRequest modifyDNRequest = new ModifyDNRequest(currentUser.getDN(), "cn=" + user.getName(), true);
                LDAPResult ldapResult = connection.modifyDN(modifyDNRequest);
                if (ldapResult.getResultCode() != (ResultCode.SUCCESS)) {
                   throw new LdapException("Renaming user returned LDAP result code " + ldapResult.getResultCode());
                }
+
+               //also update all dn membership values, since LDAP doesn't take care of this
+
+//               for (LdapGroup ldapGroup : allGroups) {
+//                  List<LdapUser> members = ldapGroup.getMembers();
+//                  for (LdapUser ldapUser : members) {
+//                     if (ldapUser.equals(currentUser)) {
+//
+//                        Modification deleteOldUserDN = new Modification(ModificationType.DELETE, LdapUtil.ATTR_MEMBERS, currentUser.getDN());
+//                        Modification addNewUserDN = new Modification(ModificationType.ADD, LdapUtil.ATTR_MEMBERS, LdapUtil.getDN(user.getName()));
+//                        List<Modification> groupMods = new ArrayList<>();
+//                        groupMods.add(deleteOldUserDN);
+//                        groupMods.add(addNewUserDN);
+//                        ModifyRequest modifyRequest = new ModifyRequest(ldapGroup.getDN(), groupMods);
+////                        ldapResult = connection.modify(modifyRequest);
+////                        if (ldapResult.getResultCode() != (ResultCode.SUCCESS)) {
+////                           throw new LdapException("Updating user in group returned LDAP result code " + ldapResult.getResultCode());
+////                        }
+//                        break;
+//                     }
+//                  }
+//               }
+
+
             }
          }
          if (!StringUtils.isEmpty(user.getMail())) {

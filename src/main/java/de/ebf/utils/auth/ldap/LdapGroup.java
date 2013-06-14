@@ -5,6 +5,8 @@
 package de.ebf.utils.auth.ldap;
 
 import de.ebf.utils.auth.AbstractGroup;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -12,8 +14,9 @@ import de.ebf.utils.auth.AbstractGroup;
  */
 public class LdapGroup extends AbstractGroup implements Comparable<LdapGroup> {
 
-   String UUID;
-   String DN;
+   private String UUID;
+   private String DN;
+   private List<LdapUser> members;
 
    public String getUUID() {
       return UUID;
@@ -34,5 +37,13 @@ public class LdapGroup extends AbstractGroup implements Comparable<LdapGroup> {
    @Override
    public int compareTo(LdapGroup o) {
       return this.getName().compareTo(o.getName());
+   }
+
+   public List<LdapUser> getMembers() {
+      return (members == null) ? new ArrayList<LdapUser>() : members;
+   }
+
+   public void setMembers(List<LdapUser> users) {
+      this.members = users;
    }
 }
