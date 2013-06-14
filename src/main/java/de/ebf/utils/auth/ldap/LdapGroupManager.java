@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
@@ -34,7 +35,10 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
-   
+
+   @Autowired
+   LdapUserManager userManager;
+
    @Override
    public LdapGroup createGroup(String groupName) throws LdapException {
       try {
@@ -63,7 +67,7 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
          throw new LdapException(ex);
       }
    }
-   
+
    public LdapGroup getGroupByUUID(String UUID) throws LdapException {
       try {
          LDAPConnection connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass());
@@ -95,10 +99,10 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
    }
 
    @Override
-   public List<LdapGroup> getAllGroups() throws LdapException{
+   public List<LdapGroup> getAllGroups() throws LdapException {
       try {
          LDAPConnection connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass());
-         Filter groupFilter = Filter.create("objectClass="+LdapUtil.ATTR_OBJECTCLASS_GROUP);
+         Filter groupFilter = Filter.create("objectClass=" + LdapUtil.ATTR_OBJECTCLASS_GROUP);
          SearchResult searchResults = connection.search(LdapConfig.getContext(), SearchScope.SUB, groupFilter, LdapUtil.ATTR_ALL);
          if (searchResults.getEntryCount() > 0) {
             List<LdapGroup> groups = new ArrayList<>();
@@ -126,7 +130,7 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
          throw new LdapException(e);
       }
    }
-   
+
    private LdapGroup getGroupByAttribute(LDAPConnection connection, String attribute, String value) throws LdapException {
       try {
          SearchResult searchResults = connection.search(LdapConfig.getContext(), SearchScope.SUB, "(" + attribute + "=" + value + ")", LdapUtil.ATTR_ALL);
@@ -139,8 +143,8 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
          throw new LdapException(e);
       }
    }
-   
-   private LdapGroup getLdapGroup(LDAPConnection connection, SearchResultEntry entry) throws LdapException{
+
+   private LdapGroup getLdapGroup(LDAPConnection connection, SearchResultEntry entry) throws LdapException {
       LdapGroup group = new LdapGroup();
       group.setName(entry.getAttributeValue(LdapUtil.ATTR_CN));
       group.setUUID(entry.getAttributeValue(LdapUtil.ATTR_ENTRYUUID));
@@ -148,15 +152,14 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
       String members = entry.getAttributeValue(LdapUtil.ATTR_MEMBERS);
       Collection<Attribute> attributes = entry.getAttributes();
       Attribute attr = entry.getAttribute(LdapUtil.ATTR_MEMBERS);
-      if (attr!=null){
+      if (attr != null) {
          String[] userDNs = attr.getValues();
          List<LdapUser> users = new ArrayList<>(userDNs.length);
-         for (int i=0; i<userDNs.length; i++)
-         {
+         for (int i = 0; i < userDNs.length; i++) {
             String cn = LdapUtil.getCN(userDNs[i]);
-            users.add(LdapUserManager.getUserByAttribute(connection, "cn", cn));
+            users.add(userManager.getUserByAttribute(connection, "cn", cn));
          }
-         group.setMembers(users);     
+         group.setMembers(users);
       }
       //TODO        
       return group;
@@ -173,9 +176,9 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
             throw new LdapException("Removing user from group returned LDAP result code " + ldapResult.getResultCode());
          }
          return getGroup(group.getName());
-      } catch (LDAPException e){
+      } catch (LDAPException e) {
          throw new LdapException(e);
-      }  
+      }
    }
 
    @Override
@@ -189,8 +192,8 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
             throw new LdapException("Adding user to group returned LDAP result code " + ldapResult.getResultCode());
          }
          return getGroup(group.getName());
-      } catch (LDAPException e){
+      } catch (LDAPException e) {
          throw new LdapException(e);
-      } 
+      }
    }
 }

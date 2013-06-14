@@ -7,7 +7,7 @@ import java.util.Objects;
  *
  * @author dwissk
  */
-public class LdapUser extends AbstractUser{
+public class LdapUser extends AbstractUser {
 
    private String DN;
    private String phone;

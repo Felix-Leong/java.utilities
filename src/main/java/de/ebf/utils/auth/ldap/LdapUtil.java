@@ -13,9 +13,8 @@ import org.apache.log4j.Logger;
  * @author Dominik
  */
 public class LdapUtil {
-   
+
    private static final Logger log = Logger.getLogger(LdapUtil.class);
-   
    public static final String ATTR_USER_PW = "userPassword";
    public static final String ATTR_OBJECTCLASS = "objectclass";
    public static final String ATTR_OBJECTCLASS_USER = "inetOrgPerson";
@@ -27,12 +26,13 @@ public class LdapUtil {
    public static final String ATTR_UID = "uid";
    public static final String ATTR_TELEPHONE_NUMBER = "telephoneNumber";
    public static final String ATTR_MEMBERS = "uniqueMember";
-   public static final String[] ATTR_ALL = new String[]{"cn", "uid", "mail", "telephoneNumber", "entryUUID", "entryDN", "uniqueMember"};
-   
+   public static final String ATTR_MEMBER_OF = "isMemberOf";
+   public static final String[] ATTR_ALL = new String[]{ATTR_CN, ATTR_UID, ATTR_MAIL, ATTR_TELEPHONE_NUMBER, ATTR_ENTRYUUID, ATTR_MEMBERS, ATTR_MEMBER_OF};
+
    public static String getDN(String name) {
       return "cn=" + name + "," + LdapConfig.getContext();
    }
-   
+
    public static LDAPConnection getConnection(String userName, String password) throws LDAPException {
       log.info("Connecting to LDAP [user=" + userName + ", server=" + LdapConfig.getServer() + ",port=" + LdapConfig.getPort() + ", ldapContext = " + LdapConfig.getContext() + "]");
       String user = (userName.startsWith("cn=") ? userName : "cn=" + userName + "," + LdapConfig.getContext());

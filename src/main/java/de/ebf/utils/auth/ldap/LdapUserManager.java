@@ -15,8 +15,8 @@ import com.unboundid.ldap.sdk.ResultCode;
 import com.unboundid.ldap.sdk.SearchResult;
 import com.unboundid.ldap.sdk.SearchResultEntry;
 import com.unboundid.ldap.sdk.SearchScope;
-import de.ebf.utils.auth.UserManager;
 import de.ebf.utils.auth.AuthException;
+import de.ebf.utils.auth.UserManager;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.lang.StringUtils;
@@ -31,7 +31,9 @@ import org.springframework.stereotype.Component;
 public class LdapUserManager implements UserManager<LdapUser> {
 
    private static final Logger log = Logger.getLogger(LdapUserManager.class);
-   
+//   @Autowired
+//   private LdapGroupManager groupManager;
+
    @Override
    public LdapUser createUser(String username) throws AuthException {
       try {
@@ -101,7 +103,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
    public List<LdapUser> getAllUsers() throws LdapException {
       try {
          LDAPConnection connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass());
-         Filter userFilter = Filter.create("objectClass="+LdapUtil.ATTR_OBJECTCLASS_USER);
+         Filter userFilter = Filter.create("objectClass=" + LdapUtil.ATTR_OBJECTCLASS_USER);
          SearchResult searchResults = connection.search(LdapConfig.getContext(), SearchScope.SUB, userFilter, LdapUtil.ATTR_ALL);
          if (searchResults.getEntryCount() > 0) {
             List<LdapUser> users = new ArrayList<>();
@@ -159,7 +161,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
       }
    }
 
-   private static LdapUser getLdapUser(SearchResultEntry entry) {
+   private LdapUser getLdapUser(SearchResultEntry entry) throws LdapException {
       LdapUser user = new LdapUser();
       user.setName(entry.getAttributeValue(LdapUtil.ATTR_CN));
       user.setUid(entry.getAttributeValue(LdapUtil.ATTR_UID));
@@ -167,14 +169,26 @@ public class LdapUserManager implements UserManager<LdapUser> {
       user.setPhone(entry.getAttributeValue(LdapUtil.ATTR_TELEPHONE_NUMBER));
       user.setUUID(entry.getAttributeValue(LdapUtil.ATTR_ENTRYUUID));
       user.setDN(entry.getDN());
+
+// isMemberOf does not seem to work in OpenDS
+//      Attribute attr = entry.getAttribute(LdapUtil.ATTR_MEMBER_OF);
+//      if (attr != null) {
+//         String[] groupDNs = attr.getValues();
+//         List<LdapGroup> groups = new ArrayList<>(groupDNs.length);
+//         for (int i = 0; i < groupDNs.length; i++) {
+//            LdapGroup ldapGroup = groupManager.getGroup(LdapUtil.getCN(groupDNs[i]));
+//            groups.add(ldapGroup);
+//         }
+//         user.setGroups(groups);
+//      }
       return user;
    }
 
-   public static LdapUser getUserByAttribute(LDAPConnection connection, String attribute, String value) throws LdapException {
-        return getUserByFilter(connection, "(" + attribute + "=" + value + ")");
+   public LdapUser getUserByAttribute(LDAPConnection connection, String attribute, String value) throws LdapException {
+      return getUserByFilter(connection, "(" + attribute + "=" + value + ")");
    }
-   
-   public static LdapUser getUserByFilter(LDAPConnection connection, String filter) throws LdapException {
+
+   public LdapUser getUserByFilter(LDAPConnection connection, String filter) throws LdapException {
       try {
          SearchResult searchResults = connection.search(LdapConfig.getContext(), SearchScope.SUB, filter, LdapUtil.ATTR_ALL);
          if (searchResults.getEntryCount() == 1) {

@@ -4,6 +4,7 @@
  */
 package de.ebf.utils.auth;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -11,7 +12,7 @@ import java.util.List;
  * @author Dominik
  */
 public class AbstractGroup implements Group {
-   
+
    private String name;
    private List<? extends User> members;
 
@@ -27,7 +28,7 @@ public class AbstractGroup implements Group {
 
    @Override
    public List<? extends User> getMembers() {
-      return members;
+      return (members == null) ? new ArrayList<User>() : members;
    }
 
    @Override
