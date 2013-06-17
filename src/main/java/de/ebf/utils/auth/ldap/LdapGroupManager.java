@@ -23,7 +23,6 @@ import com.unboundid.ldap.sdk.SearchScope;
 import de.ebf.utils.auth.AuthException;
 import de.ebf.utils.auth.GroupManager;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -149,8 +148,6 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
       group.setName(entry.getAttributeValue(LdapUtil.ATTR_CN));
       group.setUUID(entry.getAttributeValue(LdapUtil.ATTR_ENTRYUUID));
       group.setDN(entry.getDN());
-      String members = entry.getAttributeValue(LdapUtil.ATTR_MEMBERS);
-      Collection<Attribute> attributes = entry.getAttributes();
       Attribute attr = entry.getAttribute(LdapUtil.ATTR_MEMBERS);
       if (attr != null) {
          String[] userDNs = attr.getValues();
