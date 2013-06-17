@@ -23,6 +23,7 @@ import com.unboundid.ldap.sdk.SearchScope;
 import de.ebf.utils.auth.AuthException;
 import de.ebf.utils.auth.GroupManager;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -192,5 +193,17 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
       } catch (LDAPException e) {
          throw new LdapException(e);
       }
+   }
+
+   public List<LdapGroup> getGroupsForUser(LdapUser user) throws LdapException {
+      List<LdapGroup> groups = getAllGroups();
+      Iterator<LdapGroup> it = groups.iterator();
+      while (it.hasNext()) {
+         LdapGroup group = it.next();
+         if (!group.getMembers().contains(user)) {
+            it.remove();
+         }
+      }
+      return groups;
    }
 }

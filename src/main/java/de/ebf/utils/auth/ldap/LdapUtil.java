@@ -34,7 +34,6 @@ public class LdapUtil {
    }
 
    public static LDAPConnection getConnection(String userName, String password) throws LDAPException {
-      log.info("Connecting to LDAP [user=" + userName + ", server=" + LdapConfig.getServer() + ",port=" + LdapConfig.getPort() + ", ldapContext = " + LdapConfig.getContext() + "]");
       String user = (userName.startsWith("cn=") ? userName : "cn=" + userName + "," + LdapConfig.getContext());
       return new LDAPConnection(LdapConfig.getServer(), LdapConfig.getPort(), user, password);
    }
