@@ -49,8 +49,10 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
          LDAPConnection connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass());
          LDAPResult ldapResult = connection.add(addRequest);
          if (ldapResult.getResultCode() == (ResultCode.SUCCESS)) {
+            LdapUtil.release(connection);
             return getGroup(groupName);
          } else {
+            LdapUtil.release(connection);
             throw new LdapException("Adding group returned LDAP result code " + ldapResult.getResultCode());
          }
       } catch (LDAPException e) {
@@ -62,7 +64,9 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
    public LdapGroup getGroup(String groupName) throws LdapException {
       try {
          LDAPConnection connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass());
-         return getGroupByAttribute(connection, LdapUtil.ATTR_CN, groupName);
+         LdapGroup group = getGroupByAttribute(connection, LdapUtil.ATTR_CN, groupName);
+         LdapUtil.release(connection);
+         return group;
       } catch (LDAPException ex) {
          throw new LdapException(ex);
       }
@@ -71,7 +75,9 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
    public LdapGroup getGroupByUUID(String UUID) throws LdapException {
       try {
          LDAPConnection connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass());
-         return getGroupByAttribute(connection, LdapUtil.ATTR_ENTRYUUID, UUID);
+         LdapGroup group = getGroupByAttribute(connection, LdapUtil.ATTR_ENTRYUUID, UUID);
+         LdapUtil.release(connection);
+         return group;
       } catch (LDAPException ex) {
          throw new LdapException(ex);
       }
@@ -88,11 +94,14 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
                ModifyDNRequest modifyDNRequest = new ModifyDNRequest(currentGroup.getDN(), "cn=" + group.getName(), true);
                LDAPResult ldapResult = connection.modifyDN(modifyDNRequest);
                if (ldapResult.getResultCode() != (ResultCode.SUCCESS)) {
+                  LdapUtil.release(connection);
                   throw new LdapException("Renaming group returned LDAP result code " + ldapResult.getResultCode());
                }
             }
          }
-         return getGroupByAttribute(connection, LdapUtil.ATTR_ENTRYUUID, group.getUUID());
+         group = getGroupByAttribute(connection, LdapUtil.ATTR_ENTRYUUID, group.getUUID());
+         LdapUtil.release(connection);
+         return group;
       } catch (LDAPException e) {
          throw new LdapException(e);
       }
@@ -109,8 +118,10 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
             for (SearchResultEntry entry : searchResults.getSearchEntries()) {
                groups.add(getLdapGroup(connection, entry));
             }
+            LdapUtil.release(connection);
             return groups;
          } else {
+            LdapUtil.release(connection);
             throw new LdapException("Could not find an entry that matches given criteria.");
          }
       } catch (LDAPException e) {
@@ -125,6 +136,7 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
          LdapGroup group = getGroupByAttribute(connection, LdapUtil.ATTR_ENTRYUUID, UUID);
          DeleteRequest deleteRequest = new DeleteRequest(group.getDN());
          LDAPResult ldapResult = connection.delete(deleteRequest);
+         LdapUtil.release(connection);
          return (ldapResult.getResultCode() == ResultCode.SUCCESS);
       } catch (LDAPException e) {
          throw new LdapException(e);
@@ -137,6 +149,7 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
          if (searchResults.getEntryCount() == 1) {
             return getLdapGroup(connection, searchResults.getSearchEntries().get(0));
          } else {
+            LdapUtil.release(connection);
             throw new LdapException("Unexpected number of LDAP search results: " + searchResults.getEntryCount());
          }
       } catch (LDAPException e) {
@@ -159,7 +172,6 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
          }
          group.setMembers(users);
       }
-      //TODO        
       return group;
    }
 
@@ -170,6 +182,7 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
          Modification modification = new Modification(ModificationType.DELETE, LdapUtil.ATTR_MEMBERS, user.getDN());
          ModifyRequest modifyRequest = new ModifyRequest(group.getDN(), modification);
          LDAPResult ldapResult = connection.modify(modifyRequest);
+         LdapUtil.release(connection);
          if (ldapResult.getResultCode() != (ResultCode.SUCCESS)) {
             throw new LdapException("Removing user from group returned LDAP result code " + ldapResult.getResultCode());
          }
@@ -186,6 +199,7 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
          Modification modification = new Modification(ModificationType.ADD, LdapUtil.ATTR_MEMBERS, user.getDN());
          ModifyRequest modifyRequest = new ModifyRequest(group.getDN(), modification);
          LDAPResult ldapResult = connection.modify(modifyRequest);
+         LdapUtil.release(connection);
          if (ldapResult.getResultCode() != (ResultCode.SUCCESS)) {
             throw new LdapException("Adding user to group returned LDAP result code " + ldapResult.getResultCode());
          }

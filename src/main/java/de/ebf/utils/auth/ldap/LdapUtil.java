@@ -5,7 +5,11 @@
 package de.ebf.utils.auth.ldap;
 
 import com.unboundid.ldap.sdk.LDAPConnection;
+import com.unboundid.ldap.sdk.LDAPConnectionPool;
 import com.unboundid.ldap.sdk.LDAPException;
+import java.util.HashMap;
+import java.util.Map;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 /**
@@ -28,6 +32,7 @@ public class LdapUtil {
    public static final String ATTR_MEMBERS = "uniqueMember";
    public static final String ATTR_MEMBER_OF = "isMemberOf";
    public static final String[] ATTR_ALL = new String[]{ATTR_CN, ATTR_UID, ATTR_MAIL, ATTR_TELEPHONE_NUMBER, ATTR_ENTRYUUID, ATTR_MEMBERS, ATTR_MEMBER_OF};
+   private static Map<String, LDAPConnectionPool> poolMap = new HashMap<>();
 
    public static String getDN(String name) {
       return "cn=" + name + "," + LdapConfig.getContext();
@@ -35,7 +40,40 @@ public class LdapUtil {
 
    public static LDAPConnection getConnection(String userName, String password) throws LDAPException {
       String user = (userName.startsWith("cn=") ? userName : "cn=" + userName + "," + LdapConfig.getContext());
-      return new LDAPConnection(LdapConfig.getServer(), LdapConfig.getPort(), user, password);
+      LDAPConnectionPool pool;
+      if (poolMap.containsKey(user)) {
+         pool = poolMap.get(user);
+      } else {
+         LDAPConnection conn = new LDAPConnection(LdapConfig.getServer(), LdapConfig.getPort(), user, password);
+         pool = new LDAPConnectionPool(conn, 100);
+         pool.setMaxWaitTimeMillis(0);
+         pool.setCreateIfNecessary(true);
+         pool.setConnectionPoolName(user);
+         poolMap.put(user, pool);
+      }
+      return pool.getConnection();
+   }
+
+   public static void release(LDAPConnection conn) {
+      release(conn, false);
+   }
+
+   public static void release(LDAPConnection conn, Boolean defunct) {
+      String connectionPoolName = conn.getConnectionPoolName();
+      if (!StringUtils.isEmpty(connectionPoolName)) {
+         LDAPConnectionPool pool = poolMap.get(connectionPoolName);
+         if (pool != null) {
+            if (defunct) {
+               pool.releaseDefunctConnection(conn);
+            } else {
+               pool.releaseConnection(conn);
+            }
+         } else {
+            log.warn("Unable to release LDAP connection due to missing connection pool.");
+         }
+      } else {
+         log.warn("Unable to release LDAP connection due to empty connection pool name.");
+      }
    }
 
    public static String getCN(String dn) {
