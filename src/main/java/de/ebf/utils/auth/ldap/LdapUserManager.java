@@ -30,11 +30,11 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class LdapUserManager implements UserManager<LdapUser> {
-   
+
    private static final Logger log = Logger.getLogger(LdapUserManager.class);
    @Autowired
    private LdapGroupManager groupManager;
-   
+
    @Override
    public LdapUser createUser(String username) throws AuthException {
       try {
@@ -54,18 +54,18 @@ public class LdapUserManager implements UserManager<LdapUser> {
          throw new LdapException(e);
       }
    }
-   
+
    @Override
    public LdapUser updateUser(LdapUser user) throws AuthException {
       try {
          LDAPConnection connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass());
          List<Modification> mods = new ArrayList<>();
          LdapUser currentUser = getUserByAttribute(connection, LdapUtil.ATTR_ENTRYUUID, user.getUUID());
-         
+
          if (!StringUtils.isEmpty(user.getName())) {
             if (!currentUser.getName().equals(user.getName())) {
                List<LdapGroup> allGroups = groupManager.getAllGroups();
-               
+
                ModifyDNRequest modifyDNRequest = new ModifyDNRequest(currentUser.getDN(), "cn=" + user.getName(), true);
                LDAPResult ldapResult = connection.modifyDN(modifyDNRequest);
                if (ldapResult.getResultCode() != (ResultCode.SUCCESS)) {
@@ -96,7 +96,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
          if (!StringUtils.isEmpty(user.getMail())) {
             mods.add(new Modification(ModificationType.REPLACE, LdapUtil.ATTR_MAIL, user.getMail()));
          }
-         
+
          if (!StringUtils.isEmpty(user.getPassword())) {
             resetPassword(currentUser.getName(), user.getPassword());
          }
@@ -114,17 +114,17 @@ public class LdapUserManager implements UserManager<LdapUser> {
          throw new LdapException(e);
       }
    }
-   
+
    @Override
    public LdapUser authenticate(String userName, String password) throws LdapException {
       return getUser(userName, userName, password);
    }
-   
+
    @Override
    public LdapUser getUser(String userName) throws LdapException {
       return getUser(userName, LdapConfig.getUser(), LdapConfig.getPass());
    }
-   
+
    @Override
    public List<LdapUser> getAllUsers() throws LdapException {
       try {
@@ -139,13 +139,14 @@ public class LdapUserManager implements UserManager<LdapUser> {
             }
             return users;
          } else {
-            throw new LdapException("Could not find an entry that matches given criteria.");
+            log.warn("Could not find any ldap users");
+            return new ArrayList<>();
          }
       } catch (LDAPException e) {
          throw new LdapException(e);
       }
    }
-   
+
    @Override
    public LdapUser resetPassword(String username, String newPassword) throws LdapException {
       try {
@@ -161,7 +162,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
          throw new LdapException(e);
       }
    }
-   
+
    @Override
    public boolean deleteUser(String UUID) throws LdapException {
       try {
@@ -175,7 +176,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
          throw new LdapException(e);
       }
    }
-   
+
    private LdapUser getUser(String userName, String bindName, String bindPass) throws LdapException {
       try {
          LDAPConnection connection;
@@ -191,7 +192,18 @@ public class LdapUserManager implements UserManager<LdapUser> {
          throw new LdapException(ex);
       }
    }
-   
+
+   public LdapUser getUserByUUID(String UUID) throws LdapException {
+      try {
+         LDAPConnection connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass());
+         LdapUser user = getUserByAttribute(connection, LdapUtil.ATTR_ENTRYUUID, UUID);
+         LdapUtil.release(connection);
+         return user;
+      } catch (LDAPException ex) {
+         throw new LdapException(ex);
+      }
+   }
+
    private LdapUser getLdapUser(SearchResultEntry entry) throws LdapException {
       LdapUser user = new LdapUser();
       user.setName(entry.getAttributeValue(LdapUtil.ATTR_CN));
@@ -214,11 +226,11 @@ public class LdapUserManager implements UserManager<LdapUser> {
 //      }
       return user;
    }
-   
-   public LdapUser getUserByAttribute(LDAPConnection connection, String attribute, String value) throws LdapException {
+
+   protected LdapUser getUserByAttribute(LDAPConnection connection, String attribute, String value) throws LdapException {
       return getUserByFilter(connection, "(" + attribute + "=" + value + ")");
    }
-   
+
    public LdapUser getUserByFilter(LDAPConnection connection, String filter) throws LdapException {
       try {
          SearchResult searchResults = connection.search(LdapConfig.getContext(), SearchScope.SUB, filter, LdapUtil.ATTR_ALL);

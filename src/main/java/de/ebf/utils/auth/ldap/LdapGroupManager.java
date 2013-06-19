@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -38,6 +39,7 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
 
    @Autowired
    LdapUserManager userManager;
+   private static final Logger log = Logger.getLogger(LdapGroupManager.class);
 
    @Override
    public LdapGroup createGroup(String groupName) throws LdapException {
@@ -122,7 +124,7 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
             return groups;
          } else {
             LdapUtil.release(connection);
-            throw new LdapException("Could not find an entry that matches given criteria.");
+            return new ArrayList<>();
          }
       } catch (LDAPException e) {
          throw new LdapException(e);
@@ -150,7 +152,8 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
             return getLdapGroup(connection, searchResults.getSearchEntries().get(0));
          } else {
             LdapUtil.release(connection);
-            throw new LdapException("Unexpected number of LDAP search results: " + searchResults.getEntryCount());
+            log.warn("Unexpected number of LDAP search results: " + searchResults.getEntryCount());
+            return null;
          }
       } catch (LDAPException e) {
          throw new LdapException(e);
