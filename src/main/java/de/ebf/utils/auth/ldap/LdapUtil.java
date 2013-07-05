@@ -80,4 +80,8 @@ public class LdapUtil {
       String[] dnParts = dn.split(",");
       return dnParts[0].substring("cn=".length());
    }
+
+   public static void removeConnection(String user) {
+      poolMap.remove(getDN(user));
+   }
 }

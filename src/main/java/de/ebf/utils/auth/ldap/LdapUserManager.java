@@ -117,6 +117,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
 
    @Override
    public LdapUser authenticate(String userName, String password) throws LdapException {
+      LdapUtil.removeConnection(userName);
       return getUser(userName, userName, password);
    }
 
@@ -157,6 +158,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
          if (ldapResult.getResultCode() != ResultCode.SUCCESS) {
             throw new LdapException("Error while resetting user password in LDAP: " + ldapResult.getResultCode());
          }
+         LdapUtil.removeConnection(username);
          return authenticate(username, newPassword);
       } catch (LDAPException e) {
          throw new LdapException(e);
