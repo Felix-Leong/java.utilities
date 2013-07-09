@@ -35,7 +35,10 @@ public class LdapUtil {
    private static Map<String, LDAPConnectionPool> poolMap = new HashMap<>();
 
    public static String getDN(String name) {
-      return "cn=" + name + "," + LdapConfig.getContext();
+      if (!name.startsWith("cn=" + name)) {
+         return "cn=" + name + "," + LdapConfig.getContext();
+      }
+      return name;
    }
 
    public static LDAPConnection getConnection(String userName, String password) throws LDAPException {
@@ -82,6 +85,11 @@ public class LdapUtil {
    }
 
    public static void removeConnection(String user) {
-      poolMap.remove(getDN(user));
+      String userDN = getDN(user);
+      LDAPConnectionPool pool = poolMap.get(userDN);
+      if (pool != null) {
+         pool.close();
+      }
+      poolMap.remove(userDN);
    }
 }
