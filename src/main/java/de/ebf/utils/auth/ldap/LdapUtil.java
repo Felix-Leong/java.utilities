@@ -35,7 +35,7 @@ public class LdapUtil {
    private static Map<String, LDAPConnectionPool> poolMap = new HashMap<>();
 
    public static String getDN(String name) {
-      if (!name.startsWith("cn=" + name)) {
+      if (!name.startsWith("cn=")) {
          return "cn=" + name + "," + LdapConfig.getContext();
       }
       return name;
