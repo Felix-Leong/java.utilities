@@ -42,7 +42,7 @@ public class LdapUtil {
    }
 
    public static LDAPConnection getConnection(String userName, String password) throws LDAPException {
-      String user = (userName.startsWith("cn=") ? userName : "cn=" + userName + "," + LdapConfig.getContext());
+      String user = getDN(userName);
       LDAPConnectionPool pool;
       if (poolMap.containsKey(user)) {
          pool = poolMap.get(user);

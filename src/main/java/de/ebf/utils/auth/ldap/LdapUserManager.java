@@ -117,12 +117,37 @@ public class LdapUserManager implements UserManager<LdapUser> {
 
    @Override
    public LdapUser authenticate(String userName, String password) throws LdapException {
-      return getUser(userName, userName, password);
+      //do not use connection pool for auth request
+      LdapUser user = null;
+      try {
+         LDAPConnection conn = new LDAPConnection(LdapConfig.getServer(), LdapConfig.getPort(), LdapUtil.getDN(userName), password);
+         user = getUserByAttribute(conn, LdapUtil.ATTR_CN, userName);
+         conn.close();
+      } catch (LDAPException e) {
+         throw new LdapException(e.getMessage());
+      }
+      return user;
    }
 
    @Override
    public LdapUser getUser(String userName) throws LdapException {
       return getUser(userName, LdapConfig.getUser(), LdapConfig.getPass());
+   }
+
+   public LdapUser getUser(String userName, String bindName, String bindPass) throws LdapException {
+      try {
+         LDAPConnection connection;
+         if (!StringUtils.isEmpty(bindName) && !StringUtils.isEmpty(bindPass)) {
+            connection = LdapUtil.getConnection(bindName, bindPass);
+         } else {
+            connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass());
+         }
+         LdapUser user = getUserByAttribute(connection, LdapUtil.ATTR_CN, userName);
+         LdapUtil.release(connection);
+         return user;
+      } catch (LDAPException ex) {
+         throw new LdapException(ex);
+      }
    }
 
    @Override
@@ -176,22 +201,6 @@ public class LdapUserManager implements UserManager<LdapUser> {
          return (ldapResult.getResultCode() == ResultCode.SUCCESS);
       } catch (LDAPException e) {
          throw new LdapException(e);
-      }
-   }
-
-   private LdapUser getUser(String userName, String bindName, String bindPass) throws LdapException {
-      try {
-         LDAPConnection connection;
-         if (!StringUtils.isEmpty(bindName) && !StringUtils.isEmpty(bindPass)) {
-            connection = LdapUtil.getConnection(bindName, bindPass);
-         } else {
-            connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass());
-         }
-         LdapUser user = getUserByAttribute(connection, LdapUtil.ATTR_CN, userName);
-         LdapUtil.release(connection);
-         return user;
-      } catch (LDAPException ex) {
-         throw new LdapException(ex);
       }
    }
 
