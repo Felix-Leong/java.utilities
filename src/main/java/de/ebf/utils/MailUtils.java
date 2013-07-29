@@ -1,5 +1,6 @@
 package de.ebf.utils;
 
+import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.List;
@@ -64,7 +65,7 @@ public class MailUtils {
    }
 
    public static boolean sendMail(String replyTo, String recipient, String subject, String body) {
-      return sendMail(replyTo, Arrays.asList(new String[]{recipient}), subject, body, null);
+      return sendMail(replyTo, Arrays.asList(new String[]{recipient}), subject, body, null, null);
    }
 
    public static boolean sendMail(String replyTo, String recipient, String subject, String body, String htmlBody) {
@@ -75,11 +76,15 @@ public class MailUtils {
       return MailUtils.sendMail(replyTo, recipients, subject, body, null, null);
    }
 
-   public static boolean sendMail(String replyTo, List<String> recipients, String subject, String body, String attachementPath) {
-      return MailUtils.sendMail(replyTo, recipients, subject, body, null, attachementPath);
+   public static boolean sendMail(String replyTo, List<String> recipients, String subject, String body, String htmlBody) {
+      return MailUtils.sendMail(replyTo, recipients, subject, body, htmlBody, null);
    }
 
-   public static boolean sendMail(String replyTo, List<String> recipients, String subject, String body, String htmlBody, String attachmentPath) {
+   public static boolean sendMail(String replyTo, List<String> recipients, String subject, String body, File attachement) {
+      return MailUtils.sendMail(replyTo, recipients, subject, body, null, attachement);
+   }
+
+   public static boolean sendMail(String replyTo, List<String> recipients, String subject, String body, String htmlBody, File attachment) {
       log.info("Sending message [" + subject + "] to " + recipients + " via " + SMTP_SERVER);
       try {
          MimeMessage message = new MimeMessage(session);
@@ -116,11 +121,11 @@ public class MailUtils {
             multiContentPart.addBodyPart(htmlMessageBodyPart);
          }
 
-         if (attachmentPath != null) {
+         if (attachment != null) {
             BodyPart attachmentBodyPart = new MimeBodyPart();
-            DataSource source = new FileDataSource(attachmentPath);
+            DataSource source = new FileDataSource(attachment);
             attachmentBodyPart.setDataHandler(new DataHandler(source));
-            attachmentBodyPart.setFileName(attachmentPath);
+            attachmentBodyPart.setFileName(attachment.getName());
             multiContentPart.addBodyPart(attachmentBodyPart);
          }
 
