@@ -1,6 +1,7 @@
 package de.ebf.utils.auth.ldap;
 
 import de.ebf.utils.auth.AbstractUser;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -14,6 +15,7 @@ public class LdapUser extends AbstractUser {
    private String UUID;
    private String uid;
    private String password;
+   private List<LdapGroup> groups;
 
    public void setPhone(String phone) {
       this.phone = phone;
@@ -53,6 +55,14 @@ public class LdapUser extends AbstractUser {
 
    public void setDN(String DN) {
       this.DN = DN;
+   }
+
+   public List<LdapGroup> getGroups() {
+      return groups;
+   }
+
+   public void setGroups(List<LdapGroup> groups) {
+      this.groups = groups;
    }
 
    @Override
