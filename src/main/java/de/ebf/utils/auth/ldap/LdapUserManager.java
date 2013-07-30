@@ -247,11 +247,10 @@ public class LdapUserManager implements UserManager<LdapUser> {
          SearchResult searchResults = connection.search(LdapConfig.getContext(), SearchScope.SUB, filter, LdapUtil.ATTR_ALL);
          if (searchResults.getEntryCount() == 1) {
             return getLdapUser(searchResults.getSearchEntries().get(0));
-         } else {
-            throw new LdapException("Unexpected number of LDAP search results: " + searchResults.getEntryCount());
          }
       } catch (LDAPException e) {
          throw new LdapException(e);
       }
+      return null;
    }
 }

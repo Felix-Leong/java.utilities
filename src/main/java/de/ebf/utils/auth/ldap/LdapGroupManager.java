@@ -171,7 +171,10 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
          List<LdapUser> users = new ArrayList<>(userDNs.length);
          for (int i = 0; i < userDNs.length; i++) {
             String cn = LdapUtil.getCN(userDNs[i]);
-            users.add(userManager.getUserByAttribute(connection, "cn", cn));
+            LdapUser user = userManager.getUserByAttribute(connection, "cn", cn);
+            if (user != null) {
+               users.add(user);
+            }
          }
          group.setMembers(users);
       }
