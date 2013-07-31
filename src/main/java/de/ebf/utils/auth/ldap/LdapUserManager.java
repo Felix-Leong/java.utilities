@@ -191,17 +191,24 @@ public class LdapUserManager implements UserManager<LdapUser> {
    }
 
    @Override
-   public boolean deleteUser(String UUID) throws LdapException {
+   public boolean deleteUser(String UUID) throws LdapException, AuthException {
       try {
          LDAPConnection connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass());
          LdapUser user = getUserByAttribute(connection, LdapUtil.ATTR_ENTRYUUID, UUID);
-         DeleteRequest deleteRequest = new DeleteRequest(user.getDN());
-         LDAPResult ldapResult = connection.delete(deleteRequest);
-         LdapUtil.release(connection);
-         return (ldapResult.getResultCode() == ResultCode.SUCCESS);
+         List<LdapGroup> groups = groupManager.getAllGroups();
+         if (groups != null) {
+            for (LdapGroup group : groups) {
+               groupManager.removeUserFromGroup(user, group);
+            }
+            DeleteRequest deleteRequest = new DeleteRequest(user.getDN());
+            LDAPResult ldapResult = connection.delete(deleteRequest);
+            LdapUtil.release(connection);
+            return (ldapResult.getResultCode() == ResultCode.SUCCESS);
+         }
       } catch (LDAPException e) {
          throw new LdapException(e);
       }
+      return false;
    }
 
    public LdapUser getUserByUUID(String UUID) throws LdapException {
