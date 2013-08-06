@@ -16,6 +16,7 @@ public class LdapUser extends AbstractUser {
    private String uid;
    private String password;
    private List<LdapGroup> groups;
+   private String context;
 
    public void setPhone(String phone) {
       this.phone = phone;
@@ -63,6 +64,18 @@ public class LdapUser extends AbstractUser {
 
    public void setGroups(List<LdapGroup> groups) {
       this.groups = groups;
+   }
+
+   public String getContext() {
+      return context;
+   }
+
+   public void setContext(String context) {
+      this.context = context;
+   }
+
+   public String getTenantID() {
+      return LdapUtil.getCN(context);
    }
 
    @Override

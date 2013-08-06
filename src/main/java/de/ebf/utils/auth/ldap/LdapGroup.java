@@ -17,6 +17,7 @@ public class LdapGroup extends AbstractGroup implements Comparable<LdapGroup> {
    private String UUID;
    private String DN;
    private List<LdapUser> members;
+   private String context;
 
    public String getUUID() {
       return UUID;
@@ -45,5 +46,17 @@ public class LdapGroup extends AbstractGroup implements Comparable<LdapGroup> {
 
    public void setMembers(List<LdapUser> users) {
       this.members = users;
+   }
+
+   public String getContext() {
+      return context;
+   }
+
+   public void setContext(String context) {
+      this.context = context;
+   }
+
+   public String getTenantID() {
+      return LdapUtil.getCN(context);
    }
 }
