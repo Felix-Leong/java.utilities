@@ -18,6 +18,7 @@ import com.unboundid.ldap.sdk.SearchScope;
 import de.ebf.utils.auth.AuthException;
 import de.ebf.utils.auth.UserManager;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -163,6 +164,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
             for (SearchResultEntry entry : searchResults.getSearchEntries()) {
                users.add(getLdapUser(entry));
             }
+            Collections.sort(users);
             return users;
          } else {
             log.warn("Could not find any ldap users");

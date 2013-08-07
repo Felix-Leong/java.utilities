@@ -23,6 +23,7 @@ import com.unboundid.ldap.sdk.SearchScope;
 import de.ebf.utils.auth.AuthException;
 import de.ebf.utils.auth.GroupManager;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import org.apache.commons.lang.StringUtils;
@@ -121,6 +122,7 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
                groups.add(getLdapGroup(connection, entry, context));
             }
             LdapUtil.release(connection);
+            Collections.sort(groups);
             return groups;
          } else {
             LdapUtil.release(connection);

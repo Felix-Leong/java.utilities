@@ -8,7 +8,7 @@ import java.util.Objects;
  *
  * @author dwissk
  */
-public class LdapUser extends AbstractUser {
+public class LdapUser extends AbstractUser implements Comparable<LdapUser> {
 
    private String DN;
    private String phone;
@@ -102,5 +102,10 @@ public class LdapUser extends AbstractUser {
          return false;
       }
       return true;
+   }
+
+   @Override
+   public int compareTo(LdapUser o) {
+      return super.getName().compareTo(o.getName());
    }
 }
