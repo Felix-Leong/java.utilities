@@ -195,7 +195,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
       try {
          LDAPConnection connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass(), context);
          LdapUser user = getUserByAttribute(connection, LdapUtil.ATTR_ENTRYUUID, UUID, context);
-         List<LdapGroup> groups = groupManager.getAllGroups(context);
+         List<LdapGroup> groups = groupManager.getGroupsForUser(user, context);
          if (groups != null) {
             for (LdapGroup group : groups) {
                groupManager.removeUserFromGroup(user, group, context);
