@@ -41,7 +41,6 @@ public class LdapUserManager implements UserManager<LdapUser> {
       try {
          Entry entry = new Entry(LdapUtil.getDN(username, context));
          entry.addAttribute(LdapUtil.ATTR_OBJECTCLASS, LdapUtil.OBJECTCLASS_USER);
-         entry.addAttribute(LdapUtil.ATTR_SN, username);
          AddRequest addRequest = new AddRequest(entry);
          LDAPConnection connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass(), context);
          LDAPResult ldapResult = connection.add(addRequest);
@@ -92,6 +91,14 @@ public class LdapUserManager implements UserManager<LdapUser> {
                }
             }
          }
+         if (!StringUtils.isEmpty(user.getFirstName())) {
+            mods.add(new Modification(ModificationType.REPLACE, LdapUtil.ATTR_FIRST_NAME, user.getFirstName()));
+         }
+
+         if (!StringUtils.isEmpty(user.getLastName())) {
+            mods.add(new Modification(ModificationType.REPLACE, LdapUtil.ATTR_LAST_NAME, user.getLastName()));
+         }
+
          if (!StringUtils.isEmpty(user.getMail())) {
             mods.add(new Modification(ModificationType.REPLACE, LdapUtil.ATTR_MAIL, user.getMail()));
          }
@@ -225,6 +232,8 @@ public class LdapUserManager implements UserManager<LdapUser> {
    private LdapUser getLdapUser(SearchResultEntry entry) throws LdapException {
       LdapUser user = new LdapUser();
       user.setName(entry.getAttributeValue(LdapUtil.ATTR_CN));
+      user.setFirstName(entry.getAttributeValue(LdapUtil.ATTR_FIRST_NAME));
+      user.setLastName(entry.getAttributeValue(LdapUtil.ATTR_LAST_NAME));
       user.setUid(entry.getAttributeValue(LdapUtil.ATTR_UID));
       user.setMail(entry.getAttributeValue(LdapUtil.ATTR_MAIL));
       user.setPhone(entry.getAttributeValue(LdapUtil.ATTR_TELEPHONE_NUMBER));

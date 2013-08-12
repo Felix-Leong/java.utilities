@@ -11,6 +11,8 @@ import java.util.Objects;
 public class LdapUser extends AbstractUser implements Comparable<LdapUser> {
 
    private String DN;
+   private String firstName;
+   private String lastName;
    private String phone;
    private String UUID;
    private String uid;
@@ -76,6 +78,22 @@ public class LdapUser extends AbstractUser implements Comparable<LdapUser> {
 
    public String getTenantID() {
       return LdapUtil.getCN(context);
+   }
+
+   public String getFirstName() {
+      return firstName;
+   }
+
+   public void setFirstName(String firstName) {
+      this.firstName = firstName;
+   }
+
+   public String getLastName() {
+      return lastName;
+   }
+
+   public void setLastName(String lastName) {
+      this.lastName = lastName;
    }
 
    @Override
