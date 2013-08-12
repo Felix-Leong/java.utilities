@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.ebf.filter;
+package de.ebf.listener;
 
 import java.beans.FeatureDescriptor;
 import java.util.Iterator;
