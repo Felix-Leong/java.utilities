@@ -12,7 +12,7 @@ import java.util.List;
  */
 public interface UserManager<User> {
 
-   public User createUser(String username, String context) throws AuthException;
+   public User createUser(String username, String firstname, String lastname, String context) throws AuthException;
 
    public User updateUser(User user, String oldContext, String newContext) throws AuthException;
 

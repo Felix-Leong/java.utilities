@@ -37,10 +37,12 @@ public class LdapUserManager implements UserManager<LdapUser> {
    private LdapGroupManager groupManager;
 
    @Override
-   public LdapUser createUser(String username, String context) throws AuthException {
+   public LdapUser createUser(String username, String firstname, String lastname, String context) throws AuthException {
       try {
          Entry entry = new Entry(LdapUtil.getDN(username, context));
          entry.addAttribute(LdapUtil.ATTR_OBJECTCLASS, LdapUtil.OBJECTCLASS_USER);
+         entry.addAttribute(LdapUtil.ATTR_FIRST_NAME, firstname);
+         entry.addAttribute(LdapUtil.ATTR_LAST_NAME, lastname);
          AddRequest addRequest = new AddRequest(entry);
          LDAPConnection connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass(), context);
          LDAPResult ldapResult = connection.add(addRequest);
