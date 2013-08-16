@@ -47,18 +47,30 @@ public class LdapUtil {
 
    public static LDAPConnection getConnection(String userName, String password, String context) throws LDAPException {
       String user = getDN(userName, context);
-      LDAPConnectionPool pool;
+      LDAPConnection conn = null;
       if (poolMap.containsKey(user)) {
-         pool = poolMap.get(user);
-      } else {
-         LDAPConnection conn = new LDAPConnection(LdapConfig.getServer(), LdapConfig.getPort(), user, password);
-         pool = new LDAPConnectionPool(conn, 100);
-         pool.setMaxWaitTimeMillis(0);
+         LDAPConnectionPool pool = poolMap.get(user);
+         conn = pool.getConnection();
+         if (conn != null && !conn.isConnected()) {
+            log.info("Closing all LDAP connections in connection pool for user [" + user + "] b/c of invalid LDAP connection");
+            pool.close();
+            poolMap.remove(user);
+         }
+      }
+      if (conn == null) {
+         conn = new LDAPConnection(LdapConfig.getServer(), LdapConfig.getPort(), user, password);
+         LDAPConnectionPool pool = new LDAPConnectionPool(conn, 100);
+         //remove all LDAP connections after 15 mins
+         pool.setMaxConnectionAgeMillis(15 * 60 * 1000);
+         //check LDAP connection healt every 1 min
+         pool.setHealthCheckIntervalMillis(60 * 1000);
+         //create new connections immediately if pool is exhausted
          pool.setCreateIfNecessary(true);
+         pool.setMaxWaitTimeMillis(0);
          pool.setConnectionPoolName(user);
          poolMap.put(user, pool);
       }
-      return pool.getConnection();
+      return conn;
    }
 
    public static void release(LDAPConnection conn) {
