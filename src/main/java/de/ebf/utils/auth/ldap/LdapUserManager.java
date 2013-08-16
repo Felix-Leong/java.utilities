@@ -231,6 +231,17 @@ public class LdapUserManager implements UserManager<LdapUser> {
       }
    }
 
+   public List<LdapUser> getUsersByMail(String mail) throws LdapException {
+      try {
+         LDAPConnection connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass(), LdapConfig.getContext());
+         List<LdapUser> users = getUsersByAttribute(connection, LdapUtil.ATTR_MAIL, mail, LdapConfig.getContext());
+         LdapUtil.release(connection);
+         return users;
+      } catch (LDAPException ex) {
+         throw new LdapException(ex);
+      }
+   }
+
    private LdapUser getLdapUser(SearchResultEntry entry) throws LdapException {
       LdapUser user = new LdapUser();
       user.setName(entry.getAttributeValue(LdapUtil.ATTR_CN));
@@ -261,18 +272,33 @@ public class LdapUserManager implements UserManager<LdapUser> {
       return user;
    }
 
+   protected List<LdapUser> getUsersByAttribute(LDAPConnection connection, String attribute, String value, String context) throws LdapException {
+      return getUsersByFilter(connection, "(" + attribute + "=" + value + ")", context);
+   }
+
    protected LdapUser getUserByAttribute(LDAPConnection connection, String attribute, String value, String context) throws LdapException {
       return getUserByFilter(connection, "(" + attribute + "=" + value + ")", context);
    }
 
-   public LdapUser getUserByFilter(LDAPConnection connection, String filter, String context) throws LdapException {
+   public List<LdapUser> getUsersByFilter(LDAPConnection connection, String filter, String context) throws LdapException {
+      List<LdapUser> users = new ArrayList<>();
       try {
          SearchResult searchResults = connection.search(context, SearchScope.SUB, filter, LdapUtil.ATTR_ALL);
-         if (searchResults.getEntryCount() == 1) {
-            return getLdapUser(searchResults.getSearchEntries().get(0));
+         if (searchResults.getEntryCount() > 0) {
+            users.add(getLdapUser(searchResults.getSearchEntries().get(0)));
          }
       } catch (LDAPException e) {
          throw new LdapException(e);
+      }
+      return users;
+   }
+
+   public LdapUser getUserByFilter(LDAPConnection connection, String filter, String context) throws LdapException {
+      List<LdapUser> users = getUsersByFilter(connection, filter, context);
+      if (users.size() == 1) {
+         return users.get(0);
+      } else if (users.size() > 1) {
+         log.warn("Found multiple LDAP users for filter " + filter);
       }
       return null;
    }
