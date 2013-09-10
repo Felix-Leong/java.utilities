@@ -1,9 +1,9 @@
 package de.ebf.utils.dao;
 
+import de.ebf.utils.GenericsUtils;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
-
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -11,9 +11,6 @@ import org.hibernate.criterion.CriteriaSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
-
-import de.ebf.utils.GenericsUtils;
-import org.hibernate.criterion.Restrictions;
 
 @Repository
 @Transactional
@@ -50,8 +47,15 @@ public abstract class GenericDAO<T extends Serializable> extends GenericsUtils<T
       Session session = sessionFactory.getCurrentSession();
       session.delete(entity);
    }
-   
-   public void deleteById(Long id){
+
+   public void deleteById(Long id) {
       delete(findById(id));
+   }
+
+   public void delete(List<T> entities) {
+      Session session = sessionFactory.getCurrentSession();
+      for (T entity : entities) {
+         session.delete(entity);
+      }
    }
 }
