@@ -1,6 +1,7 @@
 package de.ebf.utils.auth.ldap;
 
 import de.ebf.utils.auth.AbstractUser;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -61,7 +62,7 @@ public class LdapUser extends AbstractUser implements Comparable<LdapUser> {
    }
 
    public List<LdapGroup> getGroups() {
-      return groups;
+      return (groups == null) ? new ArrayList<LdapGroup>() : groups;
    }
 
    public void setGroups(List<LdapGroup> groups) {
