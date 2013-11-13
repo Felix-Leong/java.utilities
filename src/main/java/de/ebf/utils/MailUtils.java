@@ -88,15 +88,21 @@ public class MailUtils {
       log.info("Sending message [" + subject + "] to " + recipients + " via " + SMTP_SERVER);
       try {
          MimeMessage message = new MimeMessage(session);
+
          InternetAddress sender = new InternetAddress(SMTP_SENDERMAIL, SMTP_SENDERNAME, "UTF-8");
          message.setFrom(sender);
 
          for (String recipient : recipients) {
             message.addRecipient(Message.RecipientType.TO, new InternetAddress(recipient));
          }
-         message.addRecipient(Message.RecipientType.BCC, new InternetAddress(SMTP_BCC_MAIL));
+
+         if (!StringUtils.isEmpty(SMTP_BCC_MAIL)){
+            message.addRecipient(Message.RecipientType.BCC, new InternetAddress(SMTP_BCC_MAIL));
+         }
+
          message.setSubject(subject);
-         if (!StringUtils.isEmpty(replyTo)) {
+
+          if (!StringUtils.isEmpty(replyTo)) {
             InternetAddress replyToAddress = new InternetAddress(replyTo);
             message.setReplyTo(new Address[]{replyToAddress});
          }
