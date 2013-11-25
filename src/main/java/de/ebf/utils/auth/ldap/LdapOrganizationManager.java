@@ -33,7 +33,7 @@ public class LdapOrganizationManager implements OrganizationManager {
       try {
          DN dn = getDN(name);
          Entry entry = new Entry(dn);
-         entry.addAttribute(LdapUtil.ATTR_OBJECTCLASS, LdapUtil.OBJECT_CLASS_ORGANIZATION);
+         entry.addAttribute(LdapUtil.ATTR_OBJECTCLASS, LdapUtil.OBJECT_CLASS_OU);
          AddRequest addRequest = new AddRequest(entry);
          LDAPConnection connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass(), LdapConfig.getContext());
          LDAPResult ldapResult = connection.add(addRequest);
@@ -104,6 +104,6 @@ public class LdapOrganizationManager implements OrganizationManager {
    }
 
    private DN getDN(String name) throws LDAPException {
-      return new DN("dc=" + name + "," + LdapConfig.getContext());
+      return new DN("ou=" + name + "," + LdapConfig.getContext());
    }
 }

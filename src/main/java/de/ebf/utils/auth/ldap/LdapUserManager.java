@@ -15,11 +15,13 @@ import com.unboundid.ldap.sdk.ResultCode;
 import com.unboundid.ldap.sdk.SearchResult;
 import com.unboundid.ldap.sdk.SearchResultEntry;
 import com.unboundid.ldap.sdk.SearchScope;
+import de.ebf.utils.Config;
 import de.ebf.utils.auth.AuthException;
 import de.ebf.utils.auth.UserManager;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -250,7 +252,14 @@ public class LdapUserManager implements UserManager<LdapUser> {
       user.setUid(entry.getAttributeValue(LdapUtil.ATTR_UID));
       user.setMail(entry.getAttributeValue(LdapUtil.ATTR_MAIL));
       user.setPhone(entry.getAttributeValue(LdapUtil.ATTR_TELEPHONE_NUMBER));
-      user.setUUID(entry.getAttributeValue(LdapUtil.ATTR_ENTRYUUID));
+      if (Config.instance.getString("ldap.type").equals("AD")){
+          //for some reason the objectGUID is stored in binary format in Active Directory
+          // Microsoft stores GUIDs in a binary format that differs from the RFC standard of UUIDs (RFC #4122).
+          UUID uuid = LdapUtil.bytesToUUID(entry.getAttributeValueBytes(LdapUtil.ATTR_ENTRYUUID));
+          user.setUUID(uuid.toString()); 
+      } else {
+        user.setUUID(entry.getAttributeValue(LdapUtil.ATTR_ENTRYUUID));
+      }
       user.setDN(entry.getDN());
       try {
          user.setContext(entry.getParentDNString());

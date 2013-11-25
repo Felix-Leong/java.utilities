@@ -20,12 +20,14 @@ import com.unboundid.ldap.sdk.ResultCode;
 import com.unboundid.ldap.sdk.SearchResult;
 import com.unboundid.ldap.sdk.SearchResultEntry;
 import com.unboundid.ldap.sdk.SearchScope;
+import de.ebf.utils.Config;
 import de.ebf.utils.auth.AuthException;
 import de.ebf.utils.auth.GroupManager;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.UUID;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -149,7 +151,7 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
 
    private LdapGroup getGroupByAttribute(LDAPConnection connection, String attribute, String value, String context) throws LdapException {
       try {
-         SearchResult searchResults = connection.search(context, SearchScope.SUB, "(" + attribute + "=" + value + ")", LdapUtil.ATTR_ALL);
+          SearchResult searchResults = connection.search(context, SearchScope.SUB, "(" + attribute + "=" + value + ")", LdapUtil.ATTR_ALL);
          if (searchResults.getEntryCount() == 1) {
             return getLdapGroup(connection, searchResults.getSearchEntries().get(0), context);
          } else {
@@ -165,7 +167,12 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
    private LdapGroup getLdapGroup(LDAPConnection connection, SearchResultEntry entry, String context) throws LdapException {
       LdapGroup group = new LdapGroup();
       group.setName(entry.getAttributeValue(LdapUtil.ATTR_CN));
-      group.setUUID(entry.getAttributeValue(LdapUtil.ATTR_ENTRYUUID));
+      if (Config.instance.getString("ldap.type").equals("AD")){
+          UUID uuid = LdapUtil.bytesToUUID(entry.getAttributeValueBytes(LdapUtil.ATTR_ENTRYUUID));
+          group.setUUID(uuid.toString());
+      } else {
+          group.setUUID(entry.getAttributeValue(LdapUtil.ATTR_ENTRYUUID));
+      }
       group.setDN(entry.getDN());
       try {
          group.setContext(entry.getParentDNString());
