@@ -42,125 +42,151 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
    LdapUserManager userManager;
    private static final Logger log = Logger.getLogger(LdapGroupManager.class);
 
-   @Override
-   public LdapGroup createGroup(String groupName, String context) throws LdapException {
-      try {
-         Entry entry = new Entry(LdapUtil.getDN(groupName, context));
-         entry.addAttribute(LdapUtil.ATTR_OBJECTCLASS, LdapUtil.OBJECTCLASS_GROUP);
-         entry.addAttribute(LdapUtil.ATTR_CN, groupName);
-         AddRequest addRequest = new AddRequest(entry);
-         LDAPConnection connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass(), context);
-         LDAPResult ldapResult = connection.add(addRequest);
-         if (ldapResult.getResultCode() == (ResultCode.SUCCESS)) {
-            LdapUtil.release(connection);
-            return getGroup(groupName, context);
-         } else {
-            LdapUtil.release(connection);
-            throw new LdapException("Adding group returned LDAP result code " + ldapResult.getResultCode());
-         }
-      } catch (LDAPException e) {
-         throw new LdapException(e);
-      }
-   }
-
-   @Override
-   public LdapGroup getGroup(String groupName, String context) throws LdapException {
-      try {
-         LDAPConnection connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass(), context);
-         LdapGroup group = getGroupByAttribute(connection, LdapUtil.ATTR_CN, groupName, context);
-         LdapUtil.release(connection);
-         return group;
-      } catch (LDAPException ex) {
-         throw new LdapException(ex);
-      }
-   }
-
-   public LdapGroup getGroupByUUID(String UUID, String context) throws LdapException {
-      try {
-         LDAPConnection connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass(), context);
-         LdapGroup group = getGroupByAttribute(connection, LdapUtil.ATTR_ENTRYUUID, UUID, context);
-         LdapUtil.release(connection);
-         return group;
-      } catch (LDAPException ex) {
-         throw new LdapException(ex);
-      }
-   }
-
-   @Override
-   public LdapGroup updateGroup(LdapGroup group, String oldContext, String newContext) throws LdapException {
-      try {
-         LDAPConnection connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass(), oldContext);
-         LdapGroup currentGroup = getGroupByAttribute(connection, LdapUtil.ATTR_ENTRYUUID, group.getUUID(), oldContext);
-
-         if (!StringUtils.isEmpty(group.getName())) {
-            if (!currentGroup.getName().equals(group.getName()) || !oldContext.equals(newContext)) {
-               ModifyDNRequest modifyDNRequest = new ModifyDNRequest(currentGroup.getDN(), "cn=" + group.getName(), true, newContext);
-               LDAPResult ldapResult = connection.modifyDN(modifyDNRequest);
-               if (ldapResult.getResultCode() != (ResultCode.SUCCESS)) {
-                  LdapUtil.release(connection);
-                  throw new LdapException("Renaming group returned LDAP result code " + ldapResult.getResultCode());
-               }
+    @Override
+    public LdapGroup createGroup(String groupName, String context) throws LdapException {
+        LDAPConnection connection = null;
+        try {
+            Entry entry = new Entry(LdapUtil.getDN(groupName, context));
+            entry.addAttribute(LdapUtil.ATTR_OBJECTCLASS, LdapUtil.OBJECTCLASS_GROUP);
+            entry.addAttribute(LdapUtil.ATTR_CN, groupName);
+            AddRequest addRequest = new AddRequest(entry);
+            connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass(), context);
+            LDAPResult ldapResult = connection.add(addRequest);
+            if (ldapResult.getResultCode() == (ResultCode.SUCCESS)) {
+                return getGroup(groupName, context);
+            } else {
+                throw new LdapException("Adding group returned LDAP result code " + ldapResult.getResultCode());
             }
-         }
-         group = getGroupByAttribute(connection, LdapUtil.ATTR_ENTRYUUID, group.getUUID(), newContext);
-         LdapUtil.release(connection);
-         return group;
-      } catch (LDAPException e) {
-         throw new LdapException(e);
-      }
-   }
-
-   @Override
-   public List<LdapGroup> getAllGroups(String context) throws LdapException {
-      try {
-         LDAPConnection connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass(), context);
-         Filter groupFilter = Filter.create("objectClass=" + LdapUtil.OBJECTCLASS_GROUP);
-         SearchResult searchResults = connection.search(context, SearchScope.SUB, groupFilter, LdapUtil.ATTR_ALL);
-         if (searchResults.getEntryCount() > 0) {
-            List<LdapGroup> groups = new ArrayList<>();
-            for (SearchResultEntry entry : searchResults.getSearchEntries()) {
-               groups.add(getLdapGroup(connection, entry, context));
+        } catch (LDAPException e) {
+            throw new LdapException(e);
+        } finally {
+            if (connection != null) {
+                LdapUtil.release(connection);
             }
-            LdapUtil.release(connection);
-            Collections.sort(groups);
-            return groups;
-         } else {
-            LdapUtil.release(connection);
-            return new ArrayList<>();
-         }
-      } catch (LDAPException e) {
-         throw new LdapException(e);
-      }
-   }
+        }
+    }
 
-   @Override
-   public Boolean deleteGroup(String UUID, String context) throws LdapException {
-      try {
-         LDAPConnection connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass(), context);
-         LdapGroup group = getGroupByAttribute(connection, LdapUtil.ATTR_ENTRYUUID, UUID, context);
-         DeleteRequest deleteRequest = new DeleteRequest(group.getDN());
-         LDAPResult ldapResult = connection.delete(deleteRequest);
-         LdapUtil.release(connection);
-         return (ldapResult.getResultCode() == ResultCode.SUCCESS);
-      } catch (LDAPException e) {
-         throw new LdapException(e);
-      }
-   }
+    @Override
+    public LdapGroup getGroup(String groupName, String context) throws LdapException {
+        LDAPConnection connection = null;
+        try {
+            connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass(), context);
+            LdapGroup group = getGroupByAttribute(connection, LdapUtil.ATTR_CN, groupName, context);
+            return group;
+        } catch (LDAPException ex) {
+            throw new LdapException(ex);
+        } finally {
+            if (connection != null) {
+                LdapUtil.release(connection);
+            }
+        }
+    }
 
-   private LdapGroup getGroupByAttribute(LDAPConnection connection, String attribute, String value, String context) throws LdapException {
-      try {
-         SearchResult searchResults = connection.search(context, SearchScope.SUB, "(" + attribute + "=" + value + ")", LdapUtil.ATTR_ALL);
-         if (searchResults.getEntryCount() == 1) {
-            return getLdapGroup(connection, searchResults.getSearchEntries().get(0), context);
-         } else {
-            LdapUtil.release(connection);
-            log.warn("Unexpected number of LDAP search results: " + searchResults.getEntryCount());
-            return null;
-         }
-      } catch (LDAPException e) {
-         throw new LdapException(e);
-      }
-   }
+    public LdapGroup getGroupByUUID(String UUID, String context) throws LdapException {
+        LDAPConnection connection = null;
+        try {
+            connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass(), context);
+            LdapGroup group = getGroupByAttribute(connection, LdapUtil.ATTR_ENTRYUUID, UUID, context);
+            return group;
+        } catch (LDAPException ex) {
+            throw new LdapException(ex);
+        } finally {
+            if (connection != null) {
+                LdapUtil.release(connection);
+            }
+        }
+    }
+
+    @Override
+    public LdapGroup updateGroup(LdapGroup group, String oldContext, String newContext) throws LdapException {
+        LDAPConnection connection = null;
+        try {
+            connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass(), oldContext);
+            LdapGroup currentGroup = getGroupByAttribute(connection, LdapUtil.ATTR_ENTRYUUID, group.getUUID(), oldContext);
+
+            if (!StringUtils.isEmpty(group.getName())) {
+                if (!currentGroup.getName().equals(group.getName()) || !oldContext.equals(newContext)) {
+                    ModifyDNRequest modifyDNRequest = new ModifyDNRequest(currentGroup.getDN(), "cn=" + group.getName(), true, newContext);
+                    LDAPResult ldapResult = connection.modifyDN(modifyDNRequest);
+                    if (ldapResult.getResultCode() != (ResultCode.SUCCESS)) {
+                        throw new LdapException("Renaming group returned LDAP result code " + ldapResult.getResultCode());
+                    }
+                }
+            }
+            group = getGroupByAttribute(connection, LdapUtil.ATTR_ENTRYUUID, group.getUUID(), newContext);
+            return group;
+        } catch (LDAPException e) {
+            throw new LdapException(e);
+        } finally {
+            if (connection != null) {
+                LdapUtil.release(connection);
+            }
+        }
+    }
+
+    @Override
+    public List<LdapGroup> getAllGroups(String context) throws LdapException {
+        LDAPConnection connection = null;
+        try {
+            connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass(), context);
+            Filter groupFilter = Filter.create("objectClass=" + LdapUtil.OBJECTCLASS_GROUP);
+            SearchResult searchResults = connection.search(context, SearchScope.SUB, groupFilter, LdapUtil.ATTR_ALL);
+            if (searchResults.getEntryCount() > 0) {
+                List<LdapGroup> groups = new ArrayList<>();
+                for (SearchResultEntry entry : searchResults.getSearchEntries()) {
+                    groups.add(getLdapGroup(connection, entry, context));
+                }
+                Collections.sort(groups);
+                return groups;
+            } else {
+                return new ArrayList<>();
+            }
+        } catch (LDAPException e) {
+            throw new LdapException(e);
+        } finally {
+            if (connection != null) {
+                LdapUtil.release(connection);
+            }
+        }
+    }
+
+    @Override
+    public Boolean deleteGroup(String UUID, String context) throws LdapException {
+        LDAPConnection connection = null;
+        try {
+            connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass(), context);
+            LdapGroup group = getGroupByAttribute(connection, LdapUtil.ATTR_ENTRYUUID, UUID, context);
+            DeleteRequest deleteRequest = new DeleteRequest(group.getDN());
+            LDAPResult ldapResult = connection.delete(deleteRequest);
+            return (ldapResult.getResultCode() == ResultCode.SUCCESS);
+        } catch (LDAPException e) {
+            throw new LdapException(e);
+        } finally {
+            if (connection != null) {
+                LdapUtil.release(connection);
+            }
+        }
+    }
+
+    private LdapGroup getGroupByAttribute(LDAPConnection connection, String attribute, String value, String context) throws LdapException {
+        boolean bReleaseLDAPConnection = true;
+        try {
+            SearchResult searchResults = connection.search(context, SearchScope.SUB, "(" + attribute + "=" + value + ")", LdapUtil.ATTR_ALL);
+            if (searchResults.getEntryCount() == 1) {
+                bReleaseLDAPConnection = false;
+                return getLdapGroup(connection, searchResults.getSearchEntries().get(0), context);
+            } else {
+                log.warn("Unexpected number of LDAP search results: " + searchResults.getEntryCount());
+                return null;
+            }
+        } catch (LDAPException e) {
+            throw new LdapException(e);
+        } finally {
+            if (bReleaseLDAPConnection) {
+                LdapUtil.release(connection);
+            }
+        }
+    }
 
    private LdapGroup getLdapGroup(LDAPConnection connection, SearchResultEntry entry, String context) throws LdapException {
       LdapGroup group = new LdapGroup();
@@ -188,39 +214,47 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
       return group;
    }
 
-   @Override
-   public LdapGroup removeUserFromGroup(LdapUser user, LdapGroup group, String context) throws AuthException {
-      try {
-         LDAPConnection connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass(), context);
-         Modification modification = new Modification(ModificationType.DELETE, LdapUtil.ATTR_MEMBERS, user.getDN());
-         ModifyRequest modifyRequest = new ModifyRequest(group.getDN(), modification);
-         LDAPResult ldapResult = connection.modify(modifyRequest);
-         LdapUtil.release(connection);
-         if (ldapResult.getResultCode() != (ResultCode.SUCCESS)) {
-            throw new LdapException("Removing user from group returned LDAP result code " + ldapResult.getResultCode());
-         }
-         return getGroup(group.getName(), context);
-      } catch (LDAPException e) {
-         throw new LdapException(e);
-      }
-   }
+    @Override
+    public LdapGroup removeUserFromGroup(LdapUser user, LdapGroup group, String context) throws AuthException {
+        LDAPConnection connection = null;
+        try {
+            connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass(), context);
+            Modification modification = new Modification(ModificationType.DELETE, LdapUtil.ATTR_MEMBERS, user.getDN());
+            ModifyRequest modifyRequest = new ModifyRequest(group.getDN(), modification);
+            LDAPResult ldapResult = connection.modify(modifyRequest);
+            if (ldapResult.getResultCode() != (ResultCode.SUCCESS)) {
+                throw new LdapException("Removing user from group returned LDAP result code " + ldapResult.getResultCode());
+            }
+            return getGroup(group.getName(), context);
+        } catch (LDAPException e) {
+            throw new LdapException(e);
+        } finally {
+            if (connection != null) {
+                LdapUtil.release(connection);
+            }
+        }
+    }
 
-   @Override
-   public LdapGroup addUserToGroup(LdapUser user, LdapGroup group, String context) throws AuthException {
-      try {
-         LDAPConnection connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass(), context);
-         Modification modification = new Modification(ModificationType.ADD, LdapUtil.ATTR_MEMBERS, user.getDN());
-         ModifyRequest modifyRequest = new ModifyRequest(group.getDN(), modification);
-         LDAPResult ldapResult = connection.modify(modifyRequest);
-         LdapUtil.release(connection);
-         if (ldapResult.getResultCode() != (ResultCode.SUCCESS)) {
-            throw new LdapException("Adding user to group returned LDAP result code " + ldapResult.getResultCode());
-         }
-         return getGroup(group.getName(), context);
-      } catch (LDAPException e) {
-         throw new LdapException(e);
-      }
-   }
+    @Override
+    public LdapGroup addUserToGroup(LdapUser user, LdapGroup group, String context) throws AuthException {
+        LDAPConnection connection = null;
+        try {
+            connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass(), context);
+            Modification modification = new Modification(ModificationType.ADD, LdapUtil.ATTR_MEMBERS, user.getDN());
+            ModifyRequest modifyRequest = new ModifyRequest(group.getDN(), modification);
+            LDAPResult ldapResult = connection.modify(modifyRequest);
+            if (ldapResult.getResultCode() != (ResultCode.SUCCESS)) {
+                throw new LdapException("Adding user to group returned LDAP result code " + ldapResult.getResultCode());
+            }
+            return getGroup(group.getName(), context);
+        } catch (LDAPException e) {
+            throw new LdapException(e);
+        } finally {
+            if (connection != null) {
+                LdapUtil.release(connection);
+            }
+        }
+    }
 
    public List<LdapGroup> getGroupsForUser(LdapUser user, String context) throws LdapException {
       List<LdapGroup> groups = getAllGroups(context);
