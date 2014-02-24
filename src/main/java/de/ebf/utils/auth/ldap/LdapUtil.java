@@ -46,7 +46,7 @@ public class LdapUtil {
    static {
        PropertiesConfiguration config = Config.instance;
        switch (config.getString("ldap.type")){
-           case "AD":
+           case "ActiveDirectory":
                 OBJECTCLASS_USER    = "user";
                 OBJECTCLASS_GROUP   = "group";
                 ATTR_ENTRYUUID      = "objectGUID";
