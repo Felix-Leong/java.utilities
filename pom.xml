@@ -4,7 +4,7 @@
 	<groupId>de.ebf</groupId>
 	<artifactId>java.utilities</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>EBF Java utilities Maven repository</name>
+	<name>java.utilities</name>
 	<description>contains utility libraries</description>
    <packaging>jar</packaging>
 
