@@ -34,7 +34,7 @@ public class LdapOrganizationManager implements OrganizationManager {
         try {
             DN dn = getDN(name);
             Entry entry = new Entry(dn);
-            entry.addAttribute(LdapUtil.ATTR_OBJECTCLASS, LdapUtil.OBJECT_CLASS_ORGANIZATION);
+            entry.addAttribute(LdapUtil.ATTR_OBJECTCLASS, LdapUtil.OBJECT_CLASS_OU);
             AddRequest addRequest = new AddRequest(entry);
             connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass(), LdapConfig.getContext());
             LDAPResult ldapResult = connection.add(addRequest);
@@ -99,7 +99,7 @@ public class LdapOrganizationManager implements OrganizationManager {
       try {
          connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass(), LdapConfig.getContext());
          List<LdapOrganization> OUs = new ArrayList<>();
-         SearchResult searchResults = connection.search(LdapConfig.getContext(), SearchScope.ONE, (LdapUtil.ATTR_OBJECTCLASS + "=" + LdapUtil.OBJECT_CLASS_ORGANIZATION), LdapUtil.ATTR_DN);
+         SearchResult searchResults = connection.search(LdapConfig.getContext(), SearchScope.ONE, (LdapUtil.ATTR_OBJECTCLASS + "=" + LdapUtil.OBJECT_CLASS_OU), LdapUtil.ATTR_DN);
          for (SearchResultEntry entry : searchResults.getSearchEntries()) {
             LdapOrganization OU = new LdapOrganization();
             OU.setDN(entry.getDN());

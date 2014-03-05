@@ -9,6 +9,16 @@ public class LdapConfig {
    private static String context = Config.instance.getString("ldap.context");
    private static String user = Config.instance.getString("ldap.user");
    private static String pass = Config.instance.getString("ldap.pass");
+   private static LdapType type;
+   
+   static {
+       String ldapType = Config.instance.getString("ldap.type");
+       if (ldapType == null){
+           throw new RuntimeException("missing required config entry ldap.type");
+       }
+       type = LdapType.valueOf(ldapType);
+   }
+    
 
    public static String getServer() {
       return server;
@@ -49,4 +59,12 @@ public class LdapConfig {
    public static void setPort(Integer aPort) {
       port = aPort;
    }
+
+    public static LdapType getType() {
+        return type;
+    }
+
+    public static void setType(LdapType type) {
+        LdapConfig.type = type;
+    }
 }
