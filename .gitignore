@@ -4,3 +4,5 @@ nb-configuration.xml
 
 .idea/
 *.iml
+
+nb_jr_remoting.cfg
