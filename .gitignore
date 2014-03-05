@@ -6,3 +6,7 @@ nb-configuration.xml
 *.iml
 
 nb_jr_remoting.cfg
+
+src/main/resources/rebel.xml
+
+src/main/resources/rebel-remote.xml
