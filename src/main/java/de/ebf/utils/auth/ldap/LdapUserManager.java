@@ -16,13 +16,11 @@ import com.unboundid.ldap.sdk.ResultCode;
 import com.unboundid.ldap.sdk.SearchResult;
 import com.unboundid.ldap.sdk.SearchResultEntry;
 import com.unboundid.ldap.sdk.SearchScope;
-import de.ebf.utils.Config;
 import de.ebf.utils.auth.AuthException;
 import de.ebf.utils.auth.UserManager;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.logging.Level;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,18 +68,17 @@ public class LdapUserManager implements UserManager<LdapUser> {
         try {
             connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass(), oldContext);
             List<Modification> mods = new ArrayList<>();
-            LdapUser currentUser = getUserByUUID(user.getUUID(), oldContext);
-
+            
             String newDN = LdapUtil.getDN(user.getName(), newContext);
             if (!StringUtils.isEmpty(user.getName())) {
-                if (!currentUser.getName().equals(user.getName()) || !oldContext.equals(newContext)) {
+                if (!oldContext.equals(newContext)) {
 
                     //get all groups for current user before renaming user. Otherwise group.getMembers() will already contain renamed users
-                    List<LdapGroup> allGroups = groupManager.getGroupsForUser(user, currentUser.getContext());
+                    List<LdapGroup> allGroups = groupManager.getGroupsForUser(user, oldContext);
 
-                    ModifyDNRequest modifyDNRequest = new ModifyDNRequest(currentUser.getDN(), "cn=" + user.getName(), true, newContext);
+                    ModifyDNRequest modifyDNRequest = new ModifyDNRequest(user.getDN(), "cn=" + user.getName(), true, newContext);
                     LDAPResult ldapResult = connection.modifyDN(modifyDNRequest);
-                    if (ldapResult.getResultCode() != (ResultCode.SUCCESS)) {
+                    if (ldapResult.getResultCode() != ResultCode.SUCCESS) {
                         throw new LdapException("Renaming user returned LDAP result code " + ldapResult.getResultCode());
                     }
 
@@ -89,7 +86,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
                     if (LdapConfig.getType().equals(LdapType.OpenDS)){
                         //also update all dn membership values, since OpenDS doesn't take care of this
                         for (LdapGroup ldapGroup : allGroups) {
-                            Modification deleteOldUserDN = new Modification(ModificationType.DELETE, LdapUtil.ATTR_MEMBERS, currentUser.getDN());
+                            Modification deleteOldUserDN = new Modification(ModificationType.DELETE, LdapUtil.ATTR_MEMBERS, user.getDN());
                             Modification addNewUserDN = new Modification(ModificationType.ADD, LdapUtil.ATTR_MEMBERS, newDN);
                             List<Modification> groupMods = new ArrayList<>();
                             groupMods.add(deleteOldUserDN);
@@ -116,7 +113,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
             }
 
             if (!StringUtils.isEmpty(user.getPassword())) {
-                resetPassword(currentUser.getName(), user.getPassword(), newContext);
+                resetPassword(user.getName(), user.getPassword(), newContext);
             }
             if (mods.size() > 0) {
                 ModifyRequest modifyRequest = new ModifyRequest(newDN, mods);
@@ -345,8 +342,9 @@ public class LdapUserManager implements UserManager<LdapUser> {
                     }
                 }
                 Collections.sort(users);
-            } else {
-                log.warn("Could not find any ldap users");
+            } 
+            if (users.isEmpty()){
+                log.warn("Could not find any ldap users for filter [attrName="+filter.getAttributeName()+", value="+filter.getAssertionValue()+", context="+context+"]");
             }
         } catch (LDAPSearchException e) {
             throw new LdapException(e);
