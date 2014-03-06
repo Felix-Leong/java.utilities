@@ -144,11 +144,9 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
             if (searchResults.getEntryCount() > 0) {
                 for (SearchResultEntry entry : searchResults.getSearchEntries()) {
                     String dn = entry.getAttributeValue(LdapUtil.ATTR_DN);
-                    // do not add object from the Builtin container (Active Directory) or the LDAP agent account
+                    // do not add object from the Builtin container (Active Directory) 
                     if (!dn.contains("CN=Builtin")){
-                        if (!dn.equalsIgnoreCase(LdapConfig.getUser())){
-                            groups.add(getLdapGroup(connection, entry, context));
-                        }
+                        groups.add(getLdapGroup(connection, entry, context));
                     }
                 }
                 Collections.sort(groups);
