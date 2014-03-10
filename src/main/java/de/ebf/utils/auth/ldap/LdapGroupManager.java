@@ -51,7 +51,7 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
             entry.addAttribute(LdapUtil.ATTR_OBJECTCLASS, LdapUtil.OBJECTCLASS_GROUP);
             entry.addAttribute(LdapUtil.ATTR_CN, groupName);
             AddRequest addRequest = new AddRequest(entry);
-            connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass(), context);
+            connection = LdapUtil.getConnection(LdapDefaultConfig.getUser(), LdapDefaultConfig.getPass(), context);
             LDAPResult ldapResult = connection.add(addRequest);
             if (ldapResult.getResultCode() == (ResultCode.SUCCESS)) {
                 return getGroup(groupName, context);
@@ -71,7 +71,7 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
     public LdapGroup getGroup(String groupName, String context) throws LdapException {
         LDAPConnection connection = null;
         try {
-            connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass(), context);
+            connection = LdapUtil.getConnection(LdapDefaultConfig.getUser(), LdapDefaultConfig.getPass(), context);
             Filter filter = Filter.createEqualityFilter(LdapUtil.ATTR_CN, groupName);
             LdapGroup group = getGroupByFilter(connection, filter, context);
             return group;
@@ -88,13 +88,13 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
         LDAPConnection connection = null;
         try {
             Filter filter;
-            if (LdapConfig.getType().equals(LdapType.ActiveDirectory)) {
+            if (LdapDefaultConfig.getType().equals(LdapType.ActiveDirectory)) {
                 byte[] objectGUIDByte = LdapUtil.UUIDStringToByteArray(UUID);
                 filter = Filter.createEqualityFilter(LdapUtil.ATTR_ENTRYUUID, objectGUIDByte);
             } else {
                 filter = Filter.createEqualityFilter(LdapUtil.ATTR_ENTRYUUID, UUID);
             }
-            connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass(), context);
+            connection = LdapUtil.getConnection(LdapDefaultConfig.getUser(), LdapDefaultConfig.getPass(), context);
             LdapGroup group = getGroupByFilter(connection, filter, context);
             return group;
         } catch (LDAPException ex) {
@@ -110,7 +110,7 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
     public LdapGroup updateGroup(LdapGroup group, String oldContext, String newContext) throws LdapException {
         LDAPConnection connection = null;
         try {
-            connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass(), oldContext);
+            connection = LdapUtil.getConnection(LdapDefaultConfig.getUser(), LdapDefaultConfig.getPass(), oldContext);
             LdapGroup currentGroup = getGroupByUUID(group.getUUID(), oldContext);
 
             if (!StringUtils.isEmpty(group.getName())) {
@@ -138,7 +138,7 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
         List<LdapGroup> groups = new ArrayList<>();
         LDAPConnection connection = null;
         try {
-            connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass(), context);
+            connection = LdapUtil.getConnection(LdapDefaultConfig.getUser(), LdapDefaultConfig.getPass(), context);
             Filter groupFilter = Filter.createEqualityFilter(LdapUtil.ATTR_OBJECTCLASS, LdapUtil.OBJECTCLASS_GROUP);
             SearchResult searchResults = connection.search(context, SearchScope.SUB, groupFilter, LdapUtil.ATTR_ALL);
             if (searchResults.getEntryCount() > 0) {
@@ -165,7 +165,7 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
     public Boolean deleteGroup(String UUID, String context) throws LdapException {
         LDAPConnection connection = null;
         try {
-            connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass(), context);
+            connection = LdapUtil.getConnection(LdapDefaultConfig.getUser(), LdapDefaultConfig.getPass(), context);
             LdapGroup group = getGroupByUUID(UUID, context);
             DeleteRequest deleteRequest = new DeleteRequest(group.getDN());
             LDAPResult ldapResult = connection.delete(deleteRequest);
@@ -215,7 +215,7 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
     private LdapGroup getLdapGroup(LDAPConnection connection, SearchResultEntry entry, String context) throws LdapException {
         LdapGroup group = new LdapGroup();
         group.setName(entry.getAttributeValue(LdapUtil.ATTR_CN));
-        if (LdapConfig.getType().equals(LdapType.ActiveDirectory)) {
+        if (LdapDefaultConfig.getType().equals(LdapType.ActiveDirectory)) {
             String uuid = LdapUtil.bytesToUUID(entry.getAttributeValueBytes(LdapUtil.ATTR_ENTRYUUID));
             group.setUUID(uuid);
         } else {
@@ -266,7 +266,7 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
     public LdapGroup removeUserFromGroup(LdapUser user, LdapGroup group, String context) throws AuthException {
         LDAPConnection connection = null;
         try {
-            connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass(), context);
+            connection = LdapUtil.getConnection(LdapDefaultConfig.getUser(), LdapDefaultConfig.getPass(), context);
             Modification modification = new Modification(ModificationType.DELETE, LdapUtil.ATTR_MEMBERS, user.getDN());
             ModifyRequest modifyRequest = new ModifyRequest(group.getDN(), modification);
             LDAPResult ldapResult = connection.modify(modifyRequest);
@@ -287,7 +287,7 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
     public LdapGroup addUserToGroup(LdapUser user, LdapGroup group, String context) throws AuthException {
         LDAPConnection connection = null;
         try {
-            connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass(), context);
+            connection = LdapUtil.getConnection(LdapDefaultConfig.getUser(), LdapDefaultConfig.getPass(), context);
             Modification modification = new Modification(ModificationType.ADD, LdapUtil.ATTR_MEMBERS, user.getDN());
             ModifyRequest modifyRequest = new ModifyRequest(group.getDN(), modification);
             LDAPResult ldapResult = connection.modify(modifyRequest);

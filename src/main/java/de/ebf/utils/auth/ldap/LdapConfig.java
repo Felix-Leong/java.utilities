@@ -1,70 +1,69 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
 package de.ebf.utils.auth.ldap;
 
-import de.ebf.utils.Config;
-
+/**
+ *
+ * @author dominik
+ */
 public class LdapConfig {
-
-   private static String server = Config.instance.getString("ldap.host");
-   private static Integer port = Integer.parseInt(Config.instance.getString("ldap.port"));
-   private static String context = Config.instance.getString("ldap.context");
-   private static String user = Config.instance.getString("ldap.user");
-   private static String pass = Config.instance.getString("ldap.pass");
-   private static LdapType type;
-   
-   static {
-       String ldapType = Config.instance.getString("ldap.type");
-       if (ldapType == null){
-           throw new RuntimeException("missing required config entry ldap.type");
-       }
-       type = LdapType.valueOf(ldapType);
-   }
     
+    private LdapType Type;
+    private String server;
+    private Integer port;
+    private String username;
+    private String password;
+    private String baseDN;
 
-   public static String getServer() {
-      return server;
-   }
-
-   public static void setServer(String server) {
-      LdapConfig.server = server;
-   }
-
-   public static String getContext() {
-      return context;
-   }
-
-   public static void setContext(String context) {
-      LdapConfig.context = context;
-   }
-
-   public static String getUser() {
-      return user;
-   }
-
-   public static void setUser(String user) {
-      LdapConfig.user = user;
-   }
-
-   public static String getPass() {
-      return pass;
-   }
-
-   public static void setPass(String pass) {
-      LdapConfig.pass = pass;
-   }
-
-   public static Integer getPort() {
-      return port;
-   }
-
-   public static void setPort(Integer aPort) {
-      port = aPort;
-   }
-
-    public static LdapType getType() {
-        return type;
+    public LdapType getType() {
+        return Type;
     }
 
-    public static void setType(LdapType type) {
-        LdapConfig.type = type;
+    public void setType(LdapType Type) {
+        this.Type = Type;
     }
+
+    public String getServer() {
+        return server;
+    }
+
+    public void setServer(String server) {
+        this.server = server;
+    }
+
+    public Integer getPort() {
+        return port;
+    }
+
+    public void setPort(Integer port) {
+        this.port = port;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getBaseDN() {
+        return baseDN;
+    }
+
+    public void setBaseDN(String baseDN) {
+        this.baseDN = baseDN;
+    }   
 }

@@ -13,7 +13,6 @@ import de.ebf.utils.Config;
 import java.security.GeneralSecurityException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
 import javax.net.ssl.SSLSocketFactory;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang.StringUtils;
@@ -66,6 +65,26 @@ public class LdapUtil {
         }
         return name;
     }
+    
+    public static LDAPConnection getConnection(LdapConfig config) throws LDAPException{
+        LDAPConnection conn = null;
+        if (config.getType().equals(LdapType.ActiveDirectory)){
+               try {
+                   SSLUtil sslUtil = new SSLUtil(new TrustAllTrustManager());
+                   SSLSocketFactory sslSocketFactory = sslUtil.createSSLSocketFactory();
+                   // Establish a secure connection using the socket factory.
+                   conn = new LDAPConnection(sslSocketFactory);
+                   conn.connect(config.getServer(), config.getPort());
+
+                   conn.bind(config.getUsername(), config.getPassword());
+               } catch (GeneralSecurityException ex) {
+                   log.fatal(ex);
+               }  
+           } else {
+               conn = new LDAPConnection(config.getServer(), config.getPort(), config.getUsername(), config.getPassword());
+           }
+        return conn;
+    }
 
     public static LDAPConnection getConnection(String userName, String password, String context) throws LDAPException {
         String user = getDN(userName, context);
@@ -80,20 +99,20 @@ public class LdapUtil {
             }
         }
         if (conn == null) {
-            if (LdapConfig.getType().equals(LdapType.ActiveDirectory)){
+            if (LdapDefaultConfig.getType().equals(LdapType.ActiveDirectory)){
                 try {
                     SSLUtil sslUtil = new SSLUtil(new TrustAllTrustManager());
                     SSLSocketFactory sslSocketFactory = sslUtil.createSSLSocketFactory();
                     // Establish a secure connection using the socket factory.
                     conn = new LDAPConnection(sslSocketFactory);
-                    conn.connect(LdapConfig.getServer(), LdapConfig.getPort());
+                    conn.connect(LdapDefaultConfig.getServer(), LdapDefaultConfig.getPort());
 
                     conn.bind(user, password);
                 } catch (GeneralSecurityException ex) {
                     log.fatal(ex);
                 }  
             } else {
-                conn = new LDAPConnection(LdapConfig.getServer(), LdapConfig.getPort(), user, password);
+                conn = new LDAPConnection(LdapDefaultConfig.getServer(), LdapDefaultConfig.getPort(), user, password);
             }
             //LDAPConnectionOptions connOptions = new LDAPConnectionOptions();
             //connOptions.setUseSchema(true);

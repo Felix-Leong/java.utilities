@@ -46,7 +46,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
             entry.addAttribute(LdapUtil.ATTR_FIRST_NAME, firstname);
             entry.addAttribute(LdapUtil.ATTR_LAST_NAME, lastname);
             AddRequest addRequest = new AddRequest(entry);
-            connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass(), context);
+            connection = LdapUtil.getConnection(LdapDefaultConfig.getUser(), LdapDefaultConfig.getPass(), context);
             LDAPResult ldapResult = connection.add(addRequest);
             if (ldapResult.getResultCode() == (ResultCode.SUCCESS)) {
                 return getUser(username, context);
@@ -66,7 +66,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
     public LdapUser updateUser(LdapUser user, String oldContext, String newContext) throws AuthException {
         LDAPConnection connection = null;
         try {
-            connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass(), oldContext);
+            connection = LdapUtil.getConnection(LdapDefaultConfig.getUser(), LdapDefaultConfig.getPass(), oldContext);
             List<Modification> mods = new ArrayList<>();
             
             String newDN = LdapUtil.getDN(user.getName(), newContext);
@@ -83,7 +83,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
                     }
 
                     //List<LdapGroup> allGroups = groupManager.getAllGroups(oldContext);
-                    if (LdapConfig.getType().equals(LdapType.OpenDS)){
+                    if (LdapDefaultConfig.getType().equals(LdapType.OpenDS)){
                         //also update all dn membership values, since OpenDS doesn't take care of this
                         for (LdapGroup ldapGroup : allGroups) {
                             Modification deleteOldUserDN = new Modification(ModificationType.DELETE, LdapUtil.ATTR_MEMBERS, user.getDN());
@@ -138,7 +138,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
         //do not use connection pool for auth request
         LdapUser user = null;
         try {
-            LDAPConnection conn = new LDAPConnection(LdapConfig.getServer(), LdapConfig.getPort(), LdapUtil.getDN(userName, context), password);
+            LDAPConnection conn = new LDAPConnection(LdapDefaultConfig.getServer(), LdapDefaultConfig.getPort(), LdapUtil.getDN(userName, context), password);
             user = getUserByAttribute(conn, LdapUtil.ATTR_CN, userName, context);
             conn.close();
         } catch (LDAPException e) {
@@ -149,7 +149,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
 
     @Override
     public LdapUser getUser(String userName, String context) throws LdapException {
-        return getUser(userName, LdapConfig.getUser(), LdapConfig.getPass(), context);
+        return getUser(userName, LdapDefaultConfig.getUser(), LdapDefaultConfig.getPass(), context);
     }
 
     public LdapUser getUser(String userName, String bindName, String bindPass, String context) throws LdapException {
@@ -159,7 +159,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
             if (!StringUtils.isEmpty(bindName) && !StringUtils.isEmpty(bindPass)) {
                 connection = LdapUtil.getConnection(bindName, bindPass, context);
             } else {
-                connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass(), context);
+                connection = LdapUtil.getConnection(LdapDefaultConfig.getUser(), LdapDefaultConfig.getPass(), context);
             }
             LdapUser user = getUserByAttribute(connection, LdapUtil.ATTR_CN, userName, context);
             return user;
@@ -177,7 +177,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
         List<LdapUser> users = new ArrayList<>();
         LDAPConnection connection = null;
         try {
-            connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass(), context);
+            connection = LdapUtil.getConnection(LdapDefaultConfig.getUser(), LdapDefaultConfig.getPass(), context);
             Filter userFilter = Filter.createEqualityFilter(LdapUtil.ATTR_OBJECTCLASS, LdapUtil.OBJECTCLASS_USER);
             users.addAll(getUsersByFilter(connection, userFilter, context));
         } catch (LDAPException e) {
@@ -194,7 +194,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
     public LdapUser resetPassword(String username, String newPassword, String context) throws LdapException {
         LDAPConnection connection = null;
         try {
-            connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass(), context);
+            connection = LdapUtil.getConnection(LdapDefaultConfig.getUser(), LdapDefaultConfig.getPass(), context);
             // http://msdn.microsoft.com/en-us/library/cc223248.aspx
             Modification modification = new Modification(ModificationType.REPLACE, LdapUtil.ATTR_USER_PW, newPassword);
             LDAPResult ldapResult = connection.modify(LdapUtil.getDN(username, context), modification);
@@ -217,7 +217,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
     public boolean deleteUser(String UUID, String context) throws LdapException, AuthException {
         LDAPConnection connection = null;
         try {
-            connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass(), context);
+            connection = LdapUtil.getConnection(LdapDefaultConfig.getUser(), LdapDefaultConfig.getPass(), context);
             LdapUser user = getUserByUUID(UUID, context);
             List<LdapGroup> groups = groupManager.getGroupsForUser(user, context);
             if (groups != null) {
@@ -242,12 +242,12 @@ public class LdapUserManager implements UserManager<LdapUser> {
         LDAPConnection connection = null;
         try {
             Filter filter;
-            if (LdapConfig.getType().equals(LdapType.ActiveDirectory)) {
+            if (LdapDefaultConfig.getType().equals(LdapType.ActiveDirectory)) {
                 filter = Filter.createEqualityFilter(LdapUtil.ATTR_ENTRYUUID, LdapUtil.UUIDStringToByteArray(UUID));
             } else {
                 filter = Filter.createEqualityFilter(LdapUtil.ATTR_ENTRYUUID, UUID);
             }
-            connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass(), context);
+            connection = LdapUtil.getConnection(LdapDefaultConfig.getUser(), LdapDefaultConfig.getPass(), context);
             LdapUser user = getUserByFilter(connection, filter, context);
             return user;
         } catch (LDAPException ex) {
@@ -262,9 +262,9 @@ public class LdapUserManager implements UserManager<LdapUser> {
     public List<LdapUser> getUsersByMail(String mail) throws LdapException {
         LDAPConnection connection = null;
         try {
-            connection = LdapUtil.getConnection(LdapConfig.getUser(), LdapConfig.getPass(), LdapConfig.getContext());
+            connection = LdapUtil.getConnection(LdapDefaultConfig.getUser(), LdapDefaultConfig.getPass(), LdapDefaultConfig.getContext());
             Filter filter = Filter.createEqualityFilter(LdapUtil.ATTR_MAIL, mail);
-            List<LdapUser> users = getUsersByFilter(connection, filter, LdapConfig.getContext());
+            List<LdapUser> users = getUsersByFilter(connection, filter, LdapDefaultConfig.getContext());
             return users;
         } catch (LDAPException ex) {
             throw new LdapException(ex);
@@ -283,7 +283,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
         user.setUid(entry.getAttributeValue(LdapUtil.ATTR_UID));
         user.setMail(entry.getAttributeValue(LdapUtil.ATTR_MAIL));
         user.setPhone(entry.getAttributeValue(LdapUtil.ATTR_TELEPHONE_NUMBER));
-        if (LdapConfig.getType().equals(LdapType.ActiveDirectory)) {
+        if (LdapDefaultConfig.getType().equals(LdapType.ActiveDirectory)) {
           //for some reason the objectGUID is stored in binary format in Active Directory
             // Microsoft stores GUIDs in a binary format that differs from the RFC standard of UUIDs (RFC #4122).
             String uuid = LdapUtil.bytesToUUID(entry.getAttributeValueBytes(LdapUtil.ATTR_ENTRYUUID));
@@ -336,7 +336,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
                     String dn = entry.getAttributeValue(LdapUtil.ATTR_DN);
                     // do not add object from the Builtin container (Active Directory) or the LDAP agent account
                     if (!dn.contains("CN=Builtin")){
-                        if (!dn.equalsIgnoreCase(LdapConfig.getUser())){
+                        if (!dn.equalsIgnoreCase(LdapDefaultConfig.getUser())){
                             users.add(getLdapUser(entry));
                         }
                     }
