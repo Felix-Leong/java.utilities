@@ -36,7 +36,7 @@ public class LdapOrganizationManager implements OrganizationManager {
             Entry entry = new Entry(dn);
             entry.addAttribute(LdapUtil.ATTR_OBJECTCLASS, LdapUtil.OBJECT_CLASS_OU);
             AddRequest addRequest = new AddRequest(entry);
-            connection = LdapUtil.getConnection(LdapDefaultConfig.getUser(), LdapDefaultConfig.getPass(), LdapDefaultConfig.getContext());
+            connection = LdapUtil.getConnection(LdapDefaultConfig.getInstance());
             LDAPResult ldapResult = connection.add(addRequest);
             if (ldapResult.getResultCode() != (ResultCode.SUCCESS)) {
                 throw new LdapException("Adding Organization to LDAP returned result code " + ldapResult.getResultCode());
@@ -45,9 +45,7 @@ public class LdapOrganizationManager implements OrganizationManager {
         } catch (LDAPException ex) {
             throw new LdapException(ex);
         } finally {
-            if (connection != null) {
-                LdapUtil.release(connection);
-            }
+            LdapUtil.release(connection);
         }
     }
 
@@ -58,7 +56,7 @@ public class LdapOrganizationManager implements OrganizationManager {
             DN oldDN = new DN(DN);
             DN newDN = getDN(name);
             ModifyDNRequest request = new ModifyDNRequest(oldDN, newDN.getRDN(), true);
-            connection = LdapUtil.getConnection(LdapDefaultConfig.getUser(), LdapDefaultConfig.getPass(), LdapDefaultConfig.getContext());
+            connection = LdapUtil.getConnection(LdapDefaultConfig.getInstance());
             LDAPResult ldapResult = connection.modifyDN(request);
             if (ldapResult.getResultCode() != ResultCode.SUCCESS) {
                 throw new LdapException("Renaming Organization int LDAP returned result code " + ldapResult.getResultCode());
@@ -67,9 +65,7 @@ public class LdapOrganizationManager implements OrganizationManager {
         } catch (LDAPException ex) {
             throw new LdapException(ex);
         } finally {
-            if (connection != null) {
-                LdapUtil.release(connection);
-            }
+            LdapUtil.release(connection);
         }
     }
 
@@ -77,7 +73,7 @@ public class LdapOrganizationManager implements OrganizationManager {
     public Boolean deleteOrganization(String DN) throws LdapException {
         LDAPConnection connection = null;
         try {
-            connection = LdapUtil.getConnection(LdapDefaultConfig.getUser(), LdapDefaultConfig.getPass(), LdapDefaultConfig.getContext());
+            connection = LdapUtil.getConnection(LdapDefaultConfig.getInstance());
             DeleteRequest request = new DeleteRequest(DN);
             LDAPResult ldapResult = connection.delete(request);
             if (ldapResult.getResultCode() != ResultCode.SUCCESS) {
@@ -87,9 +83,7 @@ public class LdapOrganizationManager implements OrganizationManager {
         } catch (LDAPException | LdapException e) {
             throw new LdapException(e);
         } finally {
-            if (connection != null) {
-                LdapUtil.release(connection);
-            }
+            LdapUtil.release(connection);
         }
     }
 
@@ -97,9 +91,9 @@ public class LdapOrganizationManager implements OrganizationManager {
    public List<LdapOrganization> getLdapOrganizations(String baseDN) throws LdapException {
       LDAPConnection connection = null;
       try {
-         connection = LdapUtil.getConnection(LdapDefaultConfig.getUser(), LdapDefaultConfig.getPass(), LdapDefaultConfig.getContext());
+         connection = LdapUtil.getConnection(LdapDefaultConfig.getInstance());
          List<LdapOrganization> OUs = new ArrayList<>();
-         SearchResult searchResults = connection.search(LdapDefaultConfig.getContext(), SearchScope.ONE, (LdapUtil.ATTR_OBJECTCLASS + "=" + LdapUtil.OBJECT_CLASS_OU), LdapUtil.ATTR_DN);
+         SearchResult searchResults = connection.search(LdapDefaultConfig.getInstance().getBaseDN(), SearchScope.ONE, (LdapUtil.ATTR_OBJECTCLASS + "=" + LdapUtil.OBJECT_CLASS_OU), LdapUtil.ATTR_DN);
          for (SearchResultEntry entry : searchResults.getSearchEntries()) {
             LdapOrganization OU = new LdapOrganization();
             OU.setDN(entry.getDN());
@@ -114,6 +108,6 @@ public class LdapOrganizationManager implements OrganizationManager {
    }
 
    private DN getDN(String name) throws LDAPException {
-      return new DN("ou=" + name + "," + LdapDefaultConfig.getContext());
+      return new DN("ou=" + name + "," + LdapDefaultConfig.getInstance().getBaseDN());
    }
 }

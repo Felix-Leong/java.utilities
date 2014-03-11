@@ -6,11 +6,13 @@
 
 package de.ebf.utils.auth.ldap;
 
+import java.io.Serializable;
+
 /**
  *
  * @author dominik
  */
-public class LdapConfig {
+public class LdapConfig implements Serializable {
     
     private LdapType Type;
     private String server;
@@ -19,6 +21,7 @@ public class LdapConfig {
     private String password;
     private String baseDN;
 
+    
     public LdapType getType() {
         return Type;
     }

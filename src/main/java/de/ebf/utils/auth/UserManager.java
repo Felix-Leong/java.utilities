@@ -4,6 +4,7 @@
  */
 package de.ebf.utils.auth;
 
+import de.ebf.utils.auth.ldap.LdapConfig;
 import java.util.List;
 
 /**
@@ -12,17 +13,17 @@ import java.util.List;
  */
 public interface UserManager<User> {
 
-   public User createUser(String username, String firstname, String lastname, String context) throws AuthException;
+   public User createUser(String username, String firstname, String lastname, LdapConfig config) throws AuthException;
 
-   public User updateUser(User user, String oldContext, String newContext) throws AuthException;
+   public User updateUser(User user, LdapConfig oldConfig, LdapConfig newConfig) throws AuthException;
 
-   public User authenticate(String username, String password, String context) throws AuthException;
+   public User authenticate(String username, String password, LdapConfig config) throws AuthException;
 
-   public User getUser(String username, String context) throws AuthException;
+   public User getUser(String username, LdapConfig config) throws AuthException;
 
-   public User resetPassword(String username, String newPassword, String context) throws AuthException;
+   public User resetPassword(String username, String newPassword, LdapConfig config) throws AuthException;
 
-   public boolean deleteUser(String id, String context) throws AuthException;
+   public boolean deleteUser(String id, LdapConfig config) throws AuthException;
 
-   public List<User> getAllUsers(String context) throws AuthException;
+   public List<User> getAllUsers(LdapConfig config) throws AuthException;
 }

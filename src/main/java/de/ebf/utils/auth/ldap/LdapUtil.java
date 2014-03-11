@@ -25,26 +25,26 @@ import org.apache.log4j.Logger;
 public class LdapUtil {
 
     private static final Logger log = Logger.getLogger(LdapUtil.class);
-    public static String ATTR_USER_PW = "userPassword";
-    public static String ATTR_OBJECTCLASS = "objectclass";
-    public static String ATTR_LAST_NAME = "sn";
-    public static String ATTR_MAIL = "mail";
-    public static String ATTR_ENTRYUUID = "entryUUID";
-    public static String ATTR_FIRST_NAME = "givenName";
-    public static String ATTR_CN = "cn";
-    public static String ATTR_UID = "uid";
-    public static String ATTR_TELEPHONE_NUMBER = "telephoneNumber";
-    public static String ATTR_MEMBERS = "uniqueMember";
-    public static String OBJECTCLASS_USER = "inetOrgPerson";
-    public static String OBJECTCLASS_GROUP = "groupOfUniqueNames";
-    public static String OBJECT_CLASS_OU = "organizationalUnit";
-    public static String OBJECT_CLASS_ORGANIZATION = "domain";
-    public static String ATTR_DN = "entryDN";
+    public static String ATTR_USER_PW               = "userPassword";
+    public static String ATTR_OBJECTCLASS           = "objectclass";
+    public static String ATTR_LAST_NAME             = "sn";
+    public static String ATTR_MAIL                  = "mail";
+    public static String ATTR_ENTRYUUID             = "entryUUID";
+    public static String ATTR_FIRST_NAME            = "givenName";
+    public static String ATTR_CN                    = "cn";
+    public static String ATTR_UID                   = "uid";
+    public static String ATTR_TELEPHONE_NUMBER      = "telephoneNumber";
+    public static String ATTR_MEMBERS               = "uniqueMember";
+    public static String OBJECTCLASS_USER           = "inetOrgPerson";
+    public static String OBJECTCLASS_GROUP          = "groupOfUniqueNames";
+    public static String OBJECT_CLASS_OU            = "organizationalUnit";
+    public static String OBJECT_CLASS_ORGANIZATION  = "domain";
+    public static String ATTR_DN                    = "entryDN";
     public static String[] ATTR_ALL;
 
     private static final Logger Log = Logger.getLogger(LdapUtil.class);
     
-    private static Map<String, LDAPConnectionPool> poolMap = new HashMap<>();
+    private static final Map<String, LDAPConnectionPool> poolMap = new HashMap<>();
 
     static {
         PropertiesConfiguration config = Config.instance;
@@ -86,8 +86,8 @@ public class LdapUtil {
         return conn;
     }
 
-    public static LDAPConnection getConnection(String userName, String password, String context) throws LDAPException {
-        String user = getDN(userName, context);
+    public static LDAPConnection getConnection(String userName, String password, LdapConfig config) throws LDAPException {
+        String user = getDN(userName, config.getBaseDN());
         LDAPConnection conn = null;
         if (poolMap.containsKey(user)) {
             LDAPConnectionPool pool = poolMap.get(user);
@@ -99,20 +99,20 @@ public class LdapUtil {
             }
         }
         if (conn == null) {
-            if (LdapDefaultConfig.getType().equals(LdapType.ActiveDirectory)){
+            if (config.getType().equals(LdapType.ActiveDirectory)){
                 try {
                     SSLUtil sslUtil = new SSLUtil(new TrustAllTrustManager());
                     SSLSocketFactory sslSocketFactory = sslUtil.createSSLSocketFactory();
                     // Establish a secure connection using the socket factory.
                     conn = new LDAPConnection(sslSocketFactory);
-                    conn.connect(LdapDefaultConfig.getServer(), LdapDefaultConfig.getPort());
+                    conn.connect(config.getServer(), config.getPort());
 
                     conn.bind(user, password);
                 } catch (GeneralSecurityException ex) {
                     log.fatal(ex);
                 }  
             } else {
-                conn = new LDAPConnection(LdapDefaultConfig.getServer(), LdapDefaultConfig.getPort(), user, password);
+                conn = new LDAPConnection(config.getServer(), config.getPort(), user, password);
             }
             //LDAPConnectionOptions connOptions = new LDAPConnectionOptions();
             //connOptions.setUseSchema(true);
