@@ -315,7 +315,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
                     String dn = entry.getAttributeValue(LdapUtil.ATTR_DN);
                     // do not add object from the Builtin container (Active Directory) or the LDAP agent account
                     if (!dn.contains("CN=Builtin")){
-                        if (!dn.equalsIgnoreCase(LdapDefaultConfig.getInstance().getUsername())){
+                        if (!dn.equalsIgnoreCase(config.getUsername())){
                             users.add(getLdapUser(entry, config));
                         }
                     }
