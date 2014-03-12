@@ -5,6 +5,7 @@
 package de.ebf.utils.auth.ldap;
 
 import com.unboundid.ldap.sdk.LDAPConnection;
+import com.unboundid.ldap.sdk.LDAPConnectionOptions;
 import com.unboundid.ldap.sdk.LDAPConnectionPool;
 import com.unboundid.ldap.sdk.LDAPException;
 import com.unboundid.util.ssl.SSLUtil;
@@ -66,24 +67,19 @@ public class LdapUtil {
         return name;
     }
     
-    public static LDAPConnection getConnection(LdapConfig config) throws LDAPException{
+    public static void verifyConnection(LdapConfig config) throws LDAPException{
         LDAPConnection conn = null;
-        if (config.getType().equals(LdapType.ActiveDirectory)){
-               try {
-                   SSLUtil sslUtil = new SSLUtil(new TrustAllTrustManager());
-                   SSLSocketFactory sslSocketFactory = sslUtil.createSSLSocketFactory();
-                   // Establish a secure connection using the socket factory.
-                   conn = new LDAPConnection(sslSocketFactory);
-                   conn.connect(config.getServer(), config.getPort());
-
-                   conn.bind(config.getUsername(), config.getPassword());
-               } catch (GeneralSecurityException ex) {
-                   log.fatal(ex);
-               }  
-           } else {
-               conn = new LDAPConnection(config.getServer(), config.getPort(), config.getUsername(), config.getPassword());
-           }
-        return conn;
+        try {
+            conn = getConnection(config);
+            conn.connect(config.getServer(), config.getPort());
+            conn.bind(config.getUsername(), config.getPassword());
+        } finally {
+            release(conn);
+        }
+    }
+    
+    public static LDAPConnection getConnection(LdapConfig config) throws LDAPException{
+        return getConnection(config.getUsername(), config.getPassword(), config);
     }
 
     public static LDAPConnection getConnection(String userName, String password, LdapConfig config) throws LDAPException {
@@ -99,24 +95,25 @@ public class LdapUtil {
             }
         }
         if (conn == null) {
+            LDAPConnectionOptions options = new LDAPConnectionOptions();
+            options.setConnectTimeoutMillis(10*1000);
+            options.setResponseTimeoutMillis(10*1000);
             if (config.getType().equals(LdapType.ActiveDirectory)){
                 try {
                     SSLUtil sslUtil = new SSLUtil(new TrustAllTrustManager());
                     SSLSocketFactory sslSocketFactory = sslUtil.createSSLSocketFactory();
                     // Establish a secure connection using the socket factory.
                     conn = new LDAPConnection(sslSocketFactory);
+                    conn.setConnectionOptions(options);
                     conn.connect(config.getServer(), config.getPort());
-
                     conn.bind(user, password);
                 } catch (GeneralSecurityException ex) {
                     log.fatal(ex);
                 }  
             } else {
                 conn = new LDAPConnection(config.getServer(), config.getPort(), user, password);
+                conn.setConnectionOptions(options);
             }
-            //LDAPConnectionOptions connOptions = new LDAPConnectionOptions();
-            //connOptions.setUseSchema(true);
-            //conn.setConnectionOptions(connOptions);
             LDAPConnectionPool pool = new LDAPConnectionPool(conn, 100);
             //remove all LDAP connections after 15 mins
             pool.setMaxConnectionAgeMillis(15 * 60 * 1000);
