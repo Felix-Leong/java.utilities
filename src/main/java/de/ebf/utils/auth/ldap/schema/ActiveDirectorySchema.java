@@ -13,15 +13,14 @@ package de.ebf.utils.auth.ldap.schema;
  */
 public class ActiveDirectorySchema extends LdapSchema {
     
-    public static LdapSchema getInstance(){
-        LdapSchema instance = LdapSchema.getInstance();
-        instance.OBJECTCLASS_USER     = "user";
-        instance.OBJECTCLASS_GROUP = "group";
-        instance.ATTR_ENTRYUUID       = "objectGUID";
-        instance.ATTR_DN              = "distinguishedName";
-        instance.ATTR_MEMBERS         = "member";
-        instance.ATTR_USER_PW         = "unicodePwd";
-        instance.updateAllAttributes();
-        return instance;
+    public ActiveDirectorySchema(){
+        super();
+        this.OBJECTCLASS_USER     = "user";
+        this.OBJECTCLASS_GROUP    = "group";
+        this.ATTR_ENTRYUUID       = "objectGUID";
+        this.ATTR_DN              = "distinguishedName";
+        this.ATTR_MEMBERS         = "member";
+        this.ATTR_USER_PW         = "unicodePwd";
+        super.updateAttributes();
     }
 }

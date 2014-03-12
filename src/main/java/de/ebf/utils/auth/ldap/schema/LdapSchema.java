@@ -29,22 +29,11 @@ public class LdapSchema {
     public String ATTR_DN                    = "entryDN";
     public String[] ATTR_ALL                 = null;
 
-    private static LdapSchema instance;
-    
     protected LdapSchema(){
-        //hide constructor
+        updateAttributes();
     }
     
-    public static LdapSchema getInstance(){
-        if (instance == null){
-            instance = new LdapSchema();
-            instance.updateAllAttributes();
-        }
-        return instance;
-    }
-
-    protected void updateAllAttributes() {
+    protected final void updateAttributes(){
         ATTR_ALL = new String[]{ATTR_CN, ATTR_DN, ATTR_FIRST_NAME, ATTR_LAST_NAME, ATTR_UID, ATTR_MAIL, ATTR_TELEPHONE_NUMBER, ATTR_ENTRYUUID, ATTR_MEMBERS};
     }
-    
 }

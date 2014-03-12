@@ -10,6 +10,7 @@ import de.ebf.utils.auth.ldap.LdapType;
 import de.ebf.utils.auth.ldap.schema.ActiveDirectorySchema;
 import de.ebf.utils.auth.ldap.schema.OpenDSSchema;
 import de.ebf.utils.auth.ldap.schema.LdapSchema;
+import de.ebf.utils.auth.ldap.schema.LdapSchemaFactory;
 import java.io.Serializable;
 
 /**
@@ -74,13 +75,6 @@ public class LdapConfig implements Serializable {
     }
     
     public LdapSchema getSchema(){
-        switch(type){
-            case ActiveDirectory:
-                return ActiveDirectorySchema.getInstance();
-            case OpenDS:
-                return OpenDSSchema.getInstance();
-            default:
-                return LdapSchema.getInstance();
-        }
+        return LdapSchemaFactory.getLdapSchema(type);
     }
 }
