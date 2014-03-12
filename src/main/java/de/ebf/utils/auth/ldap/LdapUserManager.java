@@ -1,5 +1,6 @@
 package de.ebf.utils.auth.ldap;
 
+import de.ebf.utils.auth.ldap.config.LdapConfig;
 import com.unboundid.ldap.sdk.AddRequest;
 import com.unboundid.ldap.sdk.DeleteRequest;
 import com.unboundid.ldap.sdk.Entry;
@@ -42,9 +43,9 @@ public class LdapUserManager implements UserManager<LdapUser> {
         LDAPConnection connection = null;
         try {
             Entry entry = new Entry(LdapUtil.getDN(username, config.getBaseDN()));
-            entry.addAttribute(LdapUtil.ATTR_OBJECTCLASS, LdapUtil.OBJECTCLASS_USER);
-            entry.addAttribute(LdapUtil.ATTR_FIRST_NAME, firstname);
-            entry.addAttribute(LdapUtil.ATTR_LAST_NAME, lastname);
+            entry.addAttribute(config.getSchema().ATTR_OBJECTCLASS, config.getSchema().OBJECTCLASS_USER);
+            entry.addAttribute(config.getSchema().ATTR_FIRST_NAME, firstname);
+            entry.addAttribute(config.getSchema().ATTR_LAST_NAME, lastname);
             AddRequest addRequest = new AddRequest(entry);
             connection = LdapUtil.getConnection(config);
             LDAPResult ldapResult = connection.add(addRequest);
@@ -84,8 +85,8 @@ public class LdapUserManager implements UserManager<LdapUser> {
                     if (newConfig.getType().equals(LdapType.OpenDS)){
                         //also update all dn membership values, since OpenDS doesn't take care of this
                         for (LdapGroup ldapGroup : allGroups) {
-                            Modification deleteOldUserDN = new Modification(ModificationType.DELETE, LdapUtil.ATTR_MEMBERS, user.getDN());
-                            Modification addNewUserDN = new Modification(ModificationType.ADD, LdapUtil.ATTR_MEMBERS, newDN);
+                            Modification deleteOldUserDN = new Modification(ModificationType.DELETE, newConfig.getSchema().ATTR_MEMBERS, user.getDN());
+                            Modification addNewUserDN = new Modification(ModificationType.ADD, newConfig.getSchema().ATTR_MEMBERS, newDN);
                             List<Modification> groupMods = new ArrayList<>();
                             groupMods.add(deleteOldUserDN);
                             groupMods.add(addNewUserDN);
@@ -99,15 +100,15 @@ public class LdapUserManager implements UserManager<LdapUser> {
                 }
             }
             if (!StringUtils.isEmpty(user.getFirstName())) {
-                mods.add(new Modification(ModificationType.REPLACE, LdapUtil.ATTR_FIRST_NAME, user.getFirstName()));
+                mods.add(new Modification(ModificationType.REPLACE, newConfig.getSchema().ATTR_FIRST_NAME, user.getFirstName()));
             }
 
             if (!StringUtils.isEmpty(user.getLastName())) {
-                mods.add(new Modification(ModificationType.REPLACE, LdapUtil.ATTR_LAST_NAME, user.getLastName()));
+                mods.add(new Modification(ModificationType.REPLACE, newConfig.getSchema().ATTR_LAST_NAME, user.getLastName()));
             }
 
             if (!StringUtils.isEmpty(user.getMail())) {
-                mods.add(new Modification(ModificationType.REPLACE, LdapUtil.ATTR_MAIL, user.getMail()));
+                mods.add(new Modification(ModificationType.REPLACE, newConfig.getSchema().ATTR_MAIL, user.getMail()));
             }
 
             if (!StringUtils.isEmpty(user.getPassword())) {
@@ -120,7 +121,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
                     throw new LdapException("Updating user returned LDAP result code " + ldapResult.getResultCode());
                 }
             }
-            user = getUserByAttribute(connection, LdapUtil.ATTR_ENTRYUUID, user.getUUID(), newConfig);
+            user = getUserByAttribute(connection, newConfig.getSchema().ATTR_ENTRYUUID, user.getUUID(), newConfig);
             return user;
         } catch (LDAPException e) {
             throw new LdapException(e);
@@ -136,7 +137,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
         LDAPConnection conn = null;
         try {
             conn = new LDAPConnection(config.getServer(), config.getPort(), LdapUtil.getDN(userName, config.getBaseDN()), password);
-            user = getUserByAttribute(conn, LdapUtil.ATTR_CN, userName, config);
+            user = getUserByAttribute(conn, config.getSchema().ATTR_CN, userName, config);
             conn.close();
         } catch (LDAPException e) {
             throw new LdapException(e.getMessage());
@@ -160,7 +161,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
             } else {
                 connection = LdapUtil.getConnection(config.getUsername(), config.getPassword(), config);
             }
-            LdapUser user = getUserByAttribute(connection, LdapUtil.ATTR_CN, userName, config);
+            LdapUser user = getUserByAttribute(connection, config.getSchema().ATTR_CN, userName, config);
             return user;
         } catch (LDAPException ex) {
             throw new LdapException(ex);
@@ -175,7 +176,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
         LDAPConnection connection = null;
         try {
             connection = LdapUtil.getConnection(config);
-            Filter userFilter = Filter.createEqualityFilter(LdapUtil.ATTR_OBJECTCLASS, LdapUtil.OBJECTCLASS_USER);
+            Filter userFilter = Filter.createEqualityFilter(config.getSchema().ATTR_OBJECTCLASS, config.getSchema().OBJECTCLASS_USER);
             users.addAll(getUsersByFilter(connection, userFilter, config));
         } catch (LDAPException e) {
             throw new LdapException(e);
@@ -191,7 +192,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
         try {
             connection = LdapUtil.getConnection(config);
             // http://msdn.microsoft.com/en-us/library/cc223248.aspx
-            Modification modification = new Modification(ModificationType.REPLACE, LdapUtil.ATTR_USER_PW, newPassword);
+            Modification modification = new Modification(ModificationType.REPLACE, config.getSchema().ATTR_USER_PW, newPassword);
             LDAPResult ldapResult = connection.modify(LdapUtil.getDN(username, config.getBaseDN()), modification);
             if (ldapResult.getResultCode() != ResultCode.SUCCESS) {
                 throw new LdapException("Error while resetting user password in LDAP: " + ldapResult.getResultCode());
@@ -234,9 +235,9 @@ public class LdapUserManager implements UserManager<LdapUser> {
         try {
             Filter filter;
             if (config.getType().equals(LdapType.ActiveDirectory)) {
-                filter = Filter.createEqualityFilter(LdapUtil.ATTR_ENTRYUUID, LdapUtil.UUIDStringToByteArray(UUID));
+                filter = Filter.createEqualityFilter(config.getSchema().ATTR_ENTRYUUID, LdapUtil.UUIDStringToByteArray(UUID));
             } else {
-                filter = Filter.createEqualityFilter(LdapUtil.ATTR_ENTRYUUID, UUID);
+                filter = Filter.createEqualityFilter(config.getSchema().ATTR_ENTRYUUID, UUID);
             }
             connection = LdapUtil.getConnection(config);
             LdapUser user = getUserByFilter(connection, filter, config);
@@ -252,7 +253,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
         LDAPConnection connection = null;
         try {
             connection = LdapUtil.getConnection(config);
-            Filter filter = Filter.createEqualityFilter(LdapUtil.ATTR_MAIL, mail);
+            Filter filter = Filter.createEqualityFilter(config.getSchema().ATTR_MAIL, mail);
             List<LdapUser> users = getUsersByFilter(connection, filter, config);
             return users;
         } catch (LDAPException ex) {
@@ -264,19 +265,19 @@ public class LdapUserManager implements UserManager<LdapUser> {
 
     private LdapUser getLdapUser(SearchResultEntry entry, LdapConfig config) throws LdapException {
         LdapUser user = new LdapUser();
-        user.setName(entry.getAttributeValue(LdapUtil.ATTR_CN));
-        user.setFirstName(entry.getAttributeValue(LdapUtil.ATTR_FIRST_NAME));
-        user.setLastName(entry.getAttributeValue(LdapUtil.ATTR_LAST_NAME));
-        user.setUid(entry.getAttributeValue(LdapUtil.ATTR_UID));
-        user.setMail(entry.getAttributeValue(LdapUtil.ATTR_MAIL));
-        user.setPhone(entry.getAttributeValue(LdapUtil.ATTR_TELEPHONE_NUMBER));
+        user.setName(entry.getAttributeValue(config.getSchema().ATTR_CN));
+        user.setFirstName(entry.getAttributeValue(config.getSchema().ATTR_FIRST_NAME));
+        user.setLastName(entry.getAttributeValue(config.getSchema().ATTR_LAST_NAME));
+        user.setUid(entry.getAttributeValue(config.getSchema().ATTR_UID));
+        user.setMail(entry.getAttributeValue(config.getSchema().ATTR_MAIL));
+        user.setPhone(entry.getAttributeValue(config.getSchema().ATTR_TELEPHONE_NUMBER));
         if (config.getType().equals(LdapType.ActiveDirectory)) {
           //for some reason the objectGUID is stored in binary format in Active Directory
             // Microsoft stores GUIDs in a binary format that differs from the RFC standard of UUIDs (RFC #4122).
-            String uuid = LdapUtil.bytesToUUID(entry.getAttributeValueBytes(LdapUtil.ATTR_ENTRYUUID));
+            String uuid = LdapUtil.bytesToUUID(entry.getAttributeValueBytes(config.getSchema().ATTR_ENTRYUUID));
             user.setUUID(uuid);
         } else {
-            user.setUUID(entry.getAttributeValue(LdapUtil.ATTR_ENTRYUUID));
+            user.setUUID(entry.getAttributeValue(config.getSchema().ATTR_ENTRYUUID));
         }
         user.setDN(entry.getDN());
         try {
@@ -307,12 +308,12 @@ public class LdapUserManager implements UserManager<LdapUser> {
     public List<LdapUser> getUsersByFilter(LDAPConnection connection, Filter filter, LdapConfig config) throws LdapException {
         List<LdapUser> users = new ArrayList<>();
         try {
-            Filter userFilter = Filter.createEqualityFilter(LdapUtil.ATTR_OBJECTCLASS, LdapUtil.OBJECTCLASS_USER);
+            Filter userFilter = Filter.createEqualityFilter(config.getSchema().ATTR_OBJECTCLASS, config.getSchema().OBJECTCLASS_USER);
             Filter searchFilter = Filter.createANDFilter(userFilter, filter);
-            SearchResult searchResults = connection.search(config.getBaseDN(), SearchScope.SUB, searchFilter, LdapUtil.ATTR_ALL);
+            SearchResult searchResults = connection.search(config.getBaseDN(), SearchScope.SUB, searchFilter, config.getSchema().ATTR_ALL);
             if (searchResults.getEntryCount() > 0) {
                 for (SearchResultEntry entry : searchResults.getSearchEntries()) {
-                    String dn = entry.getAttributeValue(LdapUtil.ATTR_DN);
+                    String dn = entry.getAttributeValue(config.getSchema().ATTR_DN);
                     // do not add object from the Builtin container (Active Directory) or the LDAP agent account
                     if (!dn.contains("CN=Builtin")){
                         if (!dn.equalsIgnoreCase(config.getUsername())){

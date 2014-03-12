@@ -4,6 +4,7 @@
  */
 package de.ebf.utils.auth.ldap;
 
+import de.ebf.utils.auth.ldap.config.LdapConfig;
 import com.unboundid.ldap.sdk.LDAPConnection;
 import com.unboundid.ldap.sdk.LDAPConnectionOptions;
 import com.unboundid.ldap.sdk.LDAPConnectionPool;
@@ -26,39 +27,39 @@ import org.apache.log4j.Logger;
 public class LdapUtil {
 
     private static final Logger log = Logger.getLogger(LdapUtil.class);
-    public static String ATTR_USER_PW               = "userPassword";
-    public static String ATTR_OBJECTCLASS           = "objectclass";
-    public static String ATTR_LAST_NAME             = "sn";
-    public static String ATTR_MAIL                  = "mail";
-    public static String ATTR_ENTRYUUID             = "entryUUID";
-    public static String ATTR_FIRST_NAME            = "givenName";
-    public static String ATTR_CN                    = "cn";
-    public static String ATTR_UID                   = "uid";
-    public static String ATTR_TELEPHONE_NUMBER      = "telephoneNumber";
-    public static String ATTR_MEMBERS               = "uniqueMember";
-    public static String OBJECTCLASS_USER           = "inetOrgPerson";
-    public static String OBJECTCLASS_GROUP          = "groupOfUniqueNames";
-    public static String OBJECT_CLASS_OU            = "organizationalUnit";
-    public static String OBJECT_CLASS_ORGANIZATION  = "domain";
-    public static String ATTR_DN                    = "entryDN";
-    public static String[] ATTR_ALL;
+//    public static String ATTR_USER_PW               = "userPassword";
+//    public static String ATTR_OBJECTCLASS           = "objectclass";
+//    public static String ATTR_LAST_NAME             = "sn";
+//    public static String ATTR_MAIL                  = "mail";
+//    public static String ATTR_ENTRYUUID             = "entryUUID";
+//    public static String ATTR_FIRST_NAME            = "givenName";
+//    public static String ATTR_CN                    = "cn";
+//    public static String ATTR_UID                   = "uid";
+//    public static String ATTR_TELEPHONE_NUMBER      = "telephoneNumber";
+//    public static String ATTR_MEMBERS               = "uniqueMember";
+//    public static String OBJECTCLASS_USER           = "inetOrgPerson";
+//    public static String OBJECTCLASS_GROUP          = "groupOfUniqueNames";
+//    public static String OBJECT_CLASS_OU            = "organizationalUnit";
+//    public static String OBJECT_CLASS_ORGANIZATION  = "domain";
+//    public static String ATTR_DN                    = "entryDN";
+//    public static String[] ATTR_ALL;
 
     private static final Logger Log = Logger.getLogger(LdapUtil.class);
     
     private static final Map<String, LDAPConnectionPool> poolMap = new HashMap<>();
 
-    static {
-        PropertiesConfiguration config = Config.instance;
-        if (config.getString("ldap.type").equals(LdapType.ActiveDirectory.name())) {
-            OBJECTCLASS_USER = "user";
-            OBJECTCLASS_GROUP = "group";
-            ATTR_ENTRYUUID = "objectGUID";
-            ATTR_DN = "distinguishedName";
-            ATTR_MEMBERS = "member";
-            ATTR_USER_PW = "unicodePwd";
-        }
-        ATTR_ALL = new String[]{ATTR_CN, ATTR_DN, ATTR_FIRST_NAME, ATTR_LAST_NAME, ATTR_UID, ATTR_MAIL, ATTR_TELEPHONE_NUMBER, ATTR_ENTRYUUID, ATTR_MEMBERS};
-    }
+//    static {
+//        PropertiesConfiguration config = Config.instance;
+//        if (config.getString("ldap.type").equals(LdapType.ActiveDirectory.name())) {
+//            OBJECTCLASS_USER = "user";
+//            OBJECTCLASS_GROUP = "group";
+//            ATTR_ENTRYUUID = "objectGUID";
+//            ATTR_DN = "distinguishedName";
+//            ATTR_MEMBERS = "member";
+//            ATTR_USER_PW = "unicodePwd";
+//        }
+//        ATTR_ALL = new String[]{ATTR_CN, ATTR_DN, ATTR_FIRST_NAME, ATTR_LAST_NAME, ATTR_UID, ATTR_MAIL, ATTR_TELEPHONE_NUMBER, ATTR_ENTRYUUID, ATTR_MEMBERS};
+//    }
 
     public static String getDN(String name, String context) {
         if (!name.contains("=")) {

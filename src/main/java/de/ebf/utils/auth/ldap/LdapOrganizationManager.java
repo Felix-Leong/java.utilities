@@ -4,6 +4,7 @@
  */
 package de.ebf.utils.auth.ldap;
 
+import de.ebf.utils.auth.ldap.config.LdapConfig;
 import com.unboundid.ldap.sdk.AddRequest;
 import com.unboundid.ldap.sdk.DN;
 import com.unboundid.ldap.sdk.DeleteRequest;
@@ -34,7 +35,7 @@ public class LdapOrganizationManager implements OrganizationManager {
         try {
             DN dn = getDN(name, config);
             Entry entry = new Entry(dn);
-            entry.addAttribute(LdapUtil.ATTR_OBJECTCLASS, LdapUtil.OBJECT_CLASS_OU);
+            entry.addAttribute(config.getSchema().ATTR_OBJECTCLASS, config.getSchema().OBJECT_CLASS_OU);
             AddRequest addRequest = new AddRequest(entry);
             connection = LdapUtil.getConnection(config);
             LDAPResult ldapResult = connection.add(addRequest);
@@ -95,7 +96,7 @@ public class LdapOrganizationManager implements OrganizationManager {
       try {
          connection = LdapUtil.getConnection(config);
          List<LdapOrganization> OUs = new ArrayList<>();
-         SearchResult searchResults = connection.search(config.getBaseDN(), SearchScope.ONE, (LdapUtil.ATTR_OBJECTCLASS + "=" + LdapUtil.OBJECT_CLASS_OU), LdapUtil.ATTR_DN);
+         SearchResult searchResults = connection.search(config.getBaseDN(), SearchScope.ONE, (config.getSchema().ATTR_OBJECTCLASS + "=" + config.getSchema().OBJECT_CLASS_OU), config.getSchema().ATTR_DN);
          for (SearchResultEntry entry : searchResults.getSearchEntries()) {
             LdapOrganization OU = new LdapOrganization();
             OU.setDN(entry.getDN());

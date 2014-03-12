@@ -4,6 +4,7 @@
  */
 package de.ebf.utils.auth.ldap;
 
+import de.ebf.utils.auth.ldap.config.LdapConfig;
 import com.unboundid.ldap.sdk.AddRequest;
 import com.unboundid.ldap.sdk.Attribute;
 import com.unboundid.ldap.sdk.DeleteRequest;
@@ -48,8 +49,8 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
         LDAPConnection connection = null;
         try {
             Entry entry = new Entry(LdapUtil.getDN(groupName, config.getBaseDN()));
-            entry.addAttribute(LdapUtil.ATTR_OBJECTCLASS, LdapUtil.OBJECTCLASS_GROUP);
-            entry.addAttribute(LdapUtil.ATTR_CN, groupName);
+            entry.addAttribute(config.getSchema().ATTR_OBJECTCLASS, config.getSchema().OBJECTCLASS_GROUP);
+            entry.addAttribute(config.getSchema().ATTR_CN, groupName);
             AddRequest addRequest = new AddRequest(entry);
             connection = LdapUtil.getConnection(config);
             LDAPResult ldapResult = connection.add(addRequest);
@@ -67,7 +68,7 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
 
     @Override
     public LdapGroup getGroup(String groupName, LdapConfig config) throws LdapException {
-        Filter filter = Filter.createEqualityFilter(LdapUtil.ATTR_CN, groupName);
+        Filter filter = Filter.createEqualityFilter(config.getSchema().ATTR_CN, groupName);
         LdapGroup group = getGroupByFilter(filter, config);
         return group;
     }
@@ -76,9 +77,9 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
         Filter filter;
         if (config.getType().equals(LdapType.ActiveDirectory)) {
             byte[] objectGUIDByte = LdapUtil.UUIDStringToByteArray(UUID);
-            filter = Filter.createEqualityFilter(LdapUtil.ATTR_ENTRYUUID, objectGUIDByte);
+            filter = Filter.createEqualityFilter(config.getSchema().ATTR_ENTRYUUID, objectGUIDByte);
         } else {
-            filter = Filter.createEqualityFilter(LdapUtil.ATTR_ENTRYUUID, UUID);
+            filter = Filter.createEqualityFilter(config.getSchema().ATTR_ENTRYUUID, UUID);
         }
         LdapGroup group = getGroupByFilter(filter, config);
         return group;    
@@ -115,11 +116,11 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
         LDAPConnection connection = null;
         try {
             connection = LdapUtil.getConnection(config);
-            Filter groupFilter = Filter.createEqualityFilter(LdapUtil.ATTR_OBJECTCLASS, LdapUtil.OBJECTCLASS_GROUP);
-            SearchResult searchResults = connection.search(config.getBaseDN(), SearchScope.SUB, groupFilter, LdapUtil.ATTR_ALL);
+            Filter groupFilter = Filter.createEqualityFilter(config.getSchema().ATTR_OBJECTCLASS, config.getSchema().OBJECTCLASS_GROUP);
+            SearchResult searchResults = connection.search(config.getBaseDN(), SearchScope.SUB, groupFilter, config.getSchema().ATTR_ALL);
             if (searchResults.getEntryCount() > 0) {
                 for (SearchResultEntry entry : searchResults.getSearchEntries()) {
-                    String dn = entry.getAttributeValue(LdapUtil.ATTR_DN);
+                    String dn = entry.getAttributeValue(config.getSchema().ATTR_DN);
                     // do not add object from the Builtin container (Active Directory) 
                     if (!dn.contains("CN=Builtin")){
                         groups.add(getLdapGroup(connection, entry, config));
@@ -156,7 +157,7 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
         LDAPConnection conn = null;
         try {
             conn = LdapUtil.getConnection(config);
-            Filter groupFilter = Filter.createEqualityFilter(LdapUtil.ATTR_OBJECTCLASS, LdapUtil.OBJECTCLASS_GROUP);
+            Filter groupFilter = Filter.createEqualityFilter(config.getSchema().ATTR_OBJECTCLASS, config.getSchema().OBJECTCLASS_GROUP);
             Filter searchFilter;
 //            if (LdapConfig.getType().equals(LdapType.ActiveDirectory)){
 //                //Filter out any groups that are within the builtin container because these cannot be moved
@@ -166,7 +167,7 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
 //            } else {
                 searchFilter = Filter.createANDFilter(groupFilter, filter);
 //            }
-            SearchResult searchResults = conn.search(config.getBaseDN(), SearchScope.SUB, searchFilter, LdapUtil.ATTR_ALL);
+            SearchResult searchResults = conn.search(config.getBaseDN(), SearchScope.SUB, searchFilter, config.getSchema().ATTR_ALL);
             if (searchResults.getEntryCount() > 0) {
                 groups.add(getLdapGroup(conn, searchResults.getSearchEntries().get(0), config));
             }
@@ -190,12 +191,12 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
 
     private LdapGroup getLdapGroup(LDAPConnection connection, SearchResultEntry entry, LdapConfig config) throws LdapException {
         LdapGroup group = new LdapGroup();
-        group.setName(entry.getAttributeValue(LdapUtil.ATTR_CN));
+        group.setName(entry.getAttributeValue(config.getSchema().ATTR_CN));
         if (config.getType().equals(LdapType.ActiveDirectory)) {
-            String uuid = LdapUtil.bytesToUUID(entry.getAttributeValueBytes(LdapUtil.ATTR_ENTRYUUID));
+            String uuid = LdapUtil.bytesToUUID(entry.getAttributeValueBytes(config.getSchema().ATTR_ENTRYUUID));
             group.setUUID(uuid);
         } else {
-            group.setUUID(entry.getAttributeValue(LdapUtil.ATTR_ENTRYUUID));
+            group.setUUID(entry.getAttributeValue(config.getSchema().ATTR_ENTRYUUID));
         }
         group.setDN(entry.getDN());
         try {
@@ -209,18 +210,18 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
 
     private List<LdapUser> getUserMembers(LDAPConnection connection, SearchResultEntry entry, LdapConfig config) throws LdapException {
         List<LdapUser> users = new ArrayList<>();
-        Attribute attr = entry.getAttribute(LdapUtil.ATTR_MEMBERS);
+        Attribute attr = entry.getAttribute(config.getSchema().ATTR_MEMBERS);
         if (attr != null) {
             String[] memberDNs = attr.getValues();
             for (String dn : memberDNs) {
-                LdapUser user = userManager.getUserByAttribute(connection, LdapUtil.ATTR_DN, dn, config);
+                LdapUser user = userManager.getUserByAttribute(connection, config.getSchema().ATTR_DN, dn, config);
                 if (user == null) {
                     //members can be users or groups, so if it is not a user, check if it is a group
-                    Filter groupFilter = Filter.createEqualityFilter(LdapUtil.ATTR_OBJECTCLASS, LdapUtil.OBJECTCLASS_GROUP);
-                    Filter dnFilter = Filter.createEqualityFilter(LdapUtil.ATTR_DN, dn);
+                    Filter groupFilter = Filter.createEqualityFilter(config.getSchema().ATTR_OBJECTCLASS, config.getSchema().OBJECTCLASS_GROUP);
+                    Filter dnFilter = Filter.createEqualityFilter(config.getSchema().ATTR_DN, dn);
                     Filter filter = Filter.createANDFilter(groupFilter, dnFilter);
                     try {
-                        SearchResult searchResult = connection.search(config.getBaseDN(), SearchScope.SUB, filter, LdapUtil.ATTR_ALL);
+                        SearchResult searchResult = connection.search(config.getBaseDN(), SearchScope.SUB, filter, config.getSchema().ATTR_ALL);
                         if (searchResult.getSearchEntries() != null && searchResult.getSearchEntries().size() > 0) {
                             for (SearchResultEntry groupEntry : searchResult.getSearchEntries()) {
                                 //recurse through member groups
@@ -243,7 +244,7 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
         LDAPConnection connection = null;
         try {
             connection = LdapUtil.getConnection(config);
-            Modification modification = new Modification(ModificationType.DELETE, LdapUtil.ATTR_MEMBERS, user.getDN());
+            Modification modification = new Modification(ModificationType.DELETE, config.getSchema().ATTR_MEMBERS, user.getDN());
             ModifyRequest modifyRequest = new ModifyRequest(group.getDN(), modification);
             LDAPResult ldapResult = connection.modify(modifyRequest);
             if (ldapResult.getResultCode() != (ResultCode.SUCCESS)) {
@@ -262,7 +263,7 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
         LDAPConnection connection = null;
         try {
             connection = LdapUtil.getConnection(config);
-            Modification modification = new Modification(ModificationType.ADD, LdapUtil.ATTR_MEMBERS, user.getDN());
+            Modification modification = new Modification(ModificationType.ADD, config.getSchema().ATTR_MEMBERS, user.getDN());
             ModifyRequest modifyRequest = new ModifyRequest(group.getDN(), modification);
             LDAPResult ldapResult = connection.modify(modifyRequest);
             if (ldapResult.getResultCode() != (ResultCode.SUCCESS)) {

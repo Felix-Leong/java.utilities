@@ -4,8 +4,12 @@
  * and open the template in the editor.
  */
 
-package de.ebf.utils.auth.ldap;
+package de.ebf.utils.auth.ldap.config;
 
+import de.ebf.utils.auth.ldap.LdapType;
+import de.ebf.utils.auth.ldap.schema.ActiveDirectorySchema;
+import de.ebf.utils.auth.ldap.schema.OpenDSSchema;
+import de.ebf.utils.auth.ldap.schema.LdapSchema;
 import java.io.Serializable;
 
 /**
@@ -14,20 +18,19 @@ import java.io.Serializable;
  */
 public class LdapConfig implements Serializable {
     
-    private LdapType Type;
+    private LdapType type;
     private String server;
     private Integer port;
     private String username;
     private String password;
     private String baseDN;
-
     
     public LdapType getType() {
-        return Type;
+        return type;
     }
 
     public void setType(LdapType Type) {
-        this.Type = Type;
+        this.type = Type;
     }
 
     public String getServer() {
@@ -68,5 +71,16 @@ public class LdapConfig implements Serializable {
 
     public void setBaseDN(String baseDN) {
         this.baseDN = baseDN;
-    }   
+    }
+    
+    public LdapSchema getSchema(){
+        switch(type){
+            case ActiveDirectory:
+                return ActiveDirectorySchema.getInstance();
+            case OpenDS:
+                return OpenDSSchema.getInstance();
+            default:
+                return LdapSchema.getInstance();
+        }
+    }
 }

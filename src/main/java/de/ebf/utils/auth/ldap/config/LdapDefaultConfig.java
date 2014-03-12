@@ -1,6 +1,7 @@
-package de.ebf.utils.auth.ldap;
+package de.ebf.utils.auth.ldap.config;
 
 import de.ebf.utils.Config;
+import de.ebf.utils.auth.ldap.LdapType;
 
 public class LdapDefaultConfig extends LdapConfig {
 
