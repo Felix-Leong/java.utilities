@@ -17,7 +17,6 @@ import com.unboundid.ldap.sdk.ResultCode;
 import com.unboundid.ldap.sdk.SearchResult;
 import com.unboundid.ldap.sdk.SearchResultEntry;
 import com.unboundid.ldap.sdk.SearchScope;
-import de.ebf.utils.auth.AuthException;
 import de.ebf.utils.auth.UserManager;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -39,7 +38,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
     private LdapGroupManager groupManager;
 
     @Override
-    public LdapUser createUser(String username, String firstname, String lastname, LdapConfig config) throws AuthException {
+    public LdapUser createUser(String username, String firstname, String lastname, LdapConfig config) throws LdapException {
         LDAPConnection connection = null;
         try {
             Entry entry = new Entry(LdapUtil.getDN(username, config.getBaseDN()));
@@ -62,7 +61,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
     }
 
     @Override
-    public LdapUser updateUser(LdapUser user, LdapConfig oldConfig, LdapConfig newConfig) throws AuthException {
+    public LdapUser updateUser(LdapUser user, LdapConfig oldConfig, LdapConfig newConfig) throws LdapException {
         LDAPConnection connection = null;
         try {
             connection = LdapUtil.getConnection(newConfig);
@@ -74,7 +73,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
 
                     //get all groups for current user before renaming user. Otherwise group.getMembers() will already contain renamed users
                     List<LdapGroup> allGroups = groupManager.getGroupsForUser(user, oldConfig);
-
+                    
                     ModifyDNRequest modifyDNRequest = new ModifyDNRequest(user.getDN(), "cn=" + user.getName(), true, newConfig.getBaseDN());
                     LDAPResult ldapResult = connection.modifyDN(modifyDNRequest);
                     if (ldapResult.getResultCode() != ResultCode.SUCCESS) {
