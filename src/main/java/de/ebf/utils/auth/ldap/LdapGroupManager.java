@@ -117,8 +117,16 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
         try {
             connection = LdapUtil.getConnection(config);
             Filter groupFilter = Filter.createEqualityFilter(config.getSchema().ATTR_OBJECTCLASS, config.getSchema().OBJECTCLASS_GROUP);
-            SearchResult searchResults = connection.search(config.getBaseDN(), SearchScope.SUB, groupFilter, config.getSchema().ATTR_ALL);
-            if (searchResults.getEntryCount() > 0) {
+            SearchResult searchResults = null;
+            try {
+                searchResults = connection.search(config.getBaseDN(), SearchScope.SUB, groupFilter, config.getSchema().ATTR_ALL);
+            } catch (LDAPSearchException e){
+                if (!e.getResultCode().equals(ResultCode.NO_SUCH_OBJECT)){
+                    throw e;
+                }
+            }
+            
+            if (searchResults!=null && searchResults.getEntryCount() > 0) {
                 for (SearchResultEntry entry : searchResults.getSearchEntries()) {
                     String dn = entry.getAttributeValue(config.getSchema().ATTR_DN);
                     // do not add object from the Builtin container (Active Directory) 
