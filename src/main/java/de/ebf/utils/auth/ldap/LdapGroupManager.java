@@ -240,7 +240,7 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
     }
 
     @Override
-    public LdapGroup removeUserFromGroup(LdapUser user, LdapGroup group, LdapConfig config) throws AuthException {
+    public LdapGroup removeUserFromGroup(LdapUser user, LdapGroup group, LdapConfig config) throws LdapException {
         LDAPConnection connection = null;
         try {
             connection = LdapUtil.getConnection(config);
@@ -259,7 +259,7 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
     }
 
     @Override
-    public LdapGroup addUserToGroup(LdapUser user, LdapGroup group, LdapConfig config) throws AuthException {
+    public LdapGroup addUserToGroup(LdapUser user, LdapGroup group, LdapConfig config) throws LdapException {
         LDAPConnection connection = null;
         try {
             connection = LdapUtil.getConnection(config);

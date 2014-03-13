@@ -208,7 +208,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
     }
 
     @Override
-    public boolean deleteUser(String UUID, LdapConfig config) throws LdapException, AuthException {
+    public boolean deleteUser(String UUID, LdapConfig config) throws LdapException {
         LDAPConnection connection = null;
         try {
             connection = LdapUtil.getConnection(config);
