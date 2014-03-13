@@ -55,8 +55,4 @@ public class LdapGroup extends AbstractGroup implements Comparable<LdapGroup> {
    public void setContext(String context) {
       this.context = context;
    }
-
-   public String getTenantID() {
-      return LdapUtil.getCN(context);
-   }
 }
