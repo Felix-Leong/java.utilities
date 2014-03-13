@@ -27,6 +27,7 @@ public class LdapSchema {
     public String OBJECT_CLASS_OU            = "organizationalUnit";
     public String OBJECT_CLASS_ORGANIZATION  = "domain";
     public String ATTR_DN                    = "entryDN";
+    public String ATTR_USER_ACCOUNT_CONTROL  = null; //exists only in AD
     public String[] ATTR_ALL                 = null;
 
     protected LdapSchema(){

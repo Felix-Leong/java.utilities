@@ -15,12 +15,13 @@ public class ActiveDirectorySchema extends LdapSchema {
     
     public ActiveDirectorySchema(){
         super();
-        this.OBJECTCLASS_USER     = "user";
-        this.OBJECTCLASS_GROUP    = "group";
-        this.ATTR_ENTRYUUID       = "objectGUID";
-        this.ATTR_DN              = "distinguishedName";
-        this.ATTR_MEMBERS         = "member";
-        this.ATTR_USER_PW         = "unicodePwd";
+        this.OBJECTCLASS_USER           = "user";
+        this.OBJECTCLASS_GROUP          = "group";
+        this.ATTR_ENTRYUUID             = "objectGUID";
+        this.ATTR_DN                    = "distinguishedName";
+        this.ATTR_MEMBERS               = "member";
+        this.ATTR_USER_PW               = "unicodePwd";
+        this.ATTR_USER_ACCOUNT_CONTROL  = "userAccountControl";
         super.updateAttributes();
     }
 }

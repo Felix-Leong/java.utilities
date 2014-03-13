@@ -17,7 +17,9 @@ import com.unboundid.ldap.sdk.ResultCode;
 import com.unboundid.ldap.sdk.SearchResult;
 import com.unboundid.ldap.sdk.SearchResultEntry;
 import com.unboundid.ldap.sdk.SearchScope;
+import de.ebf.utils.Bundle;
 import de.ebf.utils.auth.UserManager;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -45,6 +47,11 @@ public class LdapUserManager implements UserManager<LdapUser> {
             entry.addAttribute(config.getSchema().ATTR_OBJECTCLASS, config.getSchema().OBJECTCLASS_USER);
             entry.addAttribute(config.getSchema().ATTR_FIRST_NAME, firstname);
             entry.addAttribute(config.getSchema().ATTR_LAST_NAME, lastname);
+            if (config.getType().equals(LdapType.ActiveDirectory)){
+                //by default, newly created AD accounts are disabled
+                //http://www.netvision.com/ad_useraccountcontrol.php?blog
+                entry.addAttribute(config.getSchema().ATTR_USER_ACCOUNT_CONTROL, "544");
+            }
             AddRequest addRequest = new AddRequest(entry);
             connection = LdapUtil.getConnection(config);
             LDAPResult ldapResult = connection.add(addRequest);
@@ -131,19 +138,23 @@ public class LdapUserManager implements UserManager<LdapUser> {
 
     @Override
     public LdapUser authenticate(String userName, String password, LdapConfig config) throws LdapException {
-        //do not use connection pool for auth request
-        LdapUser user = null;
+        //get distinguished name from LDAP
         LDAPConnection conn = null;
+        LdapUser user;
         try {
-            conn = new LDAPConnection(config.getServer(), config.getPort(), LdapUtil.getDN(userName, config.getBaseDN()), password);
-            user = getUserByAttribute(conn, config.getSchema().ATTR_CN, userName, config);
+            user = getUser(userName, config);
+            if (user == null){
+                throw new LdapException(Bundle.getString("InvalidUsernameOrPassword"));
+            }
+            //do not use connection pool for auth request
+            conn = LdapUtil.getUnpooledConnection(user.getDN(), password, config);
             conn.close();
+            return user;
         } catch (LDAPException e) {
-            throw new LdapException(e.getMessage());
+            throw new LdapException(e);
         } finally {
             LdapUtil.release(conn);
         }
-        return user;
     }
 
     @Override
@@ -190,17 +201,38 @@ public class LdapUserManager implements UserManager<LdapUser> {
         LDAPConnection connection = null;
         try {
             connection = LdapUtil.getConnection(config);
-            // http://msdn.microsoft.com/en-us/library/cc223248.aspx
-            Modification modification = new Modification(ModificationType.REPLACE, config.getSchema().ATTR_USER_PW, newPassword);
+            Modification modification = null;
+            if (config.getType().equals(LdapType.ActiveDirectory)){
+                // http://msdn.microsoft.com/en-us/library/cc223248.aspx
+                try {
+                    //String newPasswordEncoded = javax.xml.bind.DatatypeConverter.printBase64Binary(('"'+newPassword+'"').getBytes("UTF-16LE"));
+                    byte[] newPasswordEncoded = ('"'+newPassword+'"').getBytes("UTF-16LE");
+                    modification = new Modification(ModificationType.REPLACE, config.getSchema().ATTR_USER_PW, newPasswordEncoded);
+                } catch (UnsupportedEncodingException ex) {
+                    log.error(ex);
+                }
+            } else {
+                modification = new Modification(ModificationType.REPLACE, config.getSchema().ATTR_USER_PW, newPassword);          
+            }
             LDAPResult ldapResult = connection.modify(LdapUtil.getDN(username, config.getBaseDN()), modification);
             if (ldapResult.getResultCode() != ResultCode.SUCCESS) {
                 throw new LdapException("Error while resetting user password in LDAP: " + ldapResult.getResultCode());
             }
+            connection.close();
+            LdapUtil.release(connection);
             LdapUser user = authenticate(username, newPassword, config);
             LdapUtil.removeConnection(username, config.getBaseDN());
             return user;
         } catch (LDAPException e) {
+            if (e.getResultCode().equals(ResultCode.UNWILLING_TO_PERFORM)){
+                throw new LdapException("The LDAP backend is unwilling to reset the password. Please make sure that the password meets the minimum complexity requirements. Contact your LDAP administrator if you are unsure.");
+            }
             throw new LdapException(e);
+        } catch (LdapException e){
+            if(e.getCause() != null && e.getCause().getMessage()!=null && e.getCause().getMessage().contains("data 533")){
+                throw new LdapException("Password reset request was successfully sent, but the account is still locked out. Please contact your LDAP administrator.");
+            }
+            throw e;
         } finally {
             LdapUtil.release(connection);
         }
