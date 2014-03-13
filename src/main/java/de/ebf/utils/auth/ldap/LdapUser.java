@@ -77,10 +77,6 @@ public class LdapUser extends AbstractUser implements Comparable<LdapUser> {
       this.context = context;
    }
 
-   public String getTenantID() {
-      return LdapUtil.getCN(context);
-   }
-
    public String getFirstName() {
       return firstName;
    }
