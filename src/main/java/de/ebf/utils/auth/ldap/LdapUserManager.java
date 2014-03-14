@@ -148,12 +148,13 @@ public class LdapUserManager implements UserManager<LdapUser> {
             }
             //do not use connection pool for auth request
             conn = LdapUtil.getUnpooledConnection(user.getDN(), password, config);
-            conn.close();
             return user;
         } catch (LDAPException e) {
             throw new LdapException(e);
         } finally {
-            LdapUtil.release(conn);
+            if (conn!=null){
+                conn.close();
+            }
         }
     }
 
