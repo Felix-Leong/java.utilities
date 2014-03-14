@@ -40,27 +40,34 @@ public class LdapUserManager implements UserManager<LdapUser> {
     private LdapGroupManager groupManager;
 
     @Override
-    public LdapUser createUser(String username, String firstname, String lastname, LdapConfig config) throws LdapException {
+    public LdapUser createUser(LdapUser user, LdapConfig config) throws LdapException {
         LDAPConnection connection = null;
         try {
-            Entry entry = new Entry("cn="+username+","+config.getBaseDN());
+            Entry entry = new Entry("cn="+user.getName()+","+config.getBaseDN());
             entry.addAttribute(config.getSchema().ATTR_OBJECTCLASS, config.getSchema().OBJECTCLASS_USER);
-            entry.addAttribute(config.getSchema().ATTR_FIRST_NAME, firstname);
-            entry.addAttribute(config.getSchema().ATTR_LAST_NAME, lastname);
+            entry.addAttribute(config.getSchema().ATTR_FIRST_NAME, user.getFirstName());
+            entry.addAttribute(config.getSchema().ATTR_LAST_NAME, user.getLastName());
+            entry.addAttribute(config.getSchema().ATTR_MAIL, user.getMail());
             if (config.getType().equals(LdapType.ActiveDirectory)){
                 //by default, newly created AD accounts are disabled
                 //http://www.netvision.com/ad_useraccountcontrol.php?blog
                 entry.addAttribute(config.getSchema().ATTR_USER_ACCOUNT_CONTROL, "544");
+                entry.addAttribute(config.getSchema().ATTR_USER_PW, getActiveDirectoryPassword(user.getPassword()));
+            } else {
+                
             }
             AddRequest addRequest = new AddRequest(entry);
             connection = LdapUtil.getConnection(config);
             LDAPResult ldapResult = connection.add(addRequest);
             if (ldapResult.getResultCode() == (ResultCode.SUCCESS)) {
-                return getUser(username, config);
+                return getUser(user.getName(), config);
             } else {
                 throw new LdapException("Adding user returned LDAP result code " + ldapResult.getResultCode());
             }
         } catch (LDAPException e) {
+            if (e.getResultCode().equals(ResultCode.UNWILLING_TO_PERFORM)){
+                throw new LdapException("The LDAP backend is unwilling to set the password. Please make sure that the password meets the minimum complexity requirements. Contact your LDAP administrator if you are unsure.");
+            }
             throw new LdapException(e);
         } finally {
             LdapUtil.release(connection);
@@ -68,31 +75,33 @@ public class LdapUserManager implements UserManager<LdapUser> {
     }
 
     @Override
-    public LdapUser updateUser(LdapUser user, LdapConfig oldConfig, LdapConfig newConfig) throws LdapException {
+    public LdapUser updateUser(LdapUser user, LdapConfig config) throws LdapException {
         LDAPConnection connection = null;
         try {
-            connection = LdapUtil.getConnection(newConfig);
+            LdapUser oldUser = getUserByUUID(user.getUUID(), config);
+            connection = LdapUtil.getConnection(config);
             List<Modification> mods = new ArrayList<>();
             
-            String newDN = "cn="+user.getName()+","+newConfig.getBaseDN();
+            String oldDN = "cn="+oldUser.getDN()+","+config.getBaseDN();
+            String newDN = "cn="+user.getName()+","+config.getBaseDN();
             if (!StringUtils.isEmpty(user.getName())) {
-                if (!oldConfig.getBaseDN().equals(newConfig.getBaseDN())) {
+                if (!oldDN.equals(newDN)) {
 
                     //get all groups for current user before renaming user. Otherwise group.getMembers() will already contain renamed users
-                    List<LdapGroup> allGroups = groupManager.getGroupsForUser(user, oldConfig);
+                    List<LdapGroup> allGroups = groupManager.getGroupsForUser(oldUser, config);
                     
-                    ModifyDNRequest modifyDNRequest = new ModifyDNRequest(user.getDN(), "cn=" + user.getName(), true, newConfig.getBaseDN());
+                    ModifyDNRequest modifyDNRequest = new ModifyDNRequest(oldUser.getDN(), "cn=" + user.getName(), true, config.getBaseDN());
                     LDAPResult ldapResult = connection.modifyDN(modifyDNRequest);
                     if (ldapResult.getResultCode() != ResultCode.SUCCESS) {
                         throw new LdapException("Renaming user returned LDAP result code " + ldapResult.getResultCode());
                     }
 
                     //List<LdapGroup> allGroups = groupManager.getAllGroups(oldContext);
-                    if (newConfig.getType().equals(LdapType.OpenDS)){
+                    if (config.getType().equals(LdapType.OpenDS)){
                         //also update all dn membership values, since OpenDS doesn't take care of this
                         for (LdapGroup ldapGroup : allGroups) {
-                            Modification deleteOldUserDN = new Modification(ModificationType.DELETE, newConfig.getSchema().ATTR_MEMBERS, user.getDN());
-                            Modification addNewUserDN = new Modification(ModificationType.ADD, newConfig.getSchema().ATTR_MEMBERS, newDN);
+                            Modification deleteOldUserDN = new Modification(ModificationType.DELETE, config.getSchema().ATTR_MEMBERS, user.getDN());
+                            Modification addNewUserDN = new Modification(ModificationType.ADD, config.getSchema().ATTR_MEMBERS, newDN);
                             List<Modification> groupMods = new ArrayList<>();
                             groupMods.add(deleteOldUserDN);
                             groupMods.add(addNewUserDN);
@@ -106,20 +115,17 @@ public class LdapUserManager implements UserManager<LdapUser> {
                 }
             }
             if (!StringUtils.isEmpty(user.getFirstName())) {
-                mods.add(new Modification(ModificationType.REPLACE, newConfig.getSchema().ATTR_FIRST_NAME, user.getFirstName()));
+                mods.add(new Modification(ModificationType.REPLACE, config.getSchema().ATTR_FIRST_NAME, user.getFirstName()));
             }
 
             if (!StringUtils.isEmpty(user.getLastName())) {
-                mods.add(new Modification(ModificationType.REPLACE, newConfig.getSchema().ATTR_LAST_NAME, user.getLastName()));
+                mods.add(new Modification(ModificationType.REPLACE, config.getSchema().ATTR_LAST_NAME, user.getLastName()));
             }
 
             if (!StringUtils.isEmpty(user.getMail())) {
-                mods.add(new Modification(ModificationType.REPLACE, newConfig.getSchema().ATTR_MAIL, user.getMail()));
+                mods.add(new Modification(ModificationType.REPLACE, config.getSchema().ATTR_MAIL, user.getMail()));
             }
 
-            if (!StringUtils.isEmpty(user.getPassword())) {
-                resetPassword(user, user.getPassword(), newConfig);
-            }
             if (mods.size() > 0) {
                 ModifyRequest modifyRequest = new ModifyRequest(newDN, mods);
                 LDAPResult ldapResult = connection.modify(modifyRequest);
@@ -127,8 +133,12 @@ public class LdapUserManager implements UserManager<LdapUser> {
                     throw new LdapException("Updating user returned LDAP result code " + ldapResult.getResultCode());
                 }
             }
-            user = getUserByAttribute(connection, newConfig.getSchema().ATTR_ENTRYUUID, user.getUUID(), newConfig);
-            return user;
+            
+            if (!StringUtils.isEmpty(user.getPassword())) {
+                resetPassword(user, user.getPassword(), config);
+            }
+            
+            return getUserByUUID(user.getUUID(), config);
         } catch (LDAPException e) {
             throw new LdapException(e);
         } finally {
@@ -193,16 +203,9 @@ public class LdapUserManager implements UserManager<LdapUser> {
         LDAPConnection connection = null;
         try {
             connection = LdapUtil.getConnection(config);
-            Modification modification = null;
+            Modification modification;
             if (config.getType().equals(LdapType.ActiveDirectory)){
-                // http://msdn.microsoft.com/en-us/library/cc223248.aspx
-                try {
-                    //String newPasswordEncoded = javax.xml.bind.DatatypeConverter.printBase64Binary(('"'+newPassword+'"').getBytes("UTF-16LE"));
-                    byte[] newPasswordEncoded = ('"'+newPassword+'"').getBytes("UTF-16LE");
-                    modification = new Modification(ModificationType.REPLACE, config.getSchema().ATTR_USER_PW, newPasswordEncoded);
-                } catch (UnsupportedEncodingException ex) {
-                    log.error(ex);
-                }
+                modification = new Modification(ModificationType.REPLACE, config.getSchema().ATTR_USER_PW, getActiveDirectoryPassword(newPassword));
             } else {
                 modification = new Modification(ModificationType.REPLACE, config.getSchema().ATTR_USER_PW, newPassword);          
             }
@@ -231,11 +234,10 @@ public class LdapUserManager implements UserManager<LdapUser> {
     }
 
     @Override
-    public boolean deleteUser(String UUID, LdapConfig config) throws LdapException {
+    public boolean deleteUser(LdapUser user, LdapConfig config) throws LdapException {
         LDAPConnection connection = null;
         try {
             connection = LdapUtil.getConnection(config);
-            LdapUser user = getUserByUUID(UUID, config);
             List<LdapGroup> groups = groupManager.getGroupsForUser(user, config);
             if (groups != null) {
                 for (LdapGroup group : groups) {
@@ -363,5 +365,15 @@ public class LdapUserManager implements UserManager<LdapUser> {
             log.warn("Found multiple LDAP users for filter " + filter);
         }
         return null;
+    }
+
+    private byte[] getActiveDirectoryPassword(String password) {
+        // http://msdn.microsoft.com/en-us/library/cc223248.aspx
+        try {
+            return ('"'+password+'"').getBytes("UTF-16LE");
+        } catch (UnsupportedEncodingException ex) {
+            log.error(ex);
+        }
+        return password.getBytes();
     }
 }
