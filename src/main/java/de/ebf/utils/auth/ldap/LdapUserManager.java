@@ -160,18 +160,9 @@ public class LdapUserManager implements UserManager<LdapUser> {
 
     @Override
     public LdapUser getUser(String userName, LdapConfig config) throws LdapException {
-        return getUser(userName, config.getUsername(), config.getPassword(), config);
-    }
-
-    public LdapUser getUser(String userName, String bindName, String bindPass, LdapConfig config) throws LdapException {
         LDAPConnection connection = null;
         try {
-
-            if (!StringUtils.isEmpty(bindName) && !StringUtils.isEmpty(bindPass)) {
-                connection = LdapUtil.getConnection(bindName, bindPass, config);
-            } else {
-                connection = LdapUtil.getConnection(config.getUsername(), config.getPassword(), config);
-            }
+            connection = LdapUtil.getConnection(config.getUsername(), config.getPassword(), config);
             LdapUser user = getUserByAttribute(connection, config.getSchema().ATTR_CN, userName, config);
             return user;
         } catch (LDAPException ex) {
