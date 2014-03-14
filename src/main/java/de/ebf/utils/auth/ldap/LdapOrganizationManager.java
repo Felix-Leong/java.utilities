@@ -9,17 +9,15 @@ import com.unboundid.ldap.sdk.AddRequest;
 import com.unboundid.ldap.sdk.DN;
 import com.unboundid.ldap.sdk.DeleteRequest;
 import com.unboundid.ldap.sdk.Entry;
+import com.unboundid.ldap.sdk.Filter;
 import com.unboundid.ldap.sdk.LDAPConnection;
 import com.unboundid.ldap.sdk.LDAPException;
 import com.unboundid.ldap.sdk.LDAPResult;
 import com.unboundid.ldap.sdk.ModifyDNRequest;
 import com.unboundid.ldap.sdk.ResultCode;
 import com.unboundid.ldap.sdk.SearchResult;
-import com.unboundid.ldap.sdk.SearchResultEntry;
 import com.unboundid.ldap.sdk.SearchScope;
 import de.ebf.utils.auth.OrganizationManager;
-import java.util.ArrayList;
-import java.util.List;
 import org.springframework.stereotype.Component;
 
 /**
@@ -28,6 +26,26 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class LdapOrganizationManager implements OrganizationManager {
+    
+    public String checkIfBaseDNIsValid(LdapConfig config) throws LdapException{
+        LDAPConnection connection = null;
+        try {
+            Filter userFilter = Filter.createEqualityFilter(config.getSchema().ATTR_OBJECTCLASS, config.getSchema().OBJECTCLASS_USER);
+            Filter groupFilter = Filter.createEqualityFilter(config.getSchema().ATTR_OBJECTCLASS, config.getSchema().OBJECTCLASS_GROUP);
+            Filter searchFilter = Filter.createORFilter(userFilter, groupFilter);
+            connection = LdapUtil.getConnection(config);
+            SearchResult searchResult = connection.search(config.getBaseDN(), SearchScope.SUB, searchFilter, config.getSchema().ATTR_ALL);
+            if (searchResult!=null && searchResult.getEntryCount()>0){
+                return config.getBaseDN();
+            } else {
+                throw new LdapException("Supplied entry does not contain any users or groups");
+            }
+        } catch (LDAPException ex) {
+            throw new LdapException(ex);
+        } finally {
+            LdapUtil.release(connection);
+        }
+    }
 
     @Override
     public String addOrganization(String name, LdapConfig config) throws LdapException {
@@ -51,11 +69,11 @@ public class LdapOrganizationManager implements OrganizationManager {
     }
 
     @Override
-    public String updateOrganization(String DN, LdapConfig config) throws LdapException {
+    public String updateOrganization(String oldDNStr, String newName, LdapConfig config) throws LdapException {
         LDAPConnection connection = null;
         try {
-            DN oldDN = new DN(DN);
-            DN newDN = new DN(config.getBaseDN());
+            DN oldDN = new DN(oldDNStr);
+            DN newDN = getDN(newName, config);
             if (!oldDN.getRDNString().equals(newDN.getRDNString())){
                 ModifyDNRequest request = new ModifyDNRequest(oldDN, newDN.getRDN(), true);
                 connection = LdapUtil.getConnection(config);
@@ -89,26 +107,6 @@ public class LdapOrganizationManager implements OrganizationManager {
             LdapUtil.release(connection);
         }
     }
-
-   @Override
-   public List<LdapOrganization> getLdapOrganizations(String baseDN, LdapConfig config) throws LdapException {
-      LDAPConnection connection = null;
-      try {
-         connection = LdapUtil.getConnection(config);
-         List<LdapOrganization> OUs = new ArrayList<>();
-         SearchResult searchResults = connection.search(config.getBaseDN(), SearchScope.ONE, (config.getSchema().ATTR_OBJECTCLASS + "=" + config.getSchema().OBJECT_CLASS_OU), config.getSchema().ATTR_DN);
-         for (SearchResultEntry entry : searchResults.getSearchEntries()) {
-            LdapOrganization OU = new LdapOrganization();
-            OU.setDN(entry.getDN());
-            OUs.add(OU);
-         }
-         return OUs;
-      } catch (Exception e) {
-         throw new LdapException(e);
-      } finally {
-         LdapUtil.release(connection);
-      }
-   }
 
    private DN getDN(String name, LdapConfig config) throws LDAPException {
        return new DN("ou=" + name + "," + config.getBaseDN());
