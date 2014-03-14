@@ -22,7 +22,6 @@ import com.unboundid.ldap.sdk.ResultCode;
 import com.unboundid.ldap.sdk.SearchResult;
 import com.unboundid.ldap.sdk.SearchResultEntry;
 import com.unboundid.ldap.sdk.SearchScope;
-import de.ebf.utils.auth.AuthException;
 import de.ebf.utils.auth.GroupManager;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -48,7 +47,7 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
     public LdapGroup createGroup(String groupName, LdapConfig config) throws LdapException {
         LDAPConnection connection = null;
         try {
-            Entry entry = new Entry(LdapUtil.getDN(groupName, config.getBaseDN()));
+            Entry entry = new Entry("cn="+groupName+","+config.getBaseDN());
             entry.addAttribute(config.getSchema().ATTR_OBJECTCLASS, config.getSchema().OBJECTCLASS_GROUP);
             entry.addAttribute(config.getSchema().ATTR_CN, groupName);
             AddRequest addRequest = new AddRequest(entry);

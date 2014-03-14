@@ -43,7 +43,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
     public LdapUser createUser(String username, String firstname, String lastname, LdapConfig config) throws LdapException {
         LDAPConnection connection = null;
         try {
-            Entry entry = new Entry(LdapUtil.getDN(username, config.getBaseDN()));
+            Entry entry = new Entry("cn="+username+","+config.getBaseDN());
             entry.addAttribute(config.getSchema().ATTR_OBJECTCLASS, config.getSchema().OBJECTCLASS_USER);
             entry.addAttribute(config.getSchema().ATTR_FIRST_NAME, firstname);
             entry.addAttribute(config.getSchema().ATTR_LAST_NAME, lastname);
@@ -74,7 +74,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
             connection = LdapUtil.getConnection(newConfig);
             List<Modification> mods = new ArrayList<>();
             
-            String newDN = LdapUtil.getDN(user.getName(), newConfig.getBaseDN());
+            String newDN = "cn="+user.getName()+","+newConfig.getBaseDN();
             if (!StringUtils.isEmpty(user.getName())) {
                 if (!oldConfig.getBaseDN().equals(newConfig.getBaseDN())) {
 
@@ -118,7 +118,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
             }
 
             if (!StringUtils.isEmpty(user.getPassword())) {
-                resetPassword(user.getName(), user.getPassword(), newConfig);
+                resetPassword(user, user.getPassword(), newConfig);
             }
             if (mods.size() > 0) {
                 ModifyRequest modifyRequest = new ModifyRequest(newDN, mods);
@@ -197,7 +197,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
     }
 
     @Override
-    public LdapUser resetPassword(String username, String newPassword, LdapConfig config) throws LdapException {
+    public LdapUser resetPassword(LdapUser user, String newPassword, LdapConfig config) throws LdapException {
         LDAPConnection connection = null;
         try {
             connection = LdapUtil.getConnection(config);
@@ -214,14 +214,14 @@ public class LdapUserManager implements UserManager<LdapUser> {
             } else {
                 modification = new Modification(ModificationType.REPLACE, config.getSchema().ATTR_USER_PW, newPassword);          
             }
-            LDAPResult ldapResult = connection.modify(LdapUtil.getDN(username, config.getBaseDN()), modification);
+            LDAPResult ldapResult = connection.modify(user.getDN(), modification);
             if (ldapResult.getResultCode() != ResultCode.SUCCESS) {
                 throw new LdapException("Error while resetting user password in LDAP: " + ldapResult.getResultCode());
             }
             connection.close();
             LdapUtil.release(connection);
-            LdapUser user = authenticate(username, newPassword, config);
-            LdapUtil.removeConnection(username, config.getBaseDN());
+            user = authenticate(user.getName(), newPassword, config);
+            LdapUtil.removeConnection(user.getName(), config);
             return user;
         } catch (LDAPException e) {
             if (e.getResultCode().equals(ResultCode.UNWILLING_TO_PERFORM)){

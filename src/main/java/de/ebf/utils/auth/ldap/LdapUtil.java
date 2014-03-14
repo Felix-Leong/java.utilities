@@ -28,12 +28,6 @@ public class LdapUtil {
  
     private static final Map<String, LDAPConnectionPool> poolMap = new HashMap<>();
 
-    public static String getDN(String name, String context) {
-        if (!name.contains("=")) {
-            return "cn=" + name + "," + context;
-        }
-        return name;
-    }
     
     public static void verifyConnection(LdapConfig config) throws LDAPException{
         LDAPConnection conn = null;
@@ -51,7 +45,7 @@ public class LdapUtil {
     }
 
     protected static LDAPConnection getConnection(String userName, String password, LdapConfig config) throws LDAPException {
-        String user = getDN(userName, config.getBaseDN());
+        String user = getConnectionPoolKey(userName, config);
         LDAPConnection conn = null;
         if (poolMap.containsKey(user)) {
             LDAPConnectionPool pool = poolMap.get(user);
@@ -134,8 +128,8 @@ public class LdapUtil {
         return dnParts[0].substring("cn=".length());
     }
 
-    public static void removeConnection(String user, String context) {
-        String userDN = getDN(user, context);
+    public static void removeConnection(String user, LdapConfig config) {
+        String userDN = getConnectionPoolKey(user, config);
         LDAPConnectionPool pool = poolMap.get(userDN);
         if (pool != null) {
             pool.close();
@@ -149,6 +143,10 @@ public class LdapUtil {
 
     public static boolean isValidGroupName(String name) {
         return !StringUtils.isEmpty(name) && !name.matches(".*(,;|=).*");
+    }
+    
+    private static String getConnectionPoolKey(String name, LdapConfig config) {
+        return name + config.getServer();
     }
 
     /*
@@ -182,17 +180,6 @@ public class LdapUtil {
         return displayStr.toString();
     }
 
-    //not needed anymore
-    private static String UUIDStringToUUIDByteString(String uuid) {
-        byte[] objectGUID = UUIDStringToByteArray(uuid);
-        StringBuilder result = new StringBuilder();
-        for (int i = 0; i < objectGUID.length; i++) {
-            String transformed = prefixZeros((int) objectGUID[i] & 0xFF);
-            result.append("\\");
-            result.append(transformed);
-        }
-        return result.toString();
-    }
 
     //d130ff50-7963-424c-af64-3ecaa26e7262
     static byte[] UUIDStringToByteArray(String uuid) {

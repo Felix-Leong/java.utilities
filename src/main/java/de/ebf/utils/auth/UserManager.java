@@ -21,7 +21,7 @@ public interface UserManager<User> {
 
    public User getUser(String username, LdapConfig config) throws AuthException;
 
-   public User resetPassword(String username, String newPassword, LdapConfig config) throws AuthException;
+   public User resetPassword(User user, String newPassword, LdapConfig config) throws AuthException;
 
    public boolean deleteUser(String id, LdapConfig config) throws AuthException;
 
