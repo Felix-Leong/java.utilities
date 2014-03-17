@@ -82,10 +82,10 @@ public class LdapUserManager implements UserManager<LdapUser> {
             connection = LdapUtil.getConnection(config);
             List<Modification> mods = new ArrayList<>();
             
-            String oldDN = "cn="+oldUser.getDN()+","+config.getBaseDN();
+            String oldDN = oldUser.getDN();
             String newDN = "cn="+user.getName()+","+config.getBaseDN();
             if (!StringUtils.isEmpty(user.getName())) {
-                if (!oldDN.equals(newDN)) {
+                if (!oldDN.equalsIgnoreCase(newDN)) {
 
                     //get all groups for current user before renaming user. Otherwise group.getMembers() will already contain renamed users
                     List<LdapGroup> allGroups = groupManager.getGroupsForUser(oldUser, config);
