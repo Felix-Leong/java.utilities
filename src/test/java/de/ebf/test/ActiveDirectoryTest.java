@@ -25,6 +25,6 @@ public class ActiveDirectoryTest extends LDAPTest{
         config.setUsername("cn=Administrator,cn=Users,dc=tba,dc=ebf,dc=de");
         config.setPassword("!telek0m2014");
         config.setType(LdapType.ActiveDirectory);
-        initUser();
+        initData();
     }
 }

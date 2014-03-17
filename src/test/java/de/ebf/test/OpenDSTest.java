@@ -25,6 +25,6 @@ public class OpenDSTest extends LDAPTest{
         config.setUsername("cn=Directory Manager");
         config.setPassword("secret");
         config.setType(LdapType.OpenDS);
-        initUser();
+        initData();
     }
 }
