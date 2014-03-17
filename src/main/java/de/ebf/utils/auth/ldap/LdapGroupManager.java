@@ -44,17 +44,17 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
     private static final Logger log = Logger.getLogger(LdapGroupManager.class);
 
     @Override
-    public LdapGroup createGroup(String groupName, LdapConfig config) throws LdapException {
+    public LdapGroup createGroup(LdapGroup group, LdapConfig config) throws LdapException {
         LDAPConnection connection = null;
         try {
-            Entry entry = new Entry("cn="+groupName+","+config.getBaseDN());
+            Entry entry = new Entry("cn="+group.getName()+","+config.getBaseDN());
             entry.addAttribute(config.getSchema().ATTR_OBJECTCLASS, config.getSchema().OBJECTCLASS_GROUP);
-            entry.addAttribute(config.getSchema().ATTR_CN, groupName);
+            entry.addAttribute(config.getSchema().ATTR_CN, group.getName());
             AddRequest addRequest = new AddRequest(entry);
             connection = LdapUtil.getConnection(config);
             LDAPResult ldapResult = connection.add(addRequest);
             if (ldapResult.getResultCode() == (ResultCode.SUCCESS)) {
-                return getGroup(groupName, config);
+                return getGroup(group.getName(), config);
             } else {
                 throw new LdapException("Adding group returned LDAP result code " + ldapResult.getResultCode());
             }
@@ -85,14 +85,13 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
     }
 
     @Override
-    public LdapGroup updateGroup(LdapGroup group, LdapConfig oldConfig, LdapConfig newConfig) throws LdapException {
+    public LdapGroup updateGroup(LdapGroup group, LdapConfig newConfig) throws LdapException {
         LDAPConnection connection = null;
         try {
-            connection = LdapUtil.getConnection(oldConfig);
-            LdapGroup currentGroup = getGroupByUUID(group.getUUID(), oldConfig);
-
+            LdapGroup currentGroup = getGroupByUUID(group.getUUID(), newConfig);
+            connection = LdapUtil.getConnection(newConfig);
             if (!StringUtils.isEmpty(group.getName())) {
-                if (!currentGroup.getName().equals(group.getName()) || !oldConfig.getBaseDN().equals(newConfig.getBaseDN())) {
+                if (!currentGroup.getName().equals(group.getName())) {
                     ModifyDNRequest modifyDNRequest = new ModifyDNRequest(currentGroup.getDN(), "cn=" + group.getName(), true, newConfig.getBaseDN());
                     LDAPResult ldapResult = connection.modifyDN(modifyDNRequest);
                     if (ldapResult.getResultCode() != ResultCode.SUCCESS) {
@@ -144,11 +143,10 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
     }
 
     @Override
-    public Boolean deleteGroup(String UUID, LdapConfig config) throws LdapException {
+    public Boolean deleteGroup(LdapGroup group, LdapConfig config) throws LdapException {
         LDAPConnection connection = null;
         try {
             connection = LdapUtil.getConnection(config);
-            LdapGroup group = getGroupByUUID(UUID, config);
             DeleteRequest deleteRequest = new DeleteRequest(group.getDN());
             LDAPResult ldapResult = connection.delete(deleteRequest);
             return (ldapResult.getResultCode() == ResultCode.SUCCESS);
