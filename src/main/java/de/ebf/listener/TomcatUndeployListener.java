@@ -20,6 +20,9 @@ public class TomcatUndeployListener implements ServletContextListener {
    
    private static final Logger log = Logger.getLogger(TomcatUndeployListener.class);
    
+   //flag to indicate that the application should not be deleted. Used by restart mechism implemented in the onPremis setup
+   public static Boolean DELETE_CONTEXT_FILE = true;
+   
    PropertiesConfiguration config = Config.instance;
     
    @Override
@@ -43,7 +46,9 @@ public class TomcatUndeployListener implements ServletContextListener {
         contextPath = "ROOT";
     }
 
-    if (config.getString("build.profile").equals("development")) {
+    boolean isDebug = java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("jdwp") >= 0;
+    
+    if (isDebug && DELETE_CONTEXT_FILE) {
         final File conextConfigFile = new File(catalinaBase, "conf/Catalina/localhost/"+contextPath+".xml");
         if (conextConfigFile.exists() && conextConfigFile.canRead()) {
             log.info("Deleting "+conextConfigFile.getAbsolutePath()+" to prevent duplicate deployment at next startup.");
