@@ -7,6 +7,7 @@ package de.ebf.utils.auth.ldap;
 import de.ebf.utils.auth.ldap.config.LdapConfig;
 import com.unboundid.ldap.sdk.AddRequest;
 import com.unboundid.ldap.sdk.Attribute;
+import com.unboundid.ldap.sdk.DN;
 import com.unboundid.ldap.sdk.DeleteRequest;
 import com.unboundid.ldap.sdk.Entry;
 import com.unboundid.ldap.sdk.Filter;
@@ -18,6 +19,7 @@ import com.unboundid.ldap.sdk.Modification;
 import com.unboundid.ldap.sdk.ModificationType;
 import com.unboundid.ldap.sdk.ModifyDNRequest;
 import com.unboundid.ldap.sdk.ModifyRequest;
+import com.unboundid.ldap.sdk.RDN;
 import com.unboundid.ldap.sdk.ResultCode;
 import com.unboundid.ldap.sdk.SearchResult;
 import com.unboundid.ldap.sdk.SearchResultEntry;
@@ -85,21 +87,28 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
     }
 
     @Override
-    public LdapGroup updateGroup(LdapGroup group, LdapConfig newConfig) throws LdapException {
+    public LdapGroup updateGroup(LdapGroup group, LdapConfig config) throws LdapException {
         LDAPConnection connection = null;
         try {
-            LdapGroup currentGroup = getGroupByUUID(group.getUUID(), newConfig);
-            connection = LdapUtil.getConnection(newConfig);
-            if (!StringUtils.isEmpty(group.getName())) {
-                if (!currentGroup.getName().equals(group.getName())) {
-                    ModifyDNRequest modifyDNRequest = new ModifyDNRequest(currentGroup.getDN(), "cn=" + group.getName(), true, newConfig.getBaseDN());
-                    LDAPResult ldapResult = connection.modifyDN(modifyDNRequest);
-                    if (ldapResult.getResultCode() != ResultCode.SUCCESS) {
-                        throw new LdapException("Renaming group returned LDAP result code " + ldapResult.getResultCode());
-                    }
+            LdapGroup oldGroup = getGroupByUUID(group.getUUID(), config);
+            connection = LdapUtil.getConnection(config);
+            
+            DN oldDN = new DN(oldGroup.getDN());
+            DN newDN = new DN(group.getDN());
+            
+            if (oldDN.equals(newDN) && !oldGroup.getName().equals(group.getName())){
+                //renaming a user is the same as changing its DN
+                newDN = new DN(new RDN(config.getSchema().ATTR_CN, group.getName()), newDN.getParent());
+            }
+                
+            if (!oldDN.equals(newDN)) {
+                ModifyDNRequest modifyDNRequest = new ModifyDNRequest(oldDN, newDN.getRDN(), true, newDN.getParent());
+                LDAPResult ldapResult = connection.modifyDN(modifyDNRequest);
+                if (ldapResult.getResultCode() != ResultCode.SUCCESS) {
+                    throw new LdapException("Renaming group returned LDAP result code " + ldapResult.getResultCode());
                 }
             }
-            group = getGroupByUUID(group.getUUID(), newConfig);
+            group = getGroupByUUID(group.getUUID(), config);
             return group;
         } catch (LDAPException e) {
             throw new LdapException(e);

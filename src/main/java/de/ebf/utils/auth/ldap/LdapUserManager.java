@@ -2,6 +2,7 @@ package de.ebf.utils.auth.ldap;
 
 import de.ebf.utils.auth.ldap.config.LdapConfig;
 import com.unboundid.ldap.sdk.AddRequest;
+import com.unboundid.ldap.sdk.DN;
 import com.unboundid.ldap.sdk.DeleteRequest;
 import com.unboundid.ldap.sdk.Entry;
 import com.unboundid.ldap.sdk.Filter;
@@ -13,6 +14,7 @@ import com.unboundid.ldap.sdk.Modification;
 import com.unboundid.ldap.sdk.ModificationType;
 import com.unboundid.ldap.sdk.ModifyDNRequest;
 import com.unboundid.ldap.sdk.ModifyRequest;
+import com.unboundid.ldap.sdk.RDN;
 import com.unboundid.ldap.sdk.ResultCode;
 import com.unboundid.ldap.sdk.SearchResult;
 import com.unboundid.ldap.sdk.SearchResultEntry;
@@ -82,46 +84,55 @@ public class LdapUserManager implements UserManager<LdapUser> {
             connection = LdapUtil.getConnection(config);
             List<Modification> mods = new ArrayList<>();
             
-            String oldDN = oldUser.getDN();
-            String newDN = "cn="+user.getName()+","+config.getBaseDN();
-            if (!StringUtils.isEmpty(user.getName())) {
-                if (!oldDN.equalsIgnoreCase(newDN)) {
+            DN oldDN = new DN(oldUser.getDN());
+            DN newDN = new DN(user.getDN());
+            
+            if (oldDN.equals(newDN) && !oldUser.getName().equals(user.getName())){
+                //renaming a user is the same as changing its DN
+                newDN = new DN(new RDN(config.getSchema().ATTR_CN, user.getName()), newDN.getParent());
+            }
+                
+            if (!oldDN.equals(newDN)) {
 
-                    //get all groups for current user before renaming user. Otherwise group.getMembers() will already contain renamed users
-                    List<LdapGroup> allGroups = groupManager.getGroupsForUser(oldUser, config);
-                    
-                    ModifyDNRequest modifyDNRequest = new ModifyDNRequest(oldUser.getDN(), "cn=" + user.getName(), true, config.getBaseDN());
-                    LDAPResult ldapResult = connection.modifyDN(modifyDNRequest);
-                    if (ldapResult.getResultCode() != ResultCode.SUCCESS) {
-                        throw new LdapException("Renaming user returned LDAP result code " + ldapResult.getResultCode());
-                    }
+                //get all groups for current user before renaming user. Otherwise group.getMembers() will already contain renamed users
+                List<LdapGroup> allGroups = groupManager.getGroupsForUser(oldUser, config);
+                
+                //update user DN
+                ModifyDNRequest modifyDNRequest = new ModifyDNRequest(oldDN, newDN.getRDN(), true, newDN.getParent());
+                LDAPResult ldapResult = connection.modifyDN(modifyDNRequest);
+                if (ldapResult.getResultCode() != ResultCode.SUCCESS) {
+                    throw new LdapException("Updating user DN returned LDAP result code " + ldapResult.getResultCode());
+                }
 
-                    //List<LdapGroup> allGroups = groupManager.getAllGroups(oldContext);
-                    if (config.getType().equals(LdapType.OpenDS)){
-                        //also update all dn membership values, since OpenDS doesn't take care of this
-                        for (LdapGroup ldapGroup : allGroups) {
-                            Modification deleteOldUserDN = new Modification(ModificationType.DELETE, config.getSchema().ATTR_MEMBERS, user.getDN());
-                            Modification addNewUserDN = new Modification(ModificationType.ADD, config.getSchema().ATTR_MEMBERS, newDN);
-                            List<Modification> groupMods = new ArrayList<>();
-                            groupMods.add(deleteOldUserDN);
-                            groupMods.add(addNewUserDN);
-                            ModifyRequest modifyRequest = new ModifyRequest(ldapGroup.getDN(), groupMods);
-                            ldapResult = connection.modify(modifyRequest);
-                            if (ldapResult.getResultCode() != (ResultCode.SUCCESS)) {
-                                throw new LdapException("Updating user in group returned LDAP result code " + ldapResult.getResultCode());
-                            }
+                //List<LdapGroup> allGroups = groupManager.getAllGroups(oldContext);
+                if (config.getType().equals(LdapType.OpenDS)){
+                    //also update all dn membership values, since OpenDS doesn't take care of this
+                    for (LdapGroup ldapGroup : allGroups) {
+                        Modification deleteOldUserDN = new Modification(ModificationType.DELETE, config.getSchema().ATTR_MEMBERS, oldUser.getDN());
+                        Modification addNewUserDN = new Modification(ModificationType.ADD, config.getSchema().ATTR_MEMBERS, user.getDN());
+                        List<Modification> groupMods = new ArrayList<>();
+                        groupMods.add(deleteOldUserDN);
+                        groupMods.add(addNewUserDN);
+                        ModifyRequest modifyRequest = new ModifyRequest(ldapGroup.getDN(), groupMods);
+                        ldapResult = connection.modify(modifyRequest);
+                        if (ldapResult.getResultCode() != (ResultCode.SUCCESS)) {
+                            throw new LdapException("Updating user in group returned LDAP result code " + ldapResult.getResultCode());
                         }
                     }
                 }
             }
+            
+            //update first name
             if (!StringUtils.isEmpty(user.getFirstName())) {
                 mods.add(new Modification(ModificationType.REPLACE, config.getSchema().ATTR_FIRST_NAME, user.getFirstName()));
             }
 
+            //update last name
             if (!StringUtils.isEmpty(user.getLastName())) {
                 mods.add(new Modification(ModificationType.REPLACE, config.getSchema().ATTR_LAST_NAME, user.getLastName()));
             }
 
+            //update email
             if (!StringUtils.isEmpty(user.getMail())) {
                 mods.add(new Modification(ModificationType.REPLACE, config.getSchema().ATTR_MAIL, user.getMail()));
             }
@@ -134,6 +145,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
                 }
             }
             
+            //reset password
             if (!StringUtils.isEmpty(user.getPassword())) {
                 resetPassword(user, user.getPassword(), config);
             }
@@ -259,6 +271,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
         LDAPConnection connection = null;
         try {
             Filter filter;
+            connection = LdapUtil.getConnection(config);
             if (config.getType().equals(LdapType.ActiveDirectory)) {
                 filter = Filter.createEqualityFilter(config.getSchema().ATTR_ENTRYUUID, LdapUtil.UUIDStringToByteArray(UUID));
             } else {
