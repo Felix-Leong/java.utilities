@@ -26,36 +26,52 @@ import org.apache.log4j.Logger;
 
 public class MailUtils {
 
-   private static final Logger log = Logger.getLogger(MailUtils.class);
-   private static final String SMTP_SERVER = Config.instance.getString("smtp.server");
-   private static final String SMTP_PORT = Config.instance.getString("smtp.port");
-   private static final String SMTP_USER = Config.instance.getString("smtp.user");
-   private static final String SMTP_PASS = Config.instance.getString("smtp.pass");
-   private static final String SMTP_SENDERMAIL = Config.instance.getString("smtp.user.mail");
-   private static final String SMTP_SENDERNAME = Config.instance.getString("smtp.user.name");
-   private static final String SMTP_BCC_MAIL = Config.instance.getString("smtp.bcc.mail");
-   private static final String SMTP_USER_DEFAULT = "${smtp.user}";
-   private static final String SMTP_PASS_DEFAULT = "${smtp.pass}";
-   public static final String NOREPLY = "noreply@ebf.de";
-   private static Session session;
+   private static  Logger log = Logger.getLogger(MailUtils.class);
+   private static  String SMTP_SERVER ;//= Config.instance.getString("smtp.server");
+   private static  String SMTP_PORT ;//= Config.instance.getString("smtp.port");
+   private static  String SMTP_USER ;//= Config.instance.getString("smtp.user");
+   private static  String SMTP_PASS ;//= Config.instance.getString("smtp.pass");
+   private static  String SMTP_SENDERMAIL ;//= Config.instance.getString("smtp.user.mail");
+   private static  String SMTP_SENDERNAME ;//= Config.instance.getString("smtp.user.name");
+   private static  String SMTP_BCC_MAIL ;//= Config.instance.getString("smtp.bcc.mail");
+   private static  String SMTP_USER_DEFAULT = "${smtp.user}";
+   private static  String SMTP_PASS_DEFAULT = "${smtp.pass}";
+   public static  String NOREPLY = "noreply@ebf.de";
+   private static Session session = null;
 
-   static {
+   /**
+    * 1) This method can be called at the time of Onpremise-SetupWizard with the user freshly entered
+    * properties. At this time, the properties in configuration file are still not available.
+    * 
+    * 2) This method can also be lazily and indirectly called by sendEmail() method with the properties from
+    * the configuration file, whose properties are not available until the onpremise-setupWizard is finished.
+    */
+   public static void setSystemMailProperties(final String server, final String port, final String user, final String pass,
+                                                String senderEmail, String senderName, String bccMail){
+       SMTP_SERVER = server;
+       SMTP_PORT = port;
+       SMTP_USER = user;
+       SMTP_PASS = pass;
+       SMTP_SENDERMAIL = senderEmail;
+       SMTP_SENDERNAME = senderName;
+       SMTP_BCC_MAIL = bccMail;
+               
       Properties props = System.getProperties();
-      props.put("mail.smtp.host", SMTP_SERVER);
-      props.put("mail.smtp.port", SMTP_PORT);
+      props.put("mail.smtp.host", server);
+      props.put("mail.smtp.port", port);
       props.put("mail.transport.protocol", "smtp");
-      if (!StringUtils.isEmpty(SMTP_USER)
-              && !StringUtils.isEmpty(SMTP_PASS)
-              && !SMTP_USER.equals(SMTP_USER_DEFAULT)
-              && !SMTP_PASS.equals(SMTP_PASS_DEFAULT)) {
+      if (!StringUtils.isEmpty(user)
+              && !StringUtils.isEmpty(pass)
+              && !user.equals(SMTP_USER_DEFAULT)
+              && !pass.equals(SMTP_PASS_DEFAULT)) {
          props.put("mail.smtp.auth", "true");
-         props.put("mail.smtp.user", SMTP_USER);
-         props.put("mail.password", SMTP_PASS);
+         props.put("mail.smtp.user", user);
+         props.put("mail.password", pass);
 
          Authenticator auth = new javax.mail.Authenticator() {
             @Override
             public PasswordAuthentication getPasswordAuthentication() {
-               return new PasswordAuthentication(SMTP_USER, SMTP_PASS);
+               return new PasswordAuthentication(user, pass);
             }
          };
          session = Session.getDefaultInstance(props, auth);
@@ -63,6 +79,19 @@ public class MailUtils {
          session = Session.getDefaultInstance(props);
       }
    }
+   
+   /**
+    * This can not be called at the time of setupWizard, because the properties are not finished with setup.
+    */
+    public static void setSystemMailProperties(){
+        setSystemMailProperties(Config.instance.getString("smtp.server"), 
+                                Config.instance.getString("smtp.port"), 
+                                Config.instance.getString("smtp.user"), 
+                                Config.instance.getString("smtp.pass"),
+                                Config.instance.getString("smtp.user.mail"), 
+                                Config.instance.getString("smtp.user.name"), 
+                                Config.instance.getString("smtp.bcc.mail"));
+    }
 
    public static boolean sendMail(String replyTo, String recipient, String subject, String body) {
       return sendMail(replyTo, Arrays.asList(new String[]{recipient}), subject, body, null, null);
@@ -85,6 +114,12 @@ public class MailUtils {
    }
 
    public static boolean sendMail(String replyTo, List<String> recipients, String subject, String body, String htmlBody, File attachment) {
+       /*Lazy-intialization. If the session is not created, we initialize the static properties and the session with
+        the properties from LocalSetting.properties. */
+       if(session==null) {
+           setSystemMailProperties();
+       }
+       
       log.info("Sending message [" + subject + "] to " + recipients + " via " + SMTP_SERVER);
       try {
          MimeMessage message = new MimeMessage(session);
