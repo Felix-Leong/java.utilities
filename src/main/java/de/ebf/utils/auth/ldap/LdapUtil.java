@@ -4,11 +4,15 @@
  */
 package de.ebf.utils.auth.ldap;
 
+import com.unboundid.ldap.sdk.Filter;
 import de.ebf.utils.auth.ldap.config.LdapConfig;
 import com.unboundid.ldap.sdk.LDAPConnection;
 import com.unboundid.ldap.sdk.LDAPConnectionOptions;
 import com.unboundid.ldap.sdk.LDAPConnectionPool;
 import com.unboundid.ldap.sdk.LDAPException;
+import com.unboundid.ldap.sdk.ResultCode;
+import com.unboundid.ldap.sdk.SearchResult;
+import com.unboundid.ldap.sdk.SearchScope;
 import com.unboundid.util.ssl.SSLUtil;
 import com.unboundid.util.ssl.TrustAllTrustManager;
 import java.security.GeneralSecurityException;
@@ -29,12 +33,22 @@ public class LdapUtil {
     private static final Map<String, LDAPConnectionPool> poolMap = new HashMap<>();
 
     
-    public static void verifyConnection(LdapConfig config) throws LDAPException{
+    public static void verifyConnection(LdapConfig config) throws Exception{
         LDAPConnection conn = null;
         try {
             conn = getConnection(config);
             conn.connect(config.getServer(), config.getPort());
             conn.bind(config.getUsername(), config.getPassword());
+            Filter userFilter = Filter.createEqualityFilter(config.getSchema().ATTR_OBJECTCLASS, config.getSchema().OBJECTCLASS_USER);
+            SearchResult searchResult = conn.search(config.getBaseDN(), SearchScope.SUB, userFilter, config.getSchema().ATTR_CN);
+            if (!searchResult.getResultCode().equals(ResultCode.SUCCESS) || searchResult.getEntryCount()<=0){
+                throw new LdapException("The specified base DN does not contain any users.");
+            }
+            Filter groupFilter = Filter.createEqualityFilter(config.getSchema().ATTR_OBJECTCLASS, config.getSchema().OBJECTCLASS_GROUP);
+            searchResult = conn.search(config.getBaseDN(), SearchScope.SUB, groupFilter, config.getSchema().ATTR_CN);
+            if (!searchResult.getResultCode().equals(ResultCode.SUCCESS) || searchResult.getEntryCount()<=0){
+                throw new LdapException("The specified base DN does not contain any groups.");
+            }
         } finally {
             release(conn);
         }
