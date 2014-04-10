@@ -23,7 +23,7 @@ public class ActiveDirectoryTest extends LDAPTest{
         config.setPort(636);
         config.setBaseDN("dc=tba,dc=ebf,dc=de");
         config.setUsername("cn=Administrator,cn=Users,dc=tba,dc=ebf,dc=de");
-        config.setPassword("!telek0m2014");
+        config.setPassword("!Telek0m");
         config.setType(LdapType.ActiveDirectory);
         initData();
     }
