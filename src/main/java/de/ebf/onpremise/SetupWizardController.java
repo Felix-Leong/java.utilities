@@ -53,13 +53,13 @@ public class SetupWizardController {
         return modelAndView;
     }
 
-    @RequestMapping("/start")
+    @RequestMapping("start")
     @ResponseBody
     private SetupWizardMessage start(){
         return new SetupWizardMessage(SetupWizardMessage.SUCCESS, null);
     }
     
-    @RequestMapping("/configDBSubmit")
+    @RequestMapping("configDBSubmit")
     @ResponseBody
     private SetupWizardMessage handleConfigDBSubmit(HttpServletRequest request, HttpServletResponse response) {
 
@@ -87,7 +87,7 @@ public class SetupWizardController {
         return new SetupWizardMessage(SetupWizardMessage.SUCCESS, null);
     }
 
-    @RequestMapping("/configLdapSubmit")
+    @RequestMapping("configLdapSubmit")
     @ResponseBody
     private SetupWizardMessage handleConfigLdapSubmit(HttpServletRequest request, HttpServletResponse response){
 
@@ -133,7 +133,7 @@ public class SetupWizardController {
         return new SetupWizardMessage(SetupWizardMessage.SUCCESS, null);
     }
     
-    @RequestMapping("/configMailSubmit")
+    @RequestMapping("configMailSubmit")
     @ResponseBody
     private SetupWizardMessage handleConfigMailSubmit(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
@@ -164,7 +164,7 @@ public class SetupWizardController {
         return new SetupWizardMessage(SetupWizardMessage.SUCCESS, null);
     }
     
-    @RequestMapping("/finish")
+    @RequestMapping("finish")
     @ResponseBody
     private SetupWizardMessage finish(HttpServletRequest request){
         HttpSession session = request.getSession(false);
