@@ -11,7 +11,6 @@ import de.ebf.utils.MailUtils;
 import de.ebf.utils.auth.ldap.LdapType;
 import de.ebf.utils.auth.ldap.LdapUtil;
 import de.ebf.utils.auth.ldap.config.LdapConfig;
-import de.ebf.utils.auth.ldap.config.LdapDefaultConfig;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -54,6 +53,12 @@ public class SetupWizardController {
         return modelAndView;
     }
 
+    @RequestMapping("/start")
+    @ResponseBody
+    private SetupWizardMessage start(){
+        return new SetupWizardMessage(SetupWizardMessage.SUCCESS, null);
+    }
+    
     @RequestMapping("/configDBSubmit")
     @ResponseBody
     private SetupWizardMessage handleConfigDBSubmit(HttpServletRequest request, HttpServletResponse response) {
@@ -130,7 +135,7 @@ public class SetupWizardController {
     
     @RequestMapping("/configMailSubmit")
     @ResponseBody
-    private SetupWizardMessage handleConfigMailSubmit(HttpServletRequest request, HttpServletResponse response) {
+    private SetupWizardMessage handleConfigMailSubmit(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         if (session == null) {
             return new SetupWizardMessage(SetupWizardMessage.ERROR,Bundle.getString("SetupWizardMessage_SESSION_NOT_EXISTING"));
@@ -156,10 +161,20 @@ public class SetupWizardController {
         //if mail testing is successful, put this attribute in session object
         session.setAttribute(SESSION_ATTR_MAILCONFIG, mailConfig);
 
+        return new SetupWizardMessage(SetupWizardMessage.SUCCESS, null);
+    }
+    
+    @RequestMapping("/finish")
+    @ResponseBody
+    private SetupWizardMessage finish(HttpServletRequest request){
+        HttpSession session = request.getSession(false);
+        if (session == null) {
+            return new SetupWizardMessage(SetupWizardMessage.ERROR,Bundle.getString("SetupWizardMessage_SESSION_NOT_EXISTING"));
+        }        
         //check if all the properties object are stored in session
         DBConfig dbConfig = (DBConfig) session.getAttribute(SESSION_ATTR_DBCONFIG);
         LdapConfig ldapConfig = (LdapConfig) session.getAttribute(SESSION_ATTR_LDAPCONFIG);
-        mailConfig = (MailConfig) session.getAttribute(SESSION_ATTR_MAILCONFIG);
+        MailConfig mailConfig = (MailConfig) session.getAttribute(SESSION_ATTR_MAILCONFIG);
         if(dbConfig==null || ldapConfig==null || mailConfig==null) {
             return new SetupWizardMessage(SetupWizardMessage.ERROR,Bundle.getString("SetupWizardMessage_SESSION_NOT_EXISTING"));
         }
@@ -176,7 +191,7 @@ public class SetupWizardController {
 
         //restart the app to make the properties take effect
         OnpremiseUtil.restartWebApplication();
-
+        
         return new SetupWizardMessage(SetupWizardMessage.SUCCESS, null);
     }
 
