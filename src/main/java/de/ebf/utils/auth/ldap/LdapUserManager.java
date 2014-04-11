@@ -342,7 +342,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
         Filter filter = Filter.createEqualityFilter(attribute, value);
         return getUserByFilter(connection, filter, config);
     }
-
+    
     public List<LdapUser> getUsersByFilter(LDAPConnection connection, Filter filter, LdapConfig config) throws LdapException {
         List<LdapUser> users = new ArrayList<>();
         try {
@@ -362,7 +362,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
                 Collections.sort(users);
             } 
             if (users.isEmpty()){
-                log.warn("Could not find any ldap users for filter [attrName="+filter.getAttributeName()+", value="+filter.getAssertionValue()+", baseDN="+config.getBaseDN()+"]");
+                log.warn("Could not find any ldap users for filter ["+filter+", baseDN="+config.getBaseDN()+"]");
             }
         } catch (LDAPSearchException e) {
             throw new LdapException(e);
@@ -370,7 +370,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
         return users;
     }
 
-    private LdapUser getUserByFilter(LDAPConnection connection, Filter filter, LdapConfig config) throws LdapException {
+    public LdapUser getUserByFilter(LDAPConnection connection, Filter filter, LdapConfig config) throws LdapException {
         List<LdapUser> users = getUsersByFilter(connection, filter, config);
         if (users.size() == 1) {
             return users.get(0);

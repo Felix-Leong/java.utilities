@@ -29,7 +29,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -228,12 +227,15 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
         if (attr != null) {
             String[] memberDNs = attr.getValues();
             for (String dn : memberDNs) {
-                LdapUser user = userManager.getUserByAttribute(connection, config.getSchema().ATTR_DN, dn, config);
+                //members can be users or groups
+                Filter userFilter = Filter.createEqualityFilter(config.getSchema().ATTR_OBJECTCLASS, config.getSchema().OBJECTCLASS_USER);
+                Filter dnFilter = Filter.createEqualityFilter(config.getSchema().ATTR_DN, dn);
+                Filter filter = Filter.createANDFilter(userFilter, dnFilter);
+                LdapUser user = userManager.getUserByFilter(connection, filter, config);
                 if (user == null) {
-                    //members can be users or groups, so if it is not a user, check if it is a group
+                    //so if it is not a user, check if it is a group
                     Filter groupFilter = Filter.createEqualityFilter(config.getSchema().ATTR_OBJECTCLASS, config.getSchema().OBJECTCLASS_GROUP);
-                    Filter dnFilter = Filter.createEqualityFilter(config.getSchema().ATTR_DN, dn);
-                    Filter filter = Filter.createANDFilter(groupFilter, dnFilter);
+                    filter = Filter.createANDFilter(groupFilter, dnFilter);
                     try {
                         SearchResult searchResult = connection.search(config.getBaseDN(), SearchScope.SUB, filter, config.getSchema().ATTR_ALL);
                         if (searchResult.getSearchEntries() != null && searchResult.getSearchEntries().size() > 0) {
