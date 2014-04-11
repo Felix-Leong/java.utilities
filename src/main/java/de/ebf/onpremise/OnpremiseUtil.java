@@ -47,7 +47,7 @@ public class OnpremiseUtil {
         OnpremiseUtil.servletContext = servletContext;
     }
 
-    public static boolean isOnpremise() {
+    public static boolean isSetupRequired() {
         if(isOnpremise==null) {
             isOnpremise = Config.instance.getString("app.require.setup").equalsIgnoreCase("true");
         }

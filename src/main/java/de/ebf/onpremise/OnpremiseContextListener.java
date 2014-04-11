@@ -23,7 +23,7 @@ public class OnpremiseContextListener implements ServletContextListener {
          If it is onpremise type, check if the properties file(JDBC.properties,localSetting.properties) exist in the parent folder.
          If yes, copy these two properties files and paste and overwrite in the Root folder. Start the root appliation context.
          If no, flag that setupwizard to setup the properties is needed.*/
-        if (OnpremiseUtil.isOnpremise()) {
+        if (OnpremiseUtil.isSetupRequired()) {
             if (OnpremiseUtil.existPropertiesFilesInVirutalHostDir()) {
                 /*If onpremise is true and properties files exist in parent dir, copy the 
                  existing properties files from parent dir to root dir.*/
@@ -38,14 +38,13 @@ public class OnpremiseContextListener implements ServletContextListener {
         /*If it is not onpremise, or if it is onpremise and properties setup is finished, load the root 
         application context and the MainDispatcher servlet. Otherwise, load the SetupWizardDispatcher servlet
         for the setupWizard.*/
-        if (!OnpremiseUtil.isOnpremise() || (OnpremiseUtil.isOnpremise() && OnpremiseUtil.isPropertiesSetupFinished())) {
+        if (!OnpremiseUtil.isSetupRequired() || OnpremiseUtil.isPropertiesSetupFinished()) {
             SpringRootContextLoader.getInstance().loadContext();
             OnpremiseUtil.addMainDispatcherServlet();
         } else {
             OnpremiseUtil.addSetupWizardDispatcherServlet();
         }
 
-        
         Config.load(ImportantFile.CLASSES_DIR.getFilePath());
     }
 
