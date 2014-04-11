@@ -15,10 +15,12 @@ import com.unboundid.ldap.sdk.SearchResult;
 import com.unboundid.ldap.sdk.SearchScope;
 import com.unboundid.util.ssl.SSLUtil;
 import com.unboundid.util.ssl.TrustAllTrustManager;
+import de.ebf.utils.Bundle;
 import java.security.GeneralSecurityException;
 import java.util.HashMap;
 import java.util.Map;
 import javax.net.ssl.SSLSocketFactory;
+import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
@@ -32,6 +34,34 @@ public class LdapUtil {
  
     private static final Map<String, LDAPConnectionPool> poolMap = new HashMap<>();
 
+    /**
+     * Validate the ldap-related parameters in request. If successful, these
+     * validated values will be written in specified tenant. If any error, the
+     * tenant keeps unchanged.
+     *
+     * @param request
+     * @param config
+     * @throws Exception
+     */
+    public static void validateLdapParameters(HttpServletRequest request) throws Exception {
+        String ldapTypeString = request.getParameter("ldapType");
+        String ldapServer = request.getParameter("ldapServer");
+        String ldapPortString = request.getParameter("ldapPort");
+        String ldapUser = request.getParameter("ldapUser");
+        String ldapPass = request.getParameter("ldapPass");
+        String ldapBaseDN = request.getParameter("ldapBaseDN");
+        LdapType ldapType = LdapType.valueOf(ldapTypeString);
+        Integer ldapPort = Integer.parseInt(ldapPortString);
+        
+
+        if (ldapType.equals(LdapType.ActiveDirectory) && ldapPort != 636) {
+            throw new Exception(Bundle.getString("ActiveDirectoryPortRequirements"));
+        }
+
+        if (StringUtils.isEmpty(ldapServer) || StringUtils.isEmpty(ldapUser) || StringUtils.isEmpty(ldapPass) || StringUtils.isEmpty(ldapBaseDN)) {
+            throw new Exception(Bundle.getString("RequiredFieldsMustNotBeEmpty"));
+        }
+    }
     
     public static void verifyConnection(LdapConfig config) throws Exception{
         LDAPConnection conn = null;
