@@ -23,13 +23,12 @@ import org.springframework.web.servlet.DispatcherServlet;
  */
 public class OnpremiseUtil {
 
-    private static Boolean isOnpremise = null;
+    private static Boolean isOnpremise;
     private static final Logger log = Logger.getLogger(OnpremiseUtil.class);
-    public static final String BUILD_PROFILE_ONPREMISE = "onpremise";
-    private static String rootAbsolutePath = null;
-    private static ServletContext servletContext = null;
+    private static String rootAbsolutePath;
+    private static ServletContext servletContext;
     private static boolean isPropertiesSetupFinished = false;
-    private static String virutalHosAbsolutePath = null;
+    private static String virutalHosAbsolutePath;
     
     public static boolean isPropertiesSetupFinished() {
         return isPropertiesSetupFinished;
@@ -50,7 +49,7 @@ public class OnpremiseUtil {
 
     public static boolean isOnpremise() {
         if(isOnpremise==null) {
-            isOnpremise = Config.instance.getString("build.profile").equals(OnpremiseUtil.BUILD_PROFILE_ONPREMISE);
+            isOnpremise = Config.instance.getString("app.require.setup").equalsIgnoreCase("true");
         }
         return isOnpremise;
     }
