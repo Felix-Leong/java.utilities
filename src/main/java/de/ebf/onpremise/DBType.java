@@ -11,22 +11,25 @@ package de.ebf.onpremise;
  */
 public enum DBType {
 
-    MySQL("MySQL", "com.mysql.jdbc.Driver", "org.hibernate.dialect.MySQLDialect", "jdbc:mysql://"), //mysql 
-    MSSQL("Miscrosoft SQL Server", "net.sourceforge.jtds.jdbc.Driver", "org.hibernate.dialect.SQLServerDialect", "jdbc:microsoft:sqlserver://"); //microsot sql server
+    MySQL("MySQL", "com.mysql.jdbc.Driver", "org.hibernate.dialect.MySQLDialect", "jdbc:mysql://", "select 1 from dual"), 
+    MSSQL("Miscrosoft SQL Server", "net.sourceforge.jtds.jdbc.Driver", "org.hibernate.dialect.SQLServerDialect", "jdbc:jtds:sqlserver://", "SELECT GETDATE()"); 
 
     private String label;
     private String driverClass;
     private String dialect;
     private String urlPrefix;
-    public String getDialect() {
-        return dialect;
-    }
-    
-    DBType(String label, String driverClass, String dialect, String urlPrefix) {
+    private String testQuery;
+
+    DBType(String label, String driverClass, String dialect, String urlPrefix, String testQuery) {
         this.label = label;
         this.driverClass = driverClass;
         this.dialect = dialect;
         this.urlPrefix = urlPrefix;
+        this.testQuery = testQuery;
+    }
+
+    public String getDialect() {
+        return dialect;
     }
 
     public String getUrlPrefix() {
@@ -39,6 +42,10 @@ public enum DBType {
 
     public String getDriverClass() {
         return driverClass;
+    }
+
+    public String getTestQuery() {
+        return testQuery;
     }
 
 }

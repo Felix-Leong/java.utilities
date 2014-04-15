@@ -40,7 +40,7 @@ public class TestDBConnection {
         Session session = factory.getCurrentSession();
 
         org.hibernate.Transaction tx = session.beginTransaction();
-        Query query = session.createSQLQuery("select 1 from dual");
+        Query query = session.createSQLQuery(dbConfig.getType().getTestQuery());
         List list = query.list();
         if (list != null && list.size() > 0) {
             dbOK = true;
