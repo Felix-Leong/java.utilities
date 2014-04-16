@@ -3,20 +3,21 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>de.ebf</groupId>
     <artifactId>java.utilities</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.1.0</version>
     <description>contains utility libraries</description>
     <packaging>jar</packaging>
 
+    <parent>
+        <groupId>de.ebf</groupId>
+        <artifactId>maven.parent</artifactId>
+        <version>0.1.0</version>
+    </parent>
+    
     <properties>
         <org.springframework.version>4.0.3.RELEASE</org.springframework.version>
         <org.hibernate.version>4.3.1.Final</org.hibernate.version>
     </properties>
 
-    <parent>
-        <groupId>de.ebf</groupId>
-        <artifactId>maven.parent</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
-    </parent>
     <build>
         <plugins>
             <plugin>
