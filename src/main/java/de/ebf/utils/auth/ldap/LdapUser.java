@@ -121,6 +121,6 @@ public class LdapUser extends AbstractUser implements Comparable<LdapUser> {
 
    @Override
    public int compareTo(LdapUser o) {
-      return super.getName().compareTo(o.getName());
+      return super.getName().compareToIgnoreCase(o.getName());
    }
 }

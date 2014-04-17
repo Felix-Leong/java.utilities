@@ -251,7 +251,8 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
                     users.add(user);
                 }
             }
-        }       
+        }
+        Collections.sort(users);
         return users;
     }
 
