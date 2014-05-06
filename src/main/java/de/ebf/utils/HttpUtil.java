@@ -9,6 +9,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import javax.servlet.http.HttpServletRequest;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
@@ -64,24 +65,11 @@ public class HttpUtil {
       DefaultHttpClient httpClient = getNewHttpClient();
 
       try {
-         BasicHttpContext localcontext = new BasicHttpContext();
-
          if (!StringUtils.isEmpty(user) && !StringUtils.isEmpty(pass)) {
-            httpClient.getCredentialsProvider().setCredentials(
-                    new AuthScope(httpGet2.getURI().getHost(), httpGet2.getURI().getPort()),
-                    new UsernamePasswordCredentials(user, pass));
-            // Create AuthCache instance
-            AuthCache authCache = new BasicAuthCache();
-            // Generate BASIC scheme object and add it to the local auth cache
-            BasicScheme basicAuth = new BasicScheme();
-            authCache.put(new HttpHost(httpGet2.getURI().getHost()), basicAuth);
-
-            // Add AuthCache to the execution context
-            localcontext.setAttribute(ClientContext.AUTH_CACHE, authCache);
-
+             httpGet2.addHeader("Authorization", "Basic " + Base64.encodeBase64String((user+":"+pass).getBytes()));
          }
 
-         HttpResponse response = httpClient.execute(httpGet2, localcontext);
+         HttpResponse response = httpClient.execute(httpGet2);//, localcontext);
 
          if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
             log.warn("Got invalid HTTP response code for URL " + url + " " + response.getStatusLine().getStatusCode());
