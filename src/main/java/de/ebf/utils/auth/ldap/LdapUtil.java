@@ -5,7 +5,6 @@
 package de.ebf.utils.auth.ldap;
 
 import com.unboundid.ldap.sdk.Filter;
-import de.ebf.utils.auth.ldap.config.LdapConfig;
 import com.unboundid.ldap.sdk.LDAPConnection;
 import com.unboundid.ldap.sdk.LDAPConnectionOptions;
 import com.unboundid.ldap.sdk.LDAPConnectionPool;
@@ -16,6 +15,7 @@ import com.unboundid.ldap.sdk.SearchScope;
 import com.unboundid.util.ssl.SSLUtil;
 import com.unboundid.util.ssl.TrustAllTrustManager;
 import de.ebf.utils.Bundle;
+import de.ebf.utils.auth.ldap.config.LdapConfig;
 import java.security.GeneralSecurityException;
 import java.util.HashMap;
 import java.util.Map;

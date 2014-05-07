@@ -2,7 +2,6 @@ package de.ebf.utils;
 
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
-
 import org.apache.log4j.Logger;
 
 public class FormatUtils {

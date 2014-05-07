@@ -1,5 +1,6 @@
 package de.ebf.utils;
 
+import edu.umd.cs.findbugs.annotations.SuppressWarnings;
 import java.net.URI;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
@@ -89,13 +90,18 @@ public class HttpUtil {
          sslContext = SSLContext.getInstance("SSL");
          // set up a TrustManager that trusts everything
          sslContext.init(null, new TrustManager[]{new X509TrustManager() {
+               
+               @Override
+               @SuppressWarnings(value = "PZLA_PREFER_ZERO_LENGTH_ARRAYS", justification = "do not change API")
                public X509Certificate[] getAcceptedIssuers() {
                   return null;
                }
 
+               @Override
                public void checkClientTrusted(X509Certificate[] certs, String authType) {
                }
 
+               @Override
                public void checkServerTrusted(X509Certificate[] certs, String authType) {
                }
             }}, new SecureRandom());

@@ -7,8 +7,6 @@
 package de.ebf.utils.auth.ldap.config;
 
 import de.ebf.utils.auth.ldap.LdapType;
-import de.ebf.utils.auth.ldap.schema.ActiveDirectorySchema;
-import de.ebf.utils.auth.ldap.schema.OpenDSSchema;
 import de.ebf.utils.auth.ldap.schema.LdapSchema;
 import de.ebf.utils.auth.ldap.schema.LdapSchemaFactory;
 import java.io.Serializable;
@@ -18,6 +16,8 @@ import java.io.Serializable;
  * @author dominik
  */
 public class LdapConfig implements Serializable {
+    
+    private static final long serialVersionUID = 1L;
     
     private LdapType type;
     private String server;

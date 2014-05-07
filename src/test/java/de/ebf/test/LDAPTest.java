@@ -29,9 +29,10 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @ContextConfiguration(locations={"/applicationContext.xml"})
 public abstract class LDAPTest {
     
-    private static LdapUser user;
-    private static LdapGroup group;
-    protected static LdapConfig config;
+    protected LdapConfig config;
+    
+    private static final String TEST_USER_NAME  = "junitTestUser";
+    private static final String TEST_GROUP_NAME = "junitTestGroup";
 
     @Autowired
     LdapUserManager userManager;
@@ -39,25 +40,7 @@ public abstract class LDAPTest {
     @Autowired
     LdapGroupManager groupManager;
     
-    /*
-    TODO: 
-        add tests for non complex passwords
-    */
 
-    protected static void initData() {
-        user = new LdapUser();
-        user.setName("junitTestUser");
-        user.setDN("cn=junitTestUser,"+config.getBaseDN());
-        user.setFirstName("first");
-        user.setLastName("last");
-        user.setMail("bla@blub.de");
-        user.setPassword("c0mPl3x!");
-        user.setDN("cn=junitTestUser,"+config.getBaseDN());
-        
-        group = new LdapGroup();
-        group.setName("junitTestGroup");
-    }
-    
     @AfterClass
     public static void tearDownClass() {
     }
@@ -73,74 +56,92 @@ public abstract class LDAPTest {
     
     @Test
     public void addUser() throws LdapException{
+        LdapUser user = new LdapUser();
+        user.setName(TEST_USER_NAME);
+        user.setDN("cn=junitTestUser,"+config.getBaseDN());
+        user.setFirstName("first");
+        user.setLastName("last");
+        user.setMail("bla@blub.de");
+        user.setPassword("c0mPl3x!");
+        user.setDN("cn=junitTestUser,"+config.getBaseDN());
         user = userManager.createUser(user, config);
         assert(user.getUUID()!=null);
     }
     
     @Test
     public void updateUser() throws LdapException{
+        LdapUser user = userManager.getUser(TEST_USER_NAME, config);
         user.setName("junitTestUser2");
         user.setMail("bla@blub.de");
         user = userManager.updateUser(user, config);
         assert(user.getName().equals("junitTestUser2"));
         assert(user.getMail().equals("bla@blub.de"));
+        user.setName(TEST_USER_NAME);
+        userManager.updateUser(user, config);
+        assert(user.getName().equals(TEST_USER_NAME));
     }
     
     @Test
     public void resetUserPassword1() throws LdapException{
+        LdapUser user = userManager.getUser(TEST_USER_NAME, config);
         user = userManager.resetPassword(user, "c0mPl3x!!", config);
-    }
-    
-    @Test
-    public void authenticateUser1() throws LdapException{
-        user = userManager.authenticate(user.getName(), "c0mPl3x!!", config);
+        userManager.authenticate(user.getName(), "c0mPl3x!!", config);
     }
     
     @Test
     public void resetUserPassword2() throws LdapException{
+        LdapUser user = userManager.getUser(TEST_USER_NAME, config);
         user.setPassword("c0mPl3x!!!");
-        user = userManager.updateUser(user, config);
+        userManager.updateUser(user, config);
     }
     
-    @Test
-    public void authenticateUser2() throws LdapException{
-        user = userManager.authenticate(user.getName(), "c0mPl3x!!!", config);
-    }
+    //TODO: add tests for non complex passwords
     
     @Test
     public void addGroup() throws LdapException{
+        LdapGroup group = new LdapGroup();
+        group.setName(TEST_GROUP_NAME);
         group = groupManager.createGroup(group, config);
         assert(group.getUUID()!=null);
     }
     
     @Test
     public void updateGroup() throws LdapException{
-        assert(group.getName().equals("junitTestGroup"));
+        LdapGroup group = groupManager.getGroup(TEST_GROUP_NAME, config);
         group.setName("junitTestGroup2");
         group = groupManager.updateGroup(group, config);
         assert(group.getName().equals("junitTestGroup2"));
+        group.setName(TEST_GROUP_NAME);
+        group = groupManager.updateGroup(group, config);
+        assert(group.getName().equals(TEST_GROUP_NAME));
     }
     
     @Test
     public void addUserToGoup() throws LdapException{
+        LdapUser user = userManager.getUser(TEST_USER_NAME, config);
+        LdapGroup group = groupManager.getGroup(TEST_GROUP_NAME, config);
         group = groupManager.addUserToGroup(user, group, config);
         assert(group.getMembers().contains(user));
     }
     
     @Test 
     public void removeUserFromGroup() throws LdapException{
+        LdapUser user = userManager.getUser(TEST_USER_NAME, config);
+        LdapGroup group = groupManager.getGroup(TEST_GROUP_NAME, config);
         group = groupManager.removeUserFromGroup(user, group, config);
         assert(!group.getMembers().contains(user));
     }
     
     @Test
     public void deleteGroup() throws LdapException{
+        LdapGroup group = groupManager.getGroup(TEST_GROUP_NAME, config);
         groupManager.deleteGroup(group, config);
         assert(groupManager.getGroupByUUID(group.getUUID(), config) == null);
     }
 
     @Test
     public void deleteUser() throws LdapException{
+        LdapUser user = userManager.getUser(TEST_USER_NAME, config);
         userManager.deleteUser(user, config);
         assert(userManager.getUserByUUID(user.getUUID(), config)==null);
     }

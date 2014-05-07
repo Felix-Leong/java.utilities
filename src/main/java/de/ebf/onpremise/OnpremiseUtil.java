@@ -47,9 +47,9 @@ public class OnpremiseUtil {
         OnpremiseUtil.servletContext = servletContext;
     }
 
-    public static boolean isSetupRequired() {
+    public static synchronized boolean isSetupRequired() {
         if(isOnpremise==null) {
-            isOnpremise = Config.instance.getString("app.require.setup").equalsIgnoreCase("true");
+            isOnpremise = Config.getInstance().getString("app.require.setup").equalsIgnoreCase("true");
         }
         return isOnpremise;
     }
@@ -113,7 +113,7 @@ public class OnpremiseUtil {
         Dynamic dynamic = servletContext.addServlet("MainDispatcher", DispatcherServlet.class);//MainDispatcherServlet.class);
         dynamic.addMapping("/");
         
-        LoginFilter.isMainDispatcher = true;
+        LoginFilter.setMainDispatcher(true);
     }
     
     
@@ -126,7 +126,7 @@ public class OnpremiseUtil {
         Dynamic dynamic = servletContext.addServlet("SetupWizardDispatcher", DispatcherServlet.class);//SetupWizardDispatcherServlet.class);
         dynamic.addMapping("/");
         
-        LoginFilter.isMainDispatcher = false;
+        LoginFilter.setMainDispatcher(true);
     }
     
     /**
@@ -135,7 +135,7 @@ public class OnpremiseUtil {
      */
     public static void restartWebApplication(){
         try {
-            TomcatUndeployListener.DELETE_CONTEXT_FILE = false;
+            TomcatUndeployListener.setDeleteContextFile(false);
             //touch the web.xml to ask tomcat to restart this web application
             FileUtils.touch(ImportantFile.WEB_XML.getFile());
         } catch (IOException ex) {

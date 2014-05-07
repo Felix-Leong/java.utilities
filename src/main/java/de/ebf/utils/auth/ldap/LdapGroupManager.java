@@ -4,7 +4,6 @@
  */
 package de.ebf.utils.auth.ldap;
 
-import de.ebf.utils.auth.ldap.config.LdapConfig;
 import com.unboundid.ldap.sdk.AddRequest;
 import com.unboundid.ldap.sdk.Attribute;
 import com.unboundid.ldap.sdk.DN;
@@ -25,6 +24,7 @@ import com.unboundid.ldap.sdk.SearchResult;
 import com.unboundid.ldap.sdk.SearchResultEntry;
 import com.unboundid.ldap.sdk.SearchScope;
 import de.ebf.utils.auth.GroupManager;
+import de.ebf.utils.auth.ldap.config.LdapConfig;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -184,7 +184,7 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
             if (searchResults.getEntryCount() > 0) {
                 groups.add(getLdapGroup(conn, searchResults.getSearchEntries().get(0), config));
             }
-        } catch (Exception e) {
+        } catch (LDAPException e) {
             throw new LdapException(e);
         } finally {
             LdapUtil.release(conn);

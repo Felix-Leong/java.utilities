@@ -1,6 +1,5 @@
 package de.ebf.utils.auth.ldap;
 
-import de.ebf.utils.auth.ldap.config.LdapConfig;
 import com.unboundid.ldap.sdk.AddRequest;
 import com.unboundid.ldap.sdk.DN;
 import com.unboundid.ldap.sdk.DeleteRequest;
@@ -21,6 +20,8 @@ import com.unboundid.ldap.sdk.SearchResultEntry;
 import com.unboundid.ldap.sdk.SearchScope;
 import de.ebf.utils.Bundle;
 import de.ebf.utils.auth.UserManager;
+import de.ebf.utils.auth.ldap.config.LdapConfig;
+import edu.umd.cs.findbugs.annotations.SuppressWarnings;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -251,20 +252,17 @@ public class LdapUserManager implements UserManager<LdapUser> {
         try {
             connection = LdapUtil.getConnection(config);
             List<LdapGroup> groups = groupManager.getGroupsForUser(user, config);
-            if (groups != null) {
-                for (LdapGroup group : groups) {
-                    groupManager.removeUserFromGroup(user, group, config);
-                }
-                DeleteRequest deleteRequest = new DeleteRequest(user.getDN());
-                LDAPResult ldapResult = connection.delete(deleteRequest);
-                return (ldapResult.getResultCode() == ResultCode.SUCCESS);
+            for (LdapGroup group : groups) {
+                groupManager.removeUserFromGroup(user, group, config);
             }
+            DeleteRequest deleteRequest = new DeleteRequest(user.getDN());
+            LDAPResult ldapResult = connection.delete(deleteRequest);
+            return (ldapResult.getResultCode() == ResultCode.SUCCESS);
         } catch (LDAPException e) {
             throw new LdapException(e);
         } finally {
             LdapUtil.release(connection);
         }
-        return false;
     }
 
     public LdapUser getUserByUUID(String UUID, LdapConfig config) throws LdapException {
@@ -380,6 +378,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
         return null;
     }
 
+    @SuppressWarnings(value = "PZLA_PREFER_ZERO_LENGTH_ARRAYS", justification = "zero length array would be misleading")
     private byte[] getActiveDirectoryPassword(String password) {
         // http://msdn.microsoft.com/en-us/library/cc223248.aspx
         try {
@@ -387,6 +386,6 @@ public class LdapUserManager implements UserManager<LdapUser> {
         } catch (UnsupportedEncodingException ex) {
             log.error(ex);
         }
-        return password.getBytes();
+        return null;
     }
 }

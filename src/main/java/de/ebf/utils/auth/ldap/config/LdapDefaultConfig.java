@@ -5,16 +5,18 @@ import de.ebf.utils.auth.ldap.LdapType;
 
 public class LdapDefaultConfig extends LdapConfig {
 
-    private static LdapDefaultConfig instance;
+    private static final long serialVersionUID = 1L;
 
+    private static LdapDefaultConfig instance;
+    
     private LdapDefaultConfig() {
         //hide constructor
     }
 
-    public static LdapDefaultConfig getInstance() {
+    public static synchronized LdapDefaultConfig getInstance() {
         if (instance == null) {
             instance = new LdapDefaultConfig();
-            String ldapType = Config.instance.getString("ldap.type");
+            String ldapType = Config.getInstance().getString("ldap.type");
             LdapType type;
             try {
                 type = LdapType.valueOf(ldapType);
@@ -22,11 +24,11 @@ public class LdapDefaultConfig extends LdapConfig {
                 throw new RuntimeException("missing or invalid config entry ldap.type", e);
             }
             instance.setType(type);
-            instance.setServer(Config.instance.getString("ldap.host"));
-            instance.setPort(Integer.parseInt(Config.instance.getString("ldap.port")));
-            instance.setBaseDN(Config.instance.getString("ldap.context"));
-            instance.setUsername(Config.instance.getString("ldap.user"));
-            instance.setPassword(Config.instance.getString("ldap.pass"));
+            instance.setServer(Config.getInstance().getString("ldap.host"));
+            instance.setPort(Integer.parseInt(Config.getInstance().getString("ldap.port")));
+            instance.setBaseDN(Config.getInstance().getString("ldap.context"));
+            instance.setUsername(Config.getInstance().getString("ldap.user"));
+            instance.setPassword(Config.getInstance().getString("ldap.pass"));
         }
         return instance;
     }

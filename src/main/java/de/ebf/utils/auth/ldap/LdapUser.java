@@ -1,6 +1,7 @@
 package de.ebf.utils.auth.ldap;
 
 import de.ebf.utils.auth.AbstractUser;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -9,7 +10,9 @@ import java.util.Objects;
  *
  * @author dwissk
  */
-public class LdapUser extends AbstractUser implements Comparable<LdapUser> {
+public class LdapUser extends AbstractUser implements Comparable<LdapUser>, Serializable {
+   
+   private static final long serialVersionUID = 1L;
 
    private String DN;
    private String firstName;
