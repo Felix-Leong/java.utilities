@@ -6,13 +6,13 @@
 
 package de.ebf.utils.auth.ldap.schema;
 
-import edu.umd.cs.findbugs.annotations.SuppressWarnings;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  *
  * @author dominik
  */
-@SuppressWarnings(value = "URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD", justification = "warning is incorrect")
+@SuppressFBWarnings(value = "URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD", justification = "warning is incorrect")
 public class LdapSchema {
     
     public String ATTR_USER_PW               = "userPassword";

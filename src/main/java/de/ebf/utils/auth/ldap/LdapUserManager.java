@@ -21,7 +21,7 @@ import com.unboundid.ldap.sdk.SearchScope;
 import de.ebf.utils.Bundle;
 import de.ebf.utils.auth.UserManager;
 import de.ebf.utils.auth.ldap.config.LdapConfig;
-import edu.umd.cs.findbugs.annotations.SuppressWarnings;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -378,7 +378,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
         return null;
     }
 
-    @SuppressWarnings(value = "PZLA_PREFER_ZERO_LENGTH_ARRAYS", justification = "zero length array would be misleading")
+    @SuppressFBWarnings(value = "PZLA_PREFER_ZERO_LENGTH_ARRAYS", justification = "zero length array would be misleading")
     private byte[] getActiveDirectoryPassword(String password) {
         // http://msdn.microsoft.com/en-us/library/cc223248.aspx
         try {

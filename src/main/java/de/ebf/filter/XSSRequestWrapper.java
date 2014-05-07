@@ -4,7 +4,7 @@
  */
 package de.ebf.filter;
 
-import edu.umd.cs.findbugs.annotations.SuppressWarnings;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.regex.Pattern;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
@@ -42,7 +42,7 @@ public class XSSRequestWrapper extends HttpServletRequestWrapper {
    }
 
    @Override
-   @SuppressWarnings(value = "PZLA_PREFER_ZERO_LENGTH_ARRAYS", justification = "do not change API")
+   @SuppressFBWarnings(value = "PZLA_PREFER_ZERO_LENGTH_ARRAYS", justification = "do not change API")
    public String[] getParameterValues(String parameter) {
       String[] values = super.getParameterValues(parameter);
 
