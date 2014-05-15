@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>de.ebf</groupId>
     <artifactId>java.utilities</artifactId>
-    <version>0.1.3</version>
+    <version>0.1.4</version>
     <description>contains utility libraries</description>
     <packaging>jar</packaging>
 
@@ -76,6 +76,18 @@
             <groupId>org.owasp.esapi</groupId>
             <artifactId>esapi</artifactId>
             <version>2.0.1</version>
+            <!-- exclude old xerces dependency that causes AbstractMethodError in Java 8 -->
+            <exclusions>
+                <exclusion>
+                    <artifactId>xerces</artifactId>
+                    <groupId>xmlParserAPIs</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>xerces</groupId>
+            <artifactId>xercesImpl</artifactId>
+            <version>2.11.0</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
