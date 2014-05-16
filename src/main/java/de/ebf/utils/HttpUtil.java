@@ -1,16 +1,25 @@
 package de.ebf.utils;
 
+import de.ebf.constants.BaseConstants;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URL;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
+import java.util.logging.Level;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.httpclient.URIException;
+import org.apache.commons.httpclient.util.URIUtil;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -59,7 +68,7 @@ public class HttpUtil {
 
       try {
          if (!StringUtils.isEmpty(user) && !StringUtils.isEmpty(pass)) {
-             httpGet2.addHeader("Authorization", "Basic " + Base64.encodeBase64String((user+":"+pass).getBytes()));
+             httpGet2.addHeader("Authorization", "Basic " + Base64.encodeBase64String((user+":"+pass).getBytes(BaseConstants.UTF8)));
          }
 
          HttpResponse response = httpClient.execute(httpGet2);//, localcontext);
@@ -114,11 +123,42 @@ public class HttpUtil {
          httpClient.setParams(params);
          return httpClient;
       } catch (NoSuchAlgorithmException | KeyManagementException e) {
-         // TODO Auto-generated catch block
-         e.printStackTrace();
+         log.error(e);
       }
       return null;
    }
+   
+    public static byte[] getByteArray(String absoluteUrl, String user, String pass) throws IOException {
+        InputStream stream = null;
+        try {
+            URL urlRequest = new URL(URIUtil.encodeQuery(absoluteUrl));
+            HttpURLConnection conn = (HttpURLConnection) urlRequest.openConnection();
+            if (!StringUtils.isEmpty(user) && !StringUtils.isEmpty(pass)) {
+                conn.addRequestProperty("Authorization", "Basic " + Base64.encodeBase64String((user + ":" + pass).getBytes(BaseConstants.UTF8)));
+            }
+            int contentLength = conn.getContentLength();
+            int bufferLength = 128;
+            stream = conn.getInputStream();
+            byte[] fileData = new byte[contentLength];
+            int bytesread = 0;
+            int offset = 0;
+            while (bytesread >= 0) {
+                if ((offset + bufferLength) > contentLength) {
+                    bufferLength = contentLength - offset;
+                }
+                bytesread = stream.read(fileData, offset, bufferLength);
+                if (bytesread == -1) {
+                    break;
+                }
+                offset += bytesread;
+            }
+            return fileData;
+        } finally {
+            if (stream != null) {
+                stream.close();
+            }
+        }
+    }
 
    public static String getBaseUrl(HttpServletRequest request) {
       return request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + getContextPath(request);
