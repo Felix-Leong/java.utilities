@@ -121,24 +121,40 @@ public class LdapUtil {
     */
     protected static LDAPConnection getUnpooledConnection(String user, String password, LdapConfig config) throws LDAPException{
         LDAPConnection conn = null;
-        LDAPConnectionOptions options = new LDAPConnectionOptions();
-        options.setConnectTimeoutMillis(10*1000);
-        options.setResponseTimeoutMillis(10*1000);
         if (config.getType().equals(LdapType.ActiveDirectory)){
             try {
                 SSLUtil sslUtil = new SSLUtil(new TrustAllTrustManager());
                 SSLSocketFactory sslSocketFactory = sslUtil.createSSLSocketFactory();
                 // Establish a secure connection using the socket factory.
                 conn = new LDAPConnection(sslSocketFactory);
-                conn.setConnectionOptions(options);
-                conn.connect(config.getServer(), config.getPort());
-                conn.bind(user, password);
             } catch (GeneralSecurityException ex) {
                 log.fatal(ex);
             }  
         } else {
-            conn = new LDAPConnection(config.getServer(), config.getPort(), user, password);
+            conn = new LDAPConnection();
+        }
+        if (conn!=null){
+            LDAPConnectionOptions options = new LDAPConnectionOptions();
+            options.setConnectTimeoutMillis(10*1000);
+            options.setResponseTimeoutMillis(10*1000);
             conn.setConnectionOptions(options);
+            try {
+                conn.connect(config.getServer(), config.getPort());
+            } catch (LDAPException e){
+                log.error("Error while connecting to "+config.getServer()+":"+config.getPort(), e);
+                //If a fallback LDAP server is configured, use it
+                String server2 = config.getServer2();
+                Integer port2 = config.getPort2();
+                if (!StringUtils.isEmpty(server2) && port2!=null){
+                    log.info("Falling back to "+server2+":"+port2);
+                    conn.connect(server2, port2);
+                } else {
+                    throw e;
+                }
+            }
+            if (conn.isConnected()){
+                conn.bind(config.getUsername(), config.getPassword());
+            }
         }
         return conn;
     }

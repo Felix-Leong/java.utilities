@@ -108,6 +108,8 @@ public class SetupWizardController {
         String ldapTypeString = request.getParameter("ldapType");
         String ldapServer = request.getParameter("ldapServer");
         String ldapPortString = request.getParameter("ldapPort");
+        String ldapServer2 = request.getParameter("ldapServer2");
+        String ldapPortString2 = request.getParameter("ldapPort2");
         String ldapUser = request.getParameter("ldapUser");
         String ldapPass = request.getParameter("ldapPass");
         String ldapBaseDN = request.getParameter("ldapBaseDN");
@@ -121,14 +123,20 @@ public class SetupWizardController {
         config.setUsername(ldapUser);
         config.setPassword(ldapPass);
         config.setBaseDN(ldapBaseDN);
+      
+        if (!StringUtils.isEmpty(ldapServer2) && !StringUtils.isEmpty(ldapPortString)){
+            config.setServer2(ldapServer2);
+            Integer ldapPort2 = Integer.parseInt(ldapPortString2);
+            config.setPort2(ldapPort2);
+        }
         
         //verify the ldap connection
         try {
             LdapUtil.verifyConnection(config);
         } catch (Exception e) {
-            return new SetupWizardMessage(SetupWizardMessage.ERROR,Bundle.getString("SetupWizardMessage_LDAP_CONN_FAILED")+" "+e.getMessage());
+            return new SetupWizardMessage(SetupWizardMessage.ERROR, Bundle.getString("SetupWizardMessage_LDAP_CONN_FAILED")+" "+e.getMessage());
         }
-
+        
         //if successful, put this attribute in session object
         session.setAttribute(SESSION_ATTR_LDAPCONFIG, config);
         return new SetupWizardMessage(SetupWizardMessage.SUCCESS, null);
@@ -182,7 +190,7 @@ public class SetupWizardController {
         
         try {
             // update the properties files in ROOT by replacing the variables with the collected data from the user.
-            writePropertiesFiles(dbConfig,ldapConfig,mailConfig);
+            writePropertiesFiles(dbConfig, ldapConfig, mailConfig);
         } catch (IOException ex) {
             return new SetupWizardMessage(SetupWizardMessage.ERROR, ex.getMessage());
         }
@@ -325,6 +333,11 @@ public class SetupWizardController {
         localSettingsReplaceMap.put("${ldap.context}", ldapConfig.getBaseDN());
         localSettingsReplaceMap.put("${ldap.user}", ldapConfig.getUsername());
         localSettingsReplaceMap.put("${ldap.pass}", ldapConfig.getPassword());
+        
+        if (!StringUtils.isEmpty(ldapConfig.getServer2()) && ldapConfig.getPort2()!=null){
+            localSettingsReplaceMap.put("${ldap.host2}", ldapConfig.getServer2());
+            localSettingsReplaceMap.put("${ldap.port2}", ldapConfig.getPort2().toString());
+        }
 
         //mail
         localSettingsReplaceMap.put("${smtp.server}", mailConfig.getSmtpHost());

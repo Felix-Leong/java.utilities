@@ -2,8 +2,12 @@ package de.ebf.utils.auth.ldap.config;
 
 import de.ebf.utils.Config;
 import de.ebf.utils.auth.ldap.LdapType;
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 
 public class LdapDefaultConfig extends LdapConfig {
+    
+    private static final Logger log = Logger.getLogger(LdapDefaultConfig.class);
 
     private static final long serialVersionUID = 1L;
 
@@ -29,6 +33,18 @@ public class LdapDefaultConfig extends LdapConfig {
             instance.setBaseDN(Config.getInstance().getString("ldap.context"));
             instance.setUsername(Config.getInstance().getString("ldap.user"));
             instance.setPassword(Config.getInstance().getString("ldap.pass"));
+            
+            //fallback LDAP server
+            String host2 = Config.getInstance().getString("ldap.host2");
+            String port2 = Config.getInstance().getString("ldap.port2");
+            if (!StringUtils.isEmpty(host2) && !host2.equals("${ldap.host2")){
+                instance.setServer2(host2);
+            }
+            try {
+                instance.setPort2(Integer.parseInt(port2));
+            } catch (NumberFormatException | NullPointerException ex){
+                log.warn("Unable to parse "+port2+" as Integer", ex);
+            }
         }
         return instance;
     }
