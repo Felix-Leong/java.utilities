@@ -27,7 +27,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations={"/applicationContext.xml"})
-public abstract class LDAPTest {
+public abstract class LDAPWriteTest {
     
     protected LdapConfig config;
     

@@ -13,7 +13,7 @@ import de.ebf.utils.auth.ldap.config.LdapConfig;
  *
  * @author dominik
  */
-public class ActiveDirectoryTest extends LDAPTest{
+public class ActiveDirectoryTest extends LDAPWriteTest{
     
     public ActiveDirectoryTest() {
         config = new LdapConfig();

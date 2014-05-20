@@ -13,16 +13,15 @@ import de.ebf.utils.auth.ldap.config.LdapConfig;
  *
  * @author dominik
  */
-public class OpenDSTest extends LDAPWriteTest{
+public class ActiveDirectoryGlobalCatalogTest extends LDAPReadTest{
     
-    //@BeforeClass
-    public OpenDSTest(){
+    public ActiveDirectoryGlobalCatalogTest() {
         config = new LdapConfig();
-        config.setServer("127.0.0.1");
-        config.setPort(1389);
+        config.setServer("10.4.6.12");
+        config.setPort(3269);
         config.setBaseDN("dc=tba,dc=ebf,dc=de");
-        config.setUsername("cn=Directory Manager");
-        config.setPassword("secret");
-        config.setType(LdapType.OpenDS);
+        config.setUsername("cn=Administrator,cn=Users,dc=tba,dc=ebf,dc=de");
+        config.setPassword("!Telek0m");
+        config.setType(LdapType.ActiveDirectory);
     }
 }

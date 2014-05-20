@@ -54,7 +54,7 @@ public class LdapUtil {
         Integer ldapPort = Integer.parseInt(ldapPortString);
         
 
-        if (ldapType.equals(LdapType.ActiveDirectory) && ldapPort != 636) {
+        if (ldapType.equals(LdapType.ActiveDirectory) && (ldapPort != 636 || ldapPort!= 3269)) {
             throw new Exception(Bundle.getString("ActiveDirectoryPortRequirements"));
         }
 
