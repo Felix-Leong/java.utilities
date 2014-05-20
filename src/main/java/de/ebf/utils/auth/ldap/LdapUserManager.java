@@ -350,12 +350,12 @@ public class LdapUserManager implements UserManager<LdapUser> {
             if (searchResults.getEntryCount() > 0) {
                 for (SearchResultEntry entry : searchResults.getSearchEntries()) {
                     String dn = entry.getAttributeValue(config.getSchema().ATTR_DN);
-                    // do not add object from the Builtin container (Active Directory) or the LDAP agent account
-                    if (!dn.contains("CN=Builtin")){
-                        if (!dn.equalsIgnoreCase(config.getUsername())){
+                    // do not add object from the Builtin container (Active Directory) or the LDAP agent account - disabled 2014-05-20: group members should be visible
+//                    if (!dn.contains("CN=Builtin")){
+//                        if (!dn.equalsIgnoreCase(config.getUsername())){
                             users.add(getLdapUser(entry, config));
-                        }
-                    }
+//                        }
+//                    }
                 }
                 Collections.sort(users);
             } 
