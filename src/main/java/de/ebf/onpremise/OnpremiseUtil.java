@@ -126,7 +126,7 @@ public class OnpremiseUtil {
         Dynamic dynamic = servletContext.addServlet("SetupWizardDispatcher", DispatcherServlet.class);//SetupWizardDispatcherServlet.class);
         dynamic.addMapping("/");
         
-        LoginFilter.setMainDispatcher(true);
+        LoginFilter.setMainDispatcher(false);
     }
     
     /**
