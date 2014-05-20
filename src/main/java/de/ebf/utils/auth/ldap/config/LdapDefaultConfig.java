@@ -37,13 +37,13 @@ public class LdapDefaultConfig extends LdapConfig {
             //fallback LDAP server
             String host2 = Config.getInstance().getString("ldap.host2");
             String port2 = Config.getInstance().getString("ldap.port2");
-            if (!StringUtils.isEmpty(host2) && !host2.equals("${ldap.host2")){
+            if (!StringUtils.isEmpty(host2)){
                 instance.setServer2(host2);
             }
             try {
                 instance.setPort2(Integer.parseInt(port2));
             } catch (NumberFormatException | NullPointerException ex){
-                log.warn("Unable to parse "+port2+" as Integer", ex);
+                log.warn("Unable to parse '"+port2+"' as Integer", ex);
             }
         }
         return instance;
