@@ -206,7 +206,7 @@ public class LdapUtil {
     }
     
     private static String getConnectionPoolKey(String name, LdapConfig config) {
-        return name + config.getServer();
+        return name + "@" + config.getServer() +":"+ config.getPort();
     }
 
     /*
