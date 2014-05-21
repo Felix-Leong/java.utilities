@@ -41,7 +41,9 @@ public class LdapDefaultConfig extends LdapConfig {
                 instance.setServer2(host2);
             }
             try {
-                instance.setPort2(Integer.parseInt(port2));
+                if (!StringUtils.isEmpty(port2)){
+                    instance.setPort2(Integer.parseInt(port2));
+                }
             } catch (NumberFormatException | NullPointerException ex){
                 log.warn("Unable to parse '"+port2+"' as Integer", ex);
             }
