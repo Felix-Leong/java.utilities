@@ -377,6 +377,23 @@ public class LdapUserManager implements UserManager<LdapUser> {
         }
         return null;
     }
+    
+    public String getAttribute(LdapUser user, String attributeName, LdapConfig config) throws LdapException{
+        LDAPConnection connection = null;
+        try {
+            connection = LdapUtil.getConnection(config);
+            Filter userFilter = Filter.createEqualityFilter(config.getSchema().ATTR_DN, user.getDN());
+            SearchResult searchResults = connection.search(config.getBaseDN(), SearchScope.SUB, userFilter, attributeName);
+            if (searchResults.getEntryCount() == 1) {
+                return searchResults.getSearchEntries().get(0).getAttributeValue(attributeName);
+            }
+        } catch (LDAPException ex) {
+            throw new LdapException(ex);
+        } finally {
+            LdapUtil.release(connection);
+        }
+        return null;
+    }
 
     @SuppressFBWarnings(value = "PZLA_PREFER_ZERO_LENGTH_ARRAYS", justification = "zero length array would be misleading")
     private byte[] getActiveDirectoryPassword(String password) {
