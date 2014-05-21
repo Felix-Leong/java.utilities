@@ -12,8 +12,9 @@ package de.ebf.constants;
  */
 public class BaseConstants {
     
-    public static final String UTF8                          = "UTF-8";
-    public static final String SESSION_USER             = "user";
+    public static final String UTF8                             = "UTF-8";
+    public static final String SESSION_USER                     = "user";
+    public static final String HTTP_RESPONSE_HEADER_MSG         = "msg";
    
     
 }
