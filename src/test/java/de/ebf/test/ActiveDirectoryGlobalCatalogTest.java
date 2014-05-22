@@ -21,7 +21,7 @@ public class ActiveDirectoryGlobalCatalogTest extends LDAPReadTest{
         config.setPort(3269);
         config.setBaseDN("dc=tba,dc=ebf,dc=de");
         config.setUsername("cn=Administrator,cn=Users,dc=tba,dc=ebf,dc=de");
-        config.setPassword("!Telek0m");
+        config.setPassword("Eo2WUgNw");
         config.setType(LdapType.ActiveDirectory);
     }
 }
