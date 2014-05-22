@@ -313,6 +313,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
             // Microsoft stores GUIDs in a binary format that differs from the RFC standard of UUIDs (RFC #4122).
             String uuid = LdapUtil.bytesToUUID(entry.getAttributeValueBytes(config.getSchema().ATTR_ENTRYUUID));
             user.setUUID(uuid);
+            user.setPrimaryGroupId(entry.getAttributeValueAsInteger(ActiveDirectorySchema.ATTR_PRIMARY_GROUP_ID));
         } else {
             user.setUUID(entry.getAttributeValue(config.getSchema().ATTR_ENTRYUUID));
         }

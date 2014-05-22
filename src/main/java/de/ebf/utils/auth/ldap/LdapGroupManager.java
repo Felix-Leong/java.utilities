@@ -263,7 +263,7 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
                     List<LdapUser> members = new ArrayList<>();
                     List<LdapUser> allUsers = userManager.getAllUsers(config);
                     for (LdapUser user : allUsers) {
-                        if (!StringUtils.isEmpty(user.getPrimaryGroupId()) && user.getPrimaryGroupId().equals("513")){
+                        if (user.getPrimaryGroupId()!=null && user.getPrimaryGroupId().equals(513)){
                             members.add(user);
                         }
                     }

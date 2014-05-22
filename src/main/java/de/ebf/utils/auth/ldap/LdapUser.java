@@ -25,7 +25,7 @@ public class LdapUser extends AbstractUser implements Comparable<LdapUser>, Seri
    private String context;
    
    //Active Directory specific
-   private String primaryGroupId;
+   private Integer primaryGroupId;
 
    public void setPhone(String phone) {
       this.phone = phone;
@@ -99,11 +99,11 @@ public class LdapUser extends AbstractUser implements Comparable<LdapUser>, Seri
       this.lastName = lastName;
    }
 
-    public String getPrimaryGroupId() {
+    public Integer getPrimaryGroupId() {
         return primaryGroupId;
     }
 
-    public void setPrimaryGroupId(String primaryGroupId) {
+    public void setPrimaryGroupId(Integer primaryGroupId) {
         this.primaryGroupId = primaryGroupId;
     }
    
