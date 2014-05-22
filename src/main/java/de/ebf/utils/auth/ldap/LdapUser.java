@@ -23,6 +23,9 @@ public class LdapUser extends AbstractUser implements Comparable<LdapUser>, Seri
    private String password;
    private List<LdapGroup> groups;
    private String context;
+   
+   //Active Directory specific
+   private String primaryGroupId;
 
    public void setPhone(String phone) {
       this.phone = phone;
@@ -96,6 +99,15 @@ public class LdapUser extends AbstractUser implements Comparable<LdapUser>, Seri
       this.lastName = lastName;
    }
 
+    public String getPrimaryGroupId() {
+        return primaryGroupId;
+    }
+
+    public void setPrimaryGroupId(String primaryGroupId) {
+        this.primaryGroupId = primaryGroupId;
+    }
+   
+
    @Override
    public int hashCode() {
       int hash = 7;
@@ -125,5 +137,10 @@ public class LdapUser extends AbstractUser implements Comparable<LdapUser>, Seri
    @Override
    public int compareTo(LdapUser o) {
       return super.getName().compareToIgnoreCase(o.getName());
+   }
+   
+   @Override
+   public String toString(){
+       return DN;
    }
 }

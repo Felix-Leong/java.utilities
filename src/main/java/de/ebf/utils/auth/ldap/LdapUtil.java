@@ -239,8 +239,8 @@ public class LdapUtil {
 
         return displayStr.toString();
     }
-
-
+    
+    
     //d130ff50-7963-424c-af64-3ecaa26e7262
     static byte[] UUIDStringToByteArray(String uuid) {
         uuid = uuid.replace("-", "");
@@ -280,5 +280,44 @@ public class LdapUtil {
         } else {
             return Integer.toHexString(value);
         }
+    }
+    
+    
+    //objectSid
+    public static String bytesToSid(byte[] SID) {
+        // Add the 'S' prefix
+        StringBuilder strSID = new StringBuilder("S-");
+
+   // bytes[0] : in the array is the version (must be 1 but might 
+        // change in the future)
+        strSID.append(SID[0]).append('-');
+
+        // bytes[2..7] : the Authority
+        StringBuilder tmpBuff = new StringBuilder();
+        for (int t = 2; t <= 7; t++) {
+            String hexString = Integer.toHexString(SID[t] & 0xFF);
+            tmpBuff.append(hexString);
+        }
+        strSID.append(Long.parseLong(tmpBuff.toString(), 16));
+
+        // bytes[1] : the sub authorities count
+        int count = SID[1];
+
+   // bytes[8..end] : the sub authorities (these are Integers - notice
+        // the endian)
+        for (int i = 0; i < count; i++) {
+            int currSubAuthOffset = i * 4;
+            tmpBuff.setLength(0);
+            tmpBuff.append(String.format("%02X%02X%02X%02X",
+                    (SID[11 + currSubAuthOffset] & 0xFF),
+                    (SID[10 + currSubAuthOffset] & 0xFF),
+                    (SID[9 + currSubAuthOffset] & 0xFF),
+                    (SID[8 + currSubAuthOffset] & 0xFF)));
+
+            strSID.append('-').append(Long.parseLong(tmpBuff.toString(), 16));
+        }
+
+        // That's it - we have the SID
+        return strSID.toString();
     }
 }

@@ -25,12 +25,12 @@ public class LdapSchema {
     public String ATTR_UID                   = "uid";
     public String ATTR_TELEPHONE_NUMBER      = "telephoneNumber";
     public String ATTR_MEMBERS               = "uniqueMember";
+    //public String ATTR_IS_MEMBER_OF          = "isMemberOf"; 
     public String OBJECTCLASS_USER           = "inetOrgPerson";
     public String OBJECTCLASS_GROUP          = "groupOfUniqueNames";
     public String OBJECT_CLASS_OU            = "organizationalUnit";
     public String OBJECT_CLASS_ORGANIZATION  = "domain";
     public String ATTR_DN                    = "entryDN";
-    public String ATTR_USER_ACCOUNT_CONTROL  = null; //exists only in AD
     public String[] ATTR_ALL                 = null;
 
     protected LdapSchema(){

@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -249,6 +250,24 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
                     }
                 } else {
                     users.add(user);
+                }
+            }
+        } else {
+            if (config.getType().equals(LdapType.ActiveDirectory)){
+                //The Domain Users group uses a "computed" mechanism based on the "primary group ID" of the user to determine membership and does not typically store members as multi-valued linked attributes
+                //The objectSid of the Domain Users group is known to always end in -513
+                Attribute attribute = entry.getAttribute(config.getSchema().ATTR_UID);
+                byte[] objectSidByte = attribute.getValueByteArray();
+                String objectSid = LdapUtil.bytesToSid(objectSidByte);
+                if (objectSid.endsWith("-513")){
+                    List<LdapUser> members = new ArrayList<>();
+                    List<LdapUser> allUsers = userManager.getAllUsers(config);
+                    for (LdapUser user : allUsers) {
+                        if (!StringUtils.isEmpty(user.getPrimaryGroupId()) && user.getPrimaryGroupId().equals("513")){
+                            members.add(user);
+                        }
+                    }
+                    return members;
                 }
             }
         }

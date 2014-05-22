@@ -21,6 +21,7 @@ import com.unboundid.ldap.sdk.SearchScope;
 import de.ebf.utils.Bundle;
 import de.ebf.utils.auth.UserManager;
 import de.ebf.utils.auth.ldap.config.LdapConfig;
+import de.ebf.utils.auth.ldap.schema.ActiveDirectorySchema;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -54,7 +55,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
             if (config.getType().equals(LdapType.ActiveDirectory)){
                 //by default, newly created AD accounts are disabled
                 //http://www.netvision.com/ad_useraccountcontrol.php?blog
-                entry.addAttribute(config.getSchema().ATTR_USER_ACCOUNT_CONTROL, "544");
+                entry.addAttribute(ActiveDirectorySchema.ATTR_USER_ACCOUNT_CONTROL, "544");
                 entry.addAttribute(config.getSchema().ATTR_USER_PW, getActiveDirectoryPassword(user.getPassword()));
             } else {
                 
