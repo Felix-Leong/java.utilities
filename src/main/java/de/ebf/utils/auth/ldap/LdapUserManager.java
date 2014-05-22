@@ -358,9 +358,6 @@ public class LdapUserManager implements UserManager<LdapUser> {
 //                    }
                 }
                 Collections.sort(users);
-            } 
-            if (users.isEmpty()){
-                log.warn("Could not find any ldap users for filter ["+filter+", baseDN="+config.getBaseDN()+"]");
             }
         } catch (LDAPSearchException e) {
             throw new LdapException(e);
