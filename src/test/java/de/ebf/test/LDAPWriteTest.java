@@ -63,7 +63,7 @@ public abstract class LDAPWriteTest {
         user.setLastName("last");
         user.setMail("bla@blub.de");
         user.setPassword("c0mPl3x!");
-        user.setDN("cn=junitTestUser,"+config.getBaseDN());
+        user.setDN("cn="+TEST_USER_NAME+","+config.getBaseDN());
         user = userManager.createUser(user, config);
         assert(user.getUUID()!=null);
     }
