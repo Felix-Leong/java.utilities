@@ -5,20 +5,17 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
-import java.util.logging.Level;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.httpclient.URIException;
 import org.apache.commons.httpclient.util.URIUtil;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpResponse;
@@ -42,8 +39,10 @@ public class HttpUtil {
 
    private static final Logger log = Logger.getLogger(HttpUtil.class);
    /* DEFAULT HTTP CLIENT VALUES */
-   private static final int DEFAULT_CONNECTION_TIMEOUT = 20000;
-   private static final boolean DEFAULT_FOLLOW_REDIRECTS = true;
+   private static final int     DEFAULT_CONNECTION_TIMEOUT      = 20000;
+   private static final boolean DEFAULT_FOLLOW_REDIRECTS        = true;
+   private static final String  PREFIX_BASIC                    = "Basic ";
+   
 
    public static boolean isAvailable(String url, String user, String pass) throws Exception {
       HttpResponse httpResponse = HttpUtil.get(url, user, pass);
@@ -167,4 +166,30 @@ public class HttpUtil {
    public static String getContextPath(HttpServletRequest request) {
       return (request.getContextPath() == null) ? "" : request.getContextPath();
    }
+   
+    public static String getBasicAuthUsername(HttpServletRequest request) {
+        return getBasicAuthCredential(request, 0);
+    }
+    
+    public static String getBasicAuthPassword(HttpServletRequest request) {
+        return getBasicAuthCredential(request, 1);
+    }
+   
+    private static String getBasicAuthCredential(HttpServletRequest request, int position) {
+        String authorization = request.getHeader("Authorization");
+        if (!StringUtils.isEmpty(authorization) && authorization.startsWith(PREFIX_BASIC)) {
+            String[] decodedAuthorization = decodeBasicAuth(authorization.substring(PREFIX_BASIC.length()));
+            if (decodedAuthorization != null && decodedAuthorization.length == 2) {
+                return decodedAuthorization[position];
+            }
+        }
+        return null;
+    }
+
+    private static String[] decodeBasicAuth(final String encodedString) {
+        final byte[] decodedBytes = Base64.decodeBase64(encodedString.getBytes());
+        final String pair = new String(decodedBytes);
+        final String[] userDetails = pair.split(":", 2);
+        return userDetails;
+    }
 }
