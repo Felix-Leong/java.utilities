@@ -4,11 +4,15 @@
  */
 package de.ebf.utils.auth;
 
+import java.io.Serializable;
+
 /**
  *
  * @author Dominik
  */
-public abstract class AbstractGroup<User> implements Group {
+public abstract class AbstractGroup<User> implements Group, Serializable {
+    
+    private static final long serialVersionUID = 1L;
 
    private String name;
 
