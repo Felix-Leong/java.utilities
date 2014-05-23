@@ -25,11 +25,11 @@ import com.unboundid.ldap.sdk.SearchResultEntry;
 import com.unboundid.ldap.sdk.SearchScope;
 import de.ebf.utils.auth.GroupManager;
 import de.ebf.utils.auth.ldap.config.LdapConfig;
+import de.ebf.utils.auth.ldap.schema.ActiveDirectorySchema;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -41,6 +41,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
 
+    private static final int ACTIVE_DIRECTORY_DOMAIN_USERS_GROUP_TOKEN_SUFFIX = 513;
+    
     @Autowired
     LdapUserManager userManager;
     private static final Logger log = Logger.getLogger(LdapGroupManager.class);
@@ -209,6 +211,8 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
         if (config.getType().equals(LdapType.ActiveDirectory)) {
             String uuid = LdapUtil.bytesToUUID(entry.getAttributeValueBytes(config.getSchema().ATTR_ENTRYUUID));
             group.setUUID(uuid);
+            
+            group.setObjectSid(getObjectSid(entry, config));    
         } else {
             group.setUUID(entry.getAttributeValue(config.getSchema().ATTR_ENTRYUUID));
         }
@@ -256,16 +260,21 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
             if (config.getType().equals(LdapType.ActiveDirectory)){
                 //The Domain Users group uses a "computed" mechanism based on the "primary group ID" of the user to determine membership and does not typically store members as multi-valued linked attributes
                 //The objectSid of the Domain Users group is known to always end in -513
-                Attribute attribute = entry.getAttribute(config.getSchema().ATTR_UID);
-                byte[] objectSidByte = attribute.getValueByteArray();
-                String objectSid = LdapUtil.bytesToSid(objectSidByte);
-                if (objectSid.endsWith("-513")){
+                if (getObjectSid(entry, config).endsWith("-"+ACTIVE_DIRECTORY_DOMAIN_USERS_GROUP_TOKEN_SUFFIX)){
                     List<LdapUser> members = new ArrayList<>();
-                    List<LdapUser> allUsers = userManager.getAllUsers(config);
-                    for (LdapUser user : allUsers) {
-                        if (user.getPrimaryGroupId()!=null && user.getPrimaryGroupId().equals(513)){
-                            members.add(user);
+                    
+                    Filter userFilter = Filter.createEqualityFilter(config.getSchema().ATTR_OBJECTCLASS, config.getSchema().OBJECTCLASS_USER);
+                    Filter primaryGroupIdFilter = Filter.createEqualityFilter(ActiveDirectorySchema.ATTR_PRIMARY_GROUP_ID, ACTIVE_DIRECTORY_DOMAIN_USERS_GROUP_TOKEN_SUFFIX+"");
+                    Filter filter = Filter.createANDFilter(userFilter, primaryGroupIdFilter);
+                    SearchResult searchResults;
+                    try {
+                        searchResults = connection.search(config.getBaseDN(), SearchScope.SUB, filter, config.getSchema().ATTR_ALL);
+                        for (SearchResultEntry memberEntry : searchResults.getSearchEntries()) {
+                            LdapUser ldapUser = userManager.getLdapUser(memberEntry, config);
+                            members.add(ldapUser);
                         }
+                    } catch (LDAPSearchException ex) {
+                        throw new LdapException(ex);
                     }
                     return members;
                 }
@@ -279,6 +288,12 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
     public LdapGroup removeUserFromGroup(LdapUser user, LdapGroup group, LdapConfig config) throws LdapException {
         LDAPConnection connection = null;
         try {
+            if (config.getType().equals(LdapType.ActiveDirectory)){
+                //do not try to remove users from the Domain users group
+                if (group.getObjectSid().endsWith("-"+ACTIVE_DIRECTORY_DOMAIN_USERS_GROUP_TOKEN_SUFFIX)){
+                    return group;
+                }
+            }
             connection = LdapUtil.getConnection(config);
             Modification modification = new Modification(ModificationType.DELETE, config.getSchema().ATTR_MEMBERS, user.getDN());
             ModifyRequest modifyRequest = new ModifyRequest(group.getDN(), modification);
@@ -323,5 +338,11 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
             }
         }
         return groups;
+    }
+
+    private String getObjectSid(SearchResultEntry entry, LdapConfig config) {
+        Attribute attribute = entry.getAttribute(config.getSchema().ATTR_UID);
+        byte[] objectSidByte = attribute.getValueByteArray();
+        return LdapUtil.bytesToSid(objectSidByte);
     }
 }

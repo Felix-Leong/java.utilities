@@ -300,7 +300,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
         }
     }
 
-    private LdapUser getLdapUser(SearchResultEntry entry, LdapConfig config) throws LdapException {
+    public LdapUser getLdapUser(SearchResultEntry entry, LdapConfig config) throws LdapException {
         LdapUser user = new LdapUser();
         user.setName(entry.getAttributeValue(config.getSchema().ATTR_CN));
         user.setFirstName(entry.getAttributeValue(config.getSchema().ATTR_FIRST_NAME));

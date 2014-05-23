@@ -22,6 +22,9 @@ public class LdapGroup extends AbstractGroup implements Comparable<LdapGroup>, S
    private String DN;
    private List<LdapUser> members;
    private String context;
+   
+   //Active Directory only
+   private String objectSid;
 
    public String getUUID() {
       return UUID;
@@ -54,6 +57,14 @@ public class LdapGroup extends AbstractGroup implements Comparable<LdapGroup>, S
    public void setContext(String context) {
       this.context = context;
    }
+
+    public String getObjectSid() {
+        return objectSid;
+    }
+
+    public void setObjectSid(String objectSid) {
+        this.objectSid = objectSid;
+    }
    
    @Override
    public int compareTo(LdapGroup o) {
