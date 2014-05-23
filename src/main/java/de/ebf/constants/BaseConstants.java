@@ -18,5 +18,6 @@ public class BaseConstants {
     public static final String HTTP_REQUEST_HEADER_CLIENT_OS            = "clientOS";
     public static final String HTTP_REQUEST_HEADER_CLIENT_VERSION       = "clientVersion";
     public static final String HTTP_REQUEST_HEADER_CLIENT_DEVICE        = "clientDevice";
+    public static final String HTTP_REQUEST_HEADER_API_VERSION          = "apiVersion";
     
 }
