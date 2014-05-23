@@ -13,7 +13,7 @@ import de.ebf.utils.auth.ldap.LdapUser;
 import de.ebf.utils.auth.ldap.LdapUserManager;
 import de.ebf.utils.auth.ldap.LdapUtil;
 import de.ebf.utils.auth.ldap.config.LdapConfig;
-import java.util.List;
+import org.apache.commons.lang.StringUtils;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -63,12 +63,14 @@ public abstract class LDAPReadTest {
    
    @Test
    public void getUser() throws LdapException{
-       userManager.getUser(TEST_USER_NAME, config);
+        LdapUser user = userManager.getUser(TEST_USER_NAME, config);
+        assert(user!=null);
    }
    
    @Test
    public void getGroup() throws LdapException{
-        groupManager.getGroup(TEST_GROUP_NAME, config);
+        LdapGroup group = groupManager.getGroup(TEST_GROUP_NAME, config);
+        assert(group!=null);
    }
    
    @Test

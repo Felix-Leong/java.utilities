@@ -187,7 +187,16 @@ public class LdapUserManager implements UserManager<LdapUser> {
         LDAPConnection connection = null;
         try {
             connection = LdapUtil.getConnection(config.getUsername(), config.getPassword(), config);
-            LdapUser user = getUserByAttribute(connection, config.getSchema().ATTR_CN, userName, config);
+            Filter filter;
+            Filter cnFilter = Filter.createEqualityFilter(config.getSchema().ATTR_CN, userName);
+            if (config.getType().equals(LdapType.ActiveDirectory)){
+                Filter samAccountNameFilter     = Filter.createEqualityFilter(ActiveDirectorySchema.ATTR_SAM_ACCOUNT_NAME, userName);
+                Filter userPrincipalNameFilter  = Filter.createEqualityFilter(ActiveDirectorySchema.ATTR_USER_PRINCIPAL_NAME, userName);
+                filter = Filter.createORFilter(cnFilter, samAccountNameFilter, userPrincipalNameFilter);
+            } else {
+                filter = cnFilter;
+            }
+            LdapUser user = getUserByFilter(connection, filter, config);
             return user;
         } catch (LDAPException ex) {
             throw new LdapException(ex);

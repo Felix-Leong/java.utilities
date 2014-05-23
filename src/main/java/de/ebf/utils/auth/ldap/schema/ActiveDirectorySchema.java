@@ -17,9 +17,10 @@ import java.util.Arrays;
 public class ActiveDirectorySchema extends LdapSchema {
     
     //Active Diretory only attributes
-    
-    public static final String ATTR_USER_ACCOUNT_CONTROL  = "userAccountControl"; //exists only in AD
-    public static final String ATTR_PRIMARY_GROUP_ID = "primaryGroupId";
+    public static final String ATTR_USER_ACCOUNT_CONTROL    = "userAccountControl"; //exists only in AD
+    public static final String ATTR_PRIMARY_GROUP_ID        = "primaryGroupId";
+    public static final String ATTR_SAM_ACCOUNT_NAME        = "sAMAccountName";
+    public static final String ATTR_USER_PRINCIPAL_NAME     = "userPrincipalName";
     
     public ActiveDirectorySchema(){
         super();
@@ -36,6 +37,8 @@ public class ActiveDirectorySchema extends LdapSchema {
         
         ArrayList<String> allAttributes = new ArrayList<>(Arrays.asList(ATTR_ALL));
         allAttributes.add(ATTR_PRIMARY_GROUP_ID);
+        allAttributes.add(ATTR_SAM_ACCOUNT_NAME);
+        allAttributes.add(ATTR_USER_PRINCIPAL_NAME);
         allAttributes.toArray(ATTR_ALL);
     }
 }

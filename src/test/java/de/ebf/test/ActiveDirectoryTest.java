@@ -21,7 +21,7 @@ public class ActiveDirectoryTest extends LDAPWriteTest {
     private static final String ACTIVE_DIRECTORY_ADMIN_USER_NAME            = "Administrator";
     private static final String ACTIVE_DIRECTORY_ADMIN_GROUP_NAME           = "Administrators";
     private static final String ACTIVE_DIRECTORY_DOMAIN_USERS_GROUP_NAME    = "Domain Users";
-
+    
     public ActiveDirectoryTest() {
         config = new LdapConfig();
         config.setServer("10.4.6.12");
