@@ -11,18 +11,18 @@ import java.io.Serializable;
  * @author Dominik
  */
 public abstract class AbstractGroup<User> implements Group, Serializable {
-    
+
     private static final long serialVersionUID = 1L;
 
-   private String name;
+    private String name;
 
-   @Override
-   public String getName() {
-      return name;
-   }
+    @Override
+    public String getName() {
+        return name;
+    }
 
-   @Override
-   public void setName(String name) {
-      this.name = name;
-   }
+    @Override
+    public void setName(String name) {
+        this.name = name;
+    }
 }

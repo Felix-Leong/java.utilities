@@ -7,29 +7,29 @@ import java.io.Serializable;
  * @author dwissk
  */
 public class AbstractUser implements User, Serializable {
-   
-   private static final long serialVersionUID = 1L;
 
-   private String name;
-   private String mail;
+    private static final long serialVersionUID = 1L;
 
-   @Override
-   public String getName() {
-      return name;
-   }
+    private String name;
+    private String mail;
 
-   @Override
-   public void setName(String name) {
-      this.name = name;
-   }
+    @Override
+    public String getName() {
+        return name;
+    }
 
-   @Override
-   public String getMail() {
-      return mail;
-   }
+    @Override
+    public void setName(String name) {
+        this.name = name;
+    }
 
-   @Override
-   public void setMail(String mail) {
-      this.mail = mail;
-   }
+    @Override
+    public String getMail() {
+        return mail;
+    }
+
+    @Override
+    public void setMail(String mail) {
+        this.mail = mail;
+    }
 }
