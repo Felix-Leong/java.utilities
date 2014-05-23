@@ -12,9 +12,11 @@ package de.ebf.constants;
  */
 public class BaseConstants {
     
-    public static final String UTF8                             = "UTF-8";
-    public static final String SESSION_USER                     = "user";
-    public static final String HTTP_RESPONSE_HEADER_MSG         = "msg";
-   
+    public static final String UTF8                                     = "UTF-8";
+    public static final String SESSION_USER                             = "user";
+    public static final String HTTP_RESPONSE_HEADER_MSG                 = "msg";
+    public static final String HTTP_REQUEST_HEADER_CLIENT_OS            = "clientOS";
+    public static final String HTTP_REQUEST_HEADER_CLIENT_VERSION       = "clientVersion";
+    public static final String HTTP_REQUEST_HEADER_CLIENT_DEVICE        = "clientDevice";
     
 }

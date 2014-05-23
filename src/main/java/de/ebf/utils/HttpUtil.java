@@ -192,4 +192,13 @@ public class HttpUtil {
         final String[] userDetails = pair.split(":", 2);
         return userDetails;
     }
+
+    public static String getRequestURLWithQueryString(HttpServletRequest request) {
+        String reqUrl = request.getRequestURL().toString();
+        String queryString = request.getQueryString();
+        if (queryString != null) {
+            reqUrl += "?"+queryString;
+        }
+        return reqUrl;
+    }
 }
