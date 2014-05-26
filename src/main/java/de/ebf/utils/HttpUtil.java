@@ -194,7 +194,7 @@ public class HttpUtil {
     }
 
     public static String getRequestURLWithQueryString(HttpServletRequest request) {
-        String reqUrl = request.getRequestURL().toString();
+        String reqUrl = request.getRequestURI();
         String queryString = request.getQueryString();
         if (queryString != null) {
             reqUrl += "?"+queryString;
