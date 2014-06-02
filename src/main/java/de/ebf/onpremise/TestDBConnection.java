@@ -12,7 +12,9 @@ import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  *
@@ -34,9 +36,13 @@ public class TestDBConnection {
         properties.setProperty("hibernate.connection.password", dbConfig.getPassword());
 
         properties.setProperty("hibernate.current_session_context_class", "thread");//bound the current session to this thread.
+        
+        Configuration configuration = new Configuration().setProperties(properties);
+        
+        ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().applySettings(configuration.getProperties()).build();
 
-        SessionFactory factory = new Configuration().setProperties(properties).buildSessionFactory();
-
+//        SessionFactory factory = new Configuration().setProperties(properties).buildSessionFactory();
+        SessionFactory factory = configuration.buildSessionFactory(serviceRegistry);
         Session session = factory.getCurrentSession();
 
         org.hibernate.Transaction tx = session.beginTransaction();
