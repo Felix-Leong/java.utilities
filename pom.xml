@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>de.ebf</groupId>
     <artifactId>java.utilities</artifactId>
-    <version>0.1.2</version>
+    <version>0.3.0</version>
     <description>contains utility libraries</description>
     <packaging>jar</packaging>
 
@@ -16,6 +16,7 @@
     <properties>
         <org.springframework.version>4.0.3.RELEASE</org.springframework.version>
         <org.hibernate.version>4.3.1.Final</org.hibernate.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <build>
@@ -76,12 +77,34 @@
             <groupId>org.owasp.esapi</groupId>
             <artifactId>esapi</artifactId>
             <version>2.0.1</version>
+            <!-- exclude old xerces dependency that causes AbstractMethodError in Java 8 -->
+            <exclusions>
+                <exclusion>
+                    <artifactId>xerces</artifactId>
+                    <groupId>xmlParserAPIs</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>xerces</groupId>
+            <artifactId>xercesImpl</artifactId>
+            <version>2.11.0</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.10</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>annotations</artifactId>
+            <version>2.0.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.ocpsoft.prettytime</groupId>
+            <artifactId>prettytime</artifactId>
+            <version>3.2.5.Final</version>
         </dependency>
         <dependency>
             <groupId>javax</groupId>

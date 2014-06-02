@@ -1,16 +1,20 @@
 package de.ebf.onpremise;
 
+import java.io.Serializable;
+
 /**
  *
  * @author xz
  */
-public class DBConfig {
+public class DBConfig implements Serializable{
+    
+    private static final long serialVersionUID = 1L;
 
     private DBType type;
     private String host;
     private int port;
     private String dbName;
-    private String userName;
+    private String username;
     private String password;
 
     public DBType getType() {
@@ -45,12 +49,12 @@ public class DBConfig {
         this.dbName = dbName;
     }
 
-    public String getUserName() {
-        return userName;
+    public String getUsername() {
+        return username;
     }
 
-    public void setUserName(String userName) {
-        this.userName = userName;
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public String getPassword() {

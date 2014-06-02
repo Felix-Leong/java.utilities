@@ -32,7 +32,7 @@ public class TestDBConnection {
         properties.setProperty("hibernate.connection.driver_class", dbConfig.getType().getDriverClass());
         properties.setProperty("hibernate.connection.url", dbConfig.getUrl());
         properties.setProperty("hibernate.dialect", dbConfig.getType().getDialect());
-        properties.setProperty("hibernate.connection.username", dbConfig.getUserName());
+        properties.setProperty("hibernate.connection.username", dbConfig.getUsername());
         properties.setProperty("hibernate.connection.password", dbConfig.getPassword());
 
         properties.setProperty("hibernate.current_session_context_class", "thread");//bound the current session to this thread.

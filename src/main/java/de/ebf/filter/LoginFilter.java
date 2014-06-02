@@ -21,7 +21,7 @@ public class LoginFilter implements Filter {
     private Pattern exclusionPattern;
     private String contextPath;
     //This filter should not do the job if the MainDispatcher is not working.
-    public static boolean isMainDispatcher = true;
+    private static boolean isMainDispatcher = true;
 
     @Override
     public void init(FilterConfig config) throws ServletException {
@@ -81,5 +81,9 @@ public class LoginFilter implements Filter {
     private void redirectToLogin(ServletResponse response) throws IOException {
         HttpServletResponse httpResponse = (HttpServletResponse) response;
         httpResponse.sendRedirect(contextPath + "/login");
+    }
+    
+    public static void setMainDispatcher(boolean isMainDispatcher){
+        LoginFilter.isMainDispatcher = isMainDispatcher;
     }
 }

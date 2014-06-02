@@ -1,6 +1,12 @@
 package de.ebf.utils;
 
+import de.ebf.constants.BaseConstants;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.URI;
+import java.net.URL;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -10,38 +16,33 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.httpclient.util.URIUtil;
 import org.apache.commons.lang.StringUtils;
-import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.AuthCache;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.params.CookiePolicy;
 import org.apache.http.client.params.HttpClientParams;
-import org.apache.http.client.protocol.ClientContext;
 import org.apache.http.conn.ClientConnectionManager;
 import org.apache.http.conn.scheme.PlainSocketFactory;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.scheme.SchemeRegistry;
 import org.apache.http.conn.ssl.SSLSocketFactory;
-import org.apache.http.impl.auth.BasicScheme;
-import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.BasicClientConnectionManager;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
-import org.apache.http.protocol.BasicHttpContext;
 import org.apache.log4j.Logger;
 
 public class HttpUtil {
 
    private static final Logger log = Logger.getLogger(HttpUtil.class);
    /* DEFAULT HTTP CLIENT VALUES */
-   private static final int DEFAULT_CONNECTION_TIMEOUT = 20000;
-   private static final boolean DEFAULT_FOLLOW_REDIRECTS = true;
+   private static final int     DEFAULT_CONNECTION_TIMEOUT      = 20000;
+   private static final boolean DEFAULT_FOLLOW_REDIRECTS        = true;
+   private static final String  PREFIX_BASIC                    = "Basic ";
+   
 
    public static boolean isAvailable(String url, String user, String pass) throws Exception {
       HttpResponse httpResponse = HttpUtil.get(url, user, pass);
@@ -66,7 +67,7 @@ public class HttpUtil {
 
       try {
          if (!StringUtils.isEmpty(user) && !StringUtils.isEmpty(pass)) {
-             httpGet2.addHeader("Authorization", "Basic " + Base64.encodeBase64String((user+":"+pass).getBytes()));
+             httpGet2.addHeader("Authorization", "Basic " + Base64.encodeBase64String((user+":"+pass).getBytes(BaseConstants.UTF8)));
          }
 
          HttpResponse response = httpClient.execute(httpGet2);//, localcontext);
@@ -89,13 +90,18 @@ public class HttpUtil {
          sslContext = SSLContext.getInstance("SSL");
          // set up a TrustManager that trusts everything
          sslContext.init(null, new TrustManager[]{new X509TrustManager() {
+               
+               @Override
+               @SuppressFBWarnings(value = "PZLA_PREFER_ZERO_LENGTH_ARRAYS", justification = "do not change API")
                public X509Certificate[] getAcceptedIssuers() {
                   return null;
                }
 
+               @Override
                public void checkClientTrusted(X509Certificate[] certs, String authType) {
                }
 
+               @Override
                public void checkServerTrusted(X509Certificate[] certs, String authType) {
                }
             }}, new SecureRandom());
@@ -116,11 +122,42 @@ public class HttpUtil {
          httpClient.setParams(params);
          return httpClient;
       } catch (NoSuchAlgorithmException | KeyManagementException e) {
-         // TODO Auto-generated catch block
-         e.printStackTrace();
+         log.error(e);
       }
       return null;
    }
+   
+    public static byte[] getByteArray(String absoluteUrl, String user, String pass) throws IOException {
+        InputStream stream = null;
+        try {
+            URL urlRequest = new URL(URIUtil.encodeQuery(absoluteUrl));
+            HttpURLConnection conn = (HttpURLConnection) urlRequest.openConnection();
+            if (!StringUtils.isEmpty(user) && !StringUtils.isEmpty(pass)) {
+                conn.addRequestProperty("Authorization", "Basic " + Base64.encodeBase64String((user + ":" + pass).getBytes(BaseConstants.UTF8)));
+            }
+            int contentLength = conn.getContentLength();
+            int bufferLength = 128;
+            stream = conn.getInputStream();
+            byte[] fileData = new byte[contentLength];
+            int bytesread = 0;
+            int offset = 0;
+            while (bytesread >= 0) {
+                if ((offset + bufferLength) > contentLength) {
+                    bufferLength = contentLength - offset;
+                }
+                bytesread = stream.read(fileData, offset, bufferLength);
+                if (bytesread == -1) {
+                    break;
+                }
+                offset += bytesread;
+            }
+            return fileData;
+        } finally {
+            if (stream != null) {
+                stream.close();
+            }
+        }
+    }
 
    public static String getBaseUrl(HttpServletRequest request) {
       return request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + getContextPath(request);
@@ -129,4 +166,39 @@ public class HttpUtil {
    public static String getContextPath(HttpServletRequest request) {
       return (request.getContextPath() == null) ? "" : request.getContextPath();
    }
+   
+    public static String getBasicAuthUsername(HttpServletRequest request) {
+        return getBasicAuthCredential(request, 0);
+    }
+    
+    public static String getBasicAuthPassword(HttpServletRequest request) {
+        return getBasicAuthCredential(request, 1);
+    }
+   
+    private static String getBasicAuthCredential(HttpServletRequest request, int position) {
+        String authorization = request.getHeader("Authorization");
+        if (!StringUtils.isEmpty(authorization) && authorization.startsWith(PREFIX_BASIC)) {
+            String[] decodedAuthorization = decodeBasicAuth(authorization.substring(PREFIX_BASIC.length()));
+            if (decodedAuthorization != null && decodedAuthorization.length == 2) {
+                return decodedAuthorization[position];
+            }
+        }
+        return null;
+    }
+
+    private static String[] decodeBasicAuth(final String encodedString) {
+        final byte[] decodedBytes = Base64.decodeBase64(encodedString.getBytes());
+        final String pair = new String(decodedBytes);
+        final String[] userDetails = pair.split(":", 2);
+        return userDetails;
+    }
+
+    public static String getRequestURLWithQueryString(HttpServletRequest request) {
+        String reqUrl = request.getRequestURI();
+        String queryString = request.getQueryString();
+        if (queryString != null) {
+            reqUrl += "?"+queryString;
+        }
+        return reqUrl;
+    }
 }

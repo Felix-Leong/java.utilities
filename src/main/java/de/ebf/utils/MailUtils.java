@@ -26,17 +26,14 @@ import org.apache.log4j.Logger;
 
 public class MailUtils {
 
-   private static  Logger log = Logger.getLogger(MailUtils.class);
-   private static  String SMTP_SERVER ;//= Config.instance.getString("smtp.server");
-   private static  String SMTP_PORT ;//= Config.instance.getString("smtp.port");
-   private static  String SMTP_USER ;//= Config.instance.getString("smtp.user");
-   private static  String SMTP_PASS ;//= Config.instance.getString("smtp.pass");
-   private static  String SMTP_SENDERMAIL ;//= Config.instance.getString("smtp.user.mail");
-   private static  String SMTP_SENDERNAME ;//= Config.instance.getString("smtp.user.name");
-   private static  String SMTP_BCC_MAIL ;//= Config.instance.getString("smtp.bcc.mail");
-   private static  String SMTP_USER_DEFAULT = "${smtp.user}";
-   private static  String SMTP_PASS_DEFAULT = "${smtp.pass}";
-   public static  String NOREPLY = "noreply@ebf.de";
+   private static final Logger log = Logger.getLogger(MailUtils.class);
+   private static String SMTP_SERVER ;//= Config.getInstance().getString("smtp.server");
+   private static String SMTP_SENDERMAIL ;//= Config.getInstance().getString("smtp.user.mail");
+   private static String SMTP_SENDERNAME ;//= Config.getInstance().getString("smtp.user.name");
+   private static String SMTP_BCC_MAIL ;//= Config.getInstance().getString("smtp.bcc.mail");
+   private static final String SMTP_USER_DEFAULT = "${smtp.user}";
+   private static final String SMTP_PASS_DEFAULT = "${smtp.pass}";
+   public static final String NOREPLY = "noreply@ebf.de";
    private static Session session = null;
 
    /**
@@ -45,13 +42,16 @@ public class MailUtils {
     * 
     * 2) This method can also be lazily and indirectly called by sendEmail() method with the properties from
     * the configuration file, whose properties are not available until the onpremise-setupWizard is finished.
+     * @param server
+     * @param port
+     * @param user
+     * @param pass
+     * @param senderEmail
+     * @param senderName
+     * @param bccMail
     */
-   public static void setSystemMailProperties(final String server, final String port, final String user, final String pass,
-                                                String senderEmail, String senderName, String bccMail){
+   public static void setSystemMailProperties(final String server, final String port, final String user, final String pass, String senderEmail, String senderName, String bccMail){
        SMTP_SERVER = server;
-       SMTP_PORT = port;
-       SMTP_USER = user;
-       SMTP_PASS = pass;
        SMTP_SENDERMAIL = senderEmail;
        SMTP_SENDERNAME = senderName;
        SMTP_BCC_MAIL = bccMail;
@@ -84,13 +84,13 @@ public class MailUtils {
     * This can not be called at the time of setupWizard, because the properties are not finished with setup.
     */
     public static void setSystemMailProperties(){
-        setSystemMailProperties(Config.instance.getString("smtp.server"), 
-                                Config.instance.getString("smtp.port"), 
-                                Config.instance.getString("smtp.user"), 
-                                Config.instance.getString("smtp.pass"),
-                                Config.instance.getString("smtp.user.mail"), 
-                                Config.instance.getString("smtp.user.name"), 
-                                Config.instance.getString("smtp.bcc.mail"));
+        setSystemMailProperties(Config.getInstance().getString("smtp.server"), 
+                                Config.getInstance().getString("smtp.port"), 
+                                Config.getInstance().getString("smtp.user"), 
+                                Config.getInstance().getString("smtp.pass"),
+                                Config.getInstance().getString("smtp.user.mail"), 
+                                Config.getInstance().getString("smtp.user.name"), 
+                                Config.getInstance().getString("smtp.bcc.mail"));
     }
 
    public static boolean sendMail(String replyTo, String recipient, String subject, String body) {

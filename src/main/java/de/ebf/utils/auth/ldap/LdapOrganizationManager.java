@@ -4,7 +4,6 @@
  */
 package de.ebf.utils.auth.ldap;
 
-import de.ebf.utils.auth.ldap.config.LdapConfig;
 import com.unboundid.ldap.sdk.AddRequest;
 import com.unboundid.ldap.sdk.DN;
 import com.unboundid.ldap.sdk.DeleteRequest;
@@ -18,6 +17,7 @@ import com.unboundid.ldap.sdk.ResultCode;
 import com.unboundid.ldap.sdk.SearchResult;
 import com.unboundid.ldap.sdk.SearchScope;
 import de.ebf.utils.auth.OrganizationManager;
+import de.ebf.utils.auth.ldap.config.LdapConfig;
 import org.springframework.stereotype.Component;
 
 /**

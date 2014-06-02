@@ -17,11 +17,11 @@ import org.springframework.web.context.ContextLoader;
  */
 public class SpringRootContextLoader {
 
-    private static SpringRootContextLoader instance = null;
-
     private static final Logger log = Logger.getLogger(SpringRootContextLoader.class);
+    
+    private static SpringRootContextLoader instance = null;
     private ContextLoader contextLoader = null;
-    private static ServletContext servletContext = null;
+    private ServletContext servletContext = null;
 
     private SpringRootContextLoader(ServletContext servletContext) {
         this.servletContext = servletContext;
@@ -29,12 +29,12 @@ public class SpringRootContextLoader {
 
     /**
      * get the singleton instance.
-     * @return 
+     * @return SpringRootContextLoader
      */
-    public static SpringRootContextLoader getInstance() {
+    public static synchronized SpringRootContextLoader getInstance() {
 
         if (instance == null) {
-            servletContext = OnpremiseUtil.getServletContext();
+            ServletContext servletContext = OnpremiseUtil.getServletContext();
             if (servletContext == null) {
                 log.error("servletContext is null. Please firstly set the ServletContext!");
                 return null;
@@ -43,7 +43,6 @@ public class SpringRootContextLoader {
         }
         return instance;
     }
-
 
     /**
      * ContextLoader will create and initialize the web application context, and

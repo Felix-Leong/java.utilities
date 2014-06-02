@@ -19,6 +19,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -46,7 +47,7 @@ public class SetupWizardController {
     
     
     @RequestMapping(method = RequestMethod.GET)
-    private ModelAndView handleSetupStarting(HttpServletRequest request, HttpServletResponse response) {
+    protected ModelAndView handleSetupStarting(HttpServletRequest request, HttpServletResponse response) {
         ModelAndView modelAndView = new ModelAndView("onpremise/setupwizard");
         modelAndView.addObject("DBTypes", DBType.values());
         modelAndView.addObject("ldapTypes", LdapType.values());
@@ -55,13 +56,13 @@ public class SetupWizardController {
 
     @RequestMapping("start")
     @ResponseBody
-    private SetupWizardMessage start(){
+    protected SetupWizardMessage start(){
         return new SetupWizardMessage(SetupWizardMessage.SUCCESS, null);
     }
     
     @RequestMapping("configDBSubmit")
     @ResponseBody
-    private SetupWizardMessage handleConfigDBSubmit(HttpServletRequest request, HttpServletResponse response) {
+    protected SetupWizardMessage handleConfigDBSubmit(HttpServletRequest request, HttpServletResponse response) {
 
         HttpSession session = request.getSession(true);
         //remove this session attribute if any.
@@ -89,7 +90,7 @@ public class SetupWizardController {
 
     @RequestMapping("configLdapSubmit")
     @ResponseBody
-    private SetupWizardMessage handleConfigLdapSubmit(HttpServletRequest request, HttpServletResponse response){
+    protected SetupWizardMessage handleConfigLdapSubmit(HttpServletRequest request, HttpServletResponse response){
 
         HttpSession session = request.getSession(false);
         if (session == null) {
@@ -107,6 +108,8 @@ public class SetupWizardController {
         String ldapTypeString = request.getParameter("ldapType");
         String ldapServer = request.getParameter("ldapServer");
         String ldapPortString = request.getParameter("ldapPort");
+        String ldapServer2 = request.getParameter("ldapServer2");
+        String ldapPortString2 = request.getParameter("ldapPort2");
         String ldapUser = request.getParameter("ldapUser");
         String ldapPass = request.getParameter("ldapPass");
         String ldapBaseDN = request.getParameter("ldapBaseDN");
@@ -120,14 +123,20 @@ public class SetupWizardController {
         config.setUsername(ldapUser);
         config.setPassword(ldapPass);
         config.setBaseDN(ldapBaseDN);
+      
+        if (!StringUtils.isEmpty(ldapServer2) && !StringUtils.isEmpty(ldapPortString)){
+            config.setServer2(ldapServer2);
+            Integer ldapPort2 = Integer.parseInt(ldapPortString2);
+            config.setPort2(ldapPort2);
+        }
         
         //verify the ldap connection
         try {
             LdapUtil.verifyConnection(config);
         } catch (Exception e) {
-            return new SetupWizardMessage(SetupWizardMessage.ERROR,Bundle.getString("SetupWizardMessage_LDAP_CONN_FAILED")+" "+e.getMessage());
+            return new SetupWizardMessage(SetupWizardMessage.ERROR, Bundle.getString("SetupWizardMessage_LDAP_CONN_FAILED")+" "+e.getMessage());
         }
-
+        
         //if successful, put this attribute in session object
         session.setAttribute(SESSION_ATTR_LDAPCONFIG, config);
         return new SetupWizardMessage(SetupWizardMessage.SUCCESS, null);
@@ -135,7 +144,7 @@ public class SetupWizardController {
     
     @RequestMapping("configMailSubmit")
     @ResponseBody
-    private SetupWizardMessage handleConfigMailSubmit(HttpServletRequest request) {
+    protected SetupWizardMessage handleConfigMailSubmit(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         if (session == null) {
             return new SetupWizardMessage(SetupWizardMessage.ERROR,Bundle.getString("SetupWizardMessage_SESSION_NOT_EXISTING"));
@@ -166,7 +175,7 @@ public class SetupWizardController {
     
     @RequestMapping("finish")
     @ResponseBody
-    private SetupWizardMessage finish(HttpServletRequest request){
+    protected SetupWizardMessage finish(HttpServletRequest request){
         HttpSession session = request.getSession(false);
         if (session == null) {
             return new SetupWizardMessage(SetupWizardMessage.ERROR,Bundle.getString("SetupWizardMessage_SESSION_NOT_EXISTING"));
@@ -181,7 +190,7 @@ public class SetupWizardController {
         
         try {
             // update the properties files in ROOT by replacing the variables with the collected data from the user.
-            writePropertiesFiles(dbConfig,ldapConfig,mailConfig);
+            writePropertiesFiles(dbConfig, ldapConfig, mailConfig);
         } catch (IOException ex) {
             return new SetupWizardMessage(SetupWizardMessage.ERROR, ex.getMessage());
         }
@@ -217,7 +226,7 @@ public class SetupWizardController {
         dbConfig.setHost(host);
         dbConfig.setPort(port);
         dbConfig.setDbName(dbName);
-        dbConfig.setUserName(userName);
+        dbConfig.setUsername(userName);
         dbConfig.setPassword(password);
 
         return dbConfig;
@@ -264,10 +273,10 @@ public class SetupWizardController {
         mailConfig.setSenderName(senderName);
         mailConfig.setRequireAuth(requireAuth);
         if (requireAuth) {
-            mailConfig.setUserName(userName);
+            mailConfig.setUsername(userName);
             mailConfig.setPassword(password);
         } else {
-            mailConfig.setUserName("");
+            mailConfig.setUsername("");
             mailConfig.setPassword("");
         }
 
@@ -281,7 +290,7 @@ public class SetupWizardController {
      */
     private void sendTestingEmail(MailConfig mailConfig) throws Exception {
         //send mail with the given properties
-        MailUtils.setSystemMailProperties(mailConfig.getSmtpHost(), mailConfig.getSmtpPort() + "", mailConfig.getUserName(), mailConfig.getPassword(),
+        MailUtils.setSystemMailProperties(mailConfig.getSmtpHost(), mailConfig.getSmtpPort() + "", mailConfig.getUsername(), mailConfig.getPassword(),
                 mailConfig.getSenderEmail(), mailConfig.getSenderName(), mailConfig.getBccEmail());
 
         String sender = mailConfig.getSenderEmail();
@@ -314,7 +323,7 @@ public class SetupWizardController {
         jdbcReplaceMap.put("${db.driverClassName}", dbConfig.getType().getDriverClass());
         jdbcReplaceMap.put("${db.dialect}", dbConfig.getType().getDialect());
         jdbcReplaceMap.put("${db.databaseurl}", dbConfig.getUrl());
-        jdbcReplaceMap.put("${db.username}", dbConfig.getUserName());
+        jdbcReplaceMap.put("${db.username}", dbConfig.getUsername());
         jdbcReplaceMap.put("${db.password}", dbConfig.getPassword());
 
         //ldap
@@ -324,11 +333,16 @@ public class SetupWizardController {
         localSettingsReplaceMap.put("${ldap.context}", ldapConfig.getBaseDN());
         localSettingsReplaceMap.put("${ldap.user}", ldapConfig.getUsername());
         localSettingsReplaceMap.put("${ldap.pass}", ldapConfig.getPassword());
+        
+        if (!StringUtils.isEmpty(ldapConfig.getServer2()) && ldapConfig.getPort2()!=null){
+            localSettingsReplaceMap.put("${ldap.host2}", ldapConfig.getServer2());
+            localSettingsReplaceMap.put("${ldap.port2}", ldapConfig.getPort2().toString());
+        }
 
         //mail
         localSettingsReplaceMap.put("${smtp.server}", mailConfig.getSmtpHost());
         localSettingsReplaceMap.put("${smtp.port}", mailConfig.getSmtpPort() + "");
-        localSettingsReplaceMap.put("${smtp.user}", mailConfig.getUserName());
+        localSettingsReplaceMap.put("${smtp.user}", mailConfig.getUsername());
         localSettingsReplaceMap.put("${smtp.pass}", mailConfig.getPassword());
         localSettingsReplaceMap.put("${smtp.user.mail}", mailConfig.getSenderEmail());
         localSettingsReplaceMap.put("${smtp.user.name}", mailConfig.getSenderName());
@@ -347,9 +361,8 @@ public class SetupWizardController {
         Charset charset = StandardCharsets.UTF_8;
 
         String content = new String(Files.readAllBytes(path), charset);
-        for (String replaceFrom : replaceMap.keySet()) {
-            String replaceTo = replaceMap.get(replaceFrom);
-            content = content.replace(replaceFrom, replaceTo);
+        for (Map.Entry<String, String> entrySet : replaceMap.entrySet()) {
+            content = content.replace(entrySet.getKey(), entrySet.getValue());
         }
         Files.write(path, content.getBytes(charset));
     }

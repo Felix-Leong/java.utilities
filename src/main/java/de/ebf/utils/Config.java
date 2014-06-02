@@ -6,10 +6,10 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 
 public class Config {
 
-    public static PropertiesConfiguration instance;
+    private static PropertiesConfiguration instance;
 
     static {
-        load();
+        load(null);
     }
 
     public static void load(String basePath) {
@@ -26,8 +26,7 @@ public class Config {
         }
     }
     
-    public static void load() {
-        load(null);
+    public static PropertiesConfiguration getInstance(){
+        return instance;
     }
-    
 }

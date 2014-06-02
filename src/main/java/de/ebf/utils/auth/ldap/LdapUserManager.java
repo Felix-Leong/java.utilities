@@ -1,6 +1,5 @@
 package de.ebf.utils.auth.ldap;
 
-import de.ebf.utils.auth.ldap.config.LdapConfig;
 import com.unboundid.ldap.sdk.AddRequest;
 import com.unboundid.ldap.sdk.DN;
 import com.unboundid.ldap.sdk.DeleteRequest;
@@ -21,6 +20,9 @@ import com.unboundid.ldap.sdk.SearchResultEntry;
 import com.unboundid.ldap.sdk.SearchScope;
 import de.ebf.utils.Bundle;
 import de.ebf.utils.auth.UserManager;
+import de.ebf.utils.auth.ldap.config.LdapConfig;
+import de.ebf.utils.auth.ldap.schema.ActiveDirectorySchema;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -53,7 +55,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
             if (config.getType().equals(LdapType.ActiveDirectory)){
                 //by default, newly created AD accounts are disabled
                 //http://www.netvision.com/ad_useraccountcontrol.php?blog
-                entry.addAttribute(config.getSchema().ATTR_USER_ACCOUNT_CONTROL, "544");
+                entry.addAttribute(ActiveDirectorySchema.ATTR_USER_ACCOUNT_CONTROL, "544");
                 entry.addAttribute(config.getSchema().ATTR_USER_PW, getActiveDirectoryPassword(user.getPassword()));
             } else {
                 
@@ -185,7 +187,16 @@ public class LdapUserManager implements UserManager<LdapUser> {
         LDAPConnection connection = null;
         try {
             connection = LdapUtil.getConnection(config.getUsername(), config.getPassword(), config);
-            LdapUser user = getUserByAttribute(connection, config.getSchema().ATTR_CN, userName, config);
+            Filter filter;
+            Filter cnFilter = Filter.createEqualityFilter(config.getSchema().ATTR_CN, userName);
+            if (config.getType().equals(LdapType.ActiveDirectory)){
+                Filter samAccountNameFilter     = Filter.createEqualityFilter(ActiveDirectorySchema.ATTR_SAM_ACCOUNT_NAME, userName);
+                Filter userPrincipalNameFilter  = Filter.createEqualityFilter(ActiveDirectorySchema.ATTR_USER_PRINCIPAL_NAME, userName);
+                filter = Filter.createORFilter(cnFilter, samAccountNameFilter, userPrincipalNameFilter);
+            } else {
+                filter = cnFilter;
+            }
+            LdapUser user = getUserByFilter(connection, filter, config);
             return user;
         } catch (LDAPException ex) {
             throw new LdapException(ex);
@@ -251,20 +262,17 @@ public class LdapUserManager implements UserManager<LdapUser> {
         try {
             connection = LdapUtil.getConnection(config);
             List<LdapGroup> groups = groupManager.getGroupsForUser(user, config);
-            if (groups != null) {
-                for (LdapGroup group : groups) {
-                    groupManager.removeUserFromGroup(user, group, config);
-                }
-                DeleteRequest deleteRequest = new DeleteRequest(user.getDN());
-                LDAPResult ldapResult = connection.delete(deleteRequest);
-                return (ldapResult.getResultCode() == ResultCode.SUCCESS);
+            for (LdapGroup group : groups) {
+                groupManager.removeUserFromGroup(user, group, config);
             }
+            DeleteRequest deleteRequest = new DeleteRequest(user.getDN());
+            LDAPResult ldapResult = connection.delete(deleteRequest);
+            return (ldapResult.getResultCode() == ResultCode.SUCCESS);
         } catch (LDAPException e) {
             throw new LdapException(e);
         } finally {
             LdapUtil.release(connection);
         }
-        return false;
     }
 
     public LdapUser getUserByUUID(String UUID, LdapConfig config) throws LdapException {
@@ -301,7 +309,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
         }
     }
 
-    private LdapUser getLdapUser(SearchResultEntry entry, LdapConfig config) throws LdapException {
+    public LdapUser getLdapUser(SearchResultEntry entry, LdapConfig config) throws LdapException {
         LdapUser user = new LdapUser();
         user.setName(entry.getAttributeValue(config.getSchema().ATTR_CN));
         user.setFirstName(entry.getAttributeValue(config.getSchema().ATTR_FIRST_NAME));
@@ -314,6 +322,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
             // Microsoft stores GUIDs in a binary format that differs from the RFC standard of UUIDs (RFC #4122).
             String uuid = LdapUtil.bytesToUUID(entry.getAttributeValueBytes(config.getSchema().ATTR_ENTRYUUID));
             user.setUUID(uuid);
+            user.setPrimaryGroupId(entry.getAttributeValueAsInteger(ActiveDirectorySchema.ATTR_PRIMARY_GROUP_ID));
         } else {
             user.setUUID(entry.getAttributeValue(config.getSchema().ATTR_ENTRYUUID));
         }
@@ -352,17 +361,14 @@ public class LdapUserManager implements UserManager<LdapUser> {
             if (searchResults.getEntryCount() > 0) {
                 for (SearchResultEntry entry : searchResults.getSearchEntries()) {
                     String dn = entry.getAttributeValue(config.getSchema().ATTR_DN);
-                    // do not add object from the Builtin container (Active Directory) or the LDAP agent account
-                    if (!dn.contains("CN=Builtin")){
-                        if (!dn.equalsIgnoreCase(config.getUsername())){
+                    // do not add object from the Builtin container (Active Directory) or the LDAP agent account - disabled 2014-05-20: group members should be visible
+//                    if (!dn.contains("CN=Builtin")){
+//                        if (!dn.equalsIgnoreCase(config.getUsername())){
                             users.add(getLdapUser(entry, config));
-                        }
-                    }
+//                        }
+//                    }
                 }
                 Collections.sort(users);
-            } 
-            if (users.isEmpty()){
-                log.warn("Could not find any ldap users for filter ["+filter+", baseDN="+config.getBaseDN()+"]");
             }
         } catch (LDAPSearchException e) {
             throw new LdapException(e);
@@ -379,7 +385,25 @@ public class LdapUserManager implements UserManager<LdapUser> {
         }
         return null;
     }
+    
+    public String getAttribute(LdapUser user, String attributeName, LdapConfig config) throws LdapException{
+        LDAPConnection connection = null;
+        try {
+            connection = LdapUtil.getConnection(config);
+            Filter userFilter = Filter.createEqualityFilter(config.getSchema().ATTR_DN, user.getDN());
+            SearchResult searchResults = connection.search(config.getBaseDN(), SearchScope.SUB, userFilter, attributeName);
+            if (searchResults.getEntryCount() == 1) {
+                return searchResults.getSearchEntries().get(0).getAttributeValue(attributeName);
+            }
+        } catch (LDAPException ex) {
+            throw new LdapException(ex);
+        } finally {
+            LdapUtil.release(connection);
+        }
+        return null;
+    }
 
+    @SuppressFBWarnings(value = "PZLA_PREFER_ZERO_LENGTH_ARRAYS", justification = "zero length array would be misleading")
     private byte[] getActiveDirectoryPassword(String password) {
         // http://msdn.microsoft.com/en-us/library/cc223248.aspx
         try {
@@ -387,6 +411,6 @@ public class LdapUserManager implements UserManager<LdapUser> {
         } catch (UnsupportedEncodingException ex) {
             log.error(ex);
         }
-        return password.getBytes();
+        return null;
     }
 }

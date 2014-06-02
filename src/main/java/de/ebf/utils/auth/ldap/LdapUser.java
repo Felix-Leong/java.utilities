@@ -1,6 +1,7 @@
 package de.ebf.utils.auth.ldap;
 
 import de.ebf.utils.auth.AbstractUser;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -9,7 +10,9 @@ import java.util.Objects;
  *
  * @author dwissk
  */
-public class LdapUser extends AbstractUser implements Comparable<LdapUser> {
+public class LdapUser extends AbstractUser implements Comparable<LdapUser>, Serializable {
+   
+   private static final long serialVersionUID = 1L;
 
    private String DN;
    private String firstName;
@@ -20,6 +23,9 @@ public class LdapUser extends AbstractUser implements Comparable<LdapUser> {
    private String password;
    private List<LdapGroup> groups;
    private String context;
+   
+   //Active Directory specific
+   private Integer primaryGroupId;
 
    public void setPhone(String phone) {
       this.phone = phone;
@@ -93,6 +99,15 @@ public class LdapUser extends AbstractUser implements Comparable<LdapUser> {
       this.lastName = lastName;
    }
 
+    public Integer getPrimaryGroupId() {
+        return primaryGroupId;
+    }
+
+    public void setPrimaryGroupId(Integer primaryGroupId) {
+        this.primaryGroupId = primaryGroupId;
+    }
+   
+
    @Override
    public int hashCode() {
       int hash = 7;
@@ -122,5 +137,10 @@ public class LdapUser extends AbstractUser implements Comparable<LdapUser> {
    @Override
    public int compareTo(LdapUser o) {
       return super.getName().compareToIgnoreCase(o.getName());
+   }
+   
+   @Override
+   public String toString(){
+       return DN;
    }
 }

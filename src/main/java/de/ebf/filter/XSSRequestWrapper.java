@@ -4,6 +4,7 @@
  */
 package de.ebf.filter;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.regex.Pattern;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
@@ -15,7 +16,7 @@ import org.owasp.esapi.ESAPI;
  */
 public class XSSRequestWrapper extends HttpServletRequestWrapper {
 
-   private static Pattern[] patterns = new Pattern[]{
+   private static final Pattern[] patterns = new Pattern[]{
       // Script fragments
       Pattern.compile("<script>(.*?)</script>", Pattern.CASE_INSENSITIVE),
       // src='...'
@@ -41,6 +42,7 @@ public class XSSRequestWrapper extends HttpServletRequestWrapper {
    }
 
    @Override
+   @SuppressFBWarnings(value = "PZLA_PREFER_ZERO_LENGTH_ARRAYS", justification = "do not change API")
    public String[] getParameterValues(String parameter) {
       String[] values = super.getParameterValues(parameter);
 

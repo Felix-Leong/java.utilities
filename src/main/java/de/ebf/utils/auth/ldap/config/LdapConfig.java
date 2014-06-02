@@ -7,8 +7,6 @@
 package de.ebf.utils.auth.ldap.config;
 
 import de.ebf.utils.auth.ldap.LdapType;
-import de.ebf.utils.auth.ldap.schema.ActiveDirectorySchema;
-import de.ebf.utils.auth.ldap.schema.OpenDSSchema;
 import de.ebf.utils.auth.ldap.schema.LdapSchema;
 import de.ebf.utils.auth.ldap.schema.LdapSchemaFactory;
 import java.io.Serializable;
@@ -19,12 +17,19 @@ import java.io.Serializable;
  */
 public class LdapConfig implements Serializable {
     
+    private static final long serialVersionUID = 1L;
+    
+    //primary LDAP server
     private LdapType type;
     private String server;
     private Integer port;
     private String username;
     private String password;
     private String baseDN;
+    
+    //secondary LDAP server
+    private String server2;
+    private Integer port2;
     
     public LdapType getType() {
         return type;
@@ -76,5 +81,21 @@ public class LdapConfig implements Serializable {
     
     public LdapSchema getSchema(){
         return LdapSchemaFactory.getLdapSchema(type);
+    }
+
+    public String getServer2() {
+        return server2;
+    }
+
+    public void setServer2(String server2) {
+        this.server2 = server2;
+    }
+
+    public Integer getPort2() {
+        return port2;
+    }
+
+    public void setPort2(Integer port2) {
+        this.port2 = port2;
     }
 }

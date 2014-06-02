@@ -5,7 +5,6 @@
 package de.ebf.utils.auth.ldap;
 
 import com.unboundid.ldap.sdk.Filter;
-import de.ebf.utils.auth.ldap.config.LdapConfig;
 import com.unboundid.ldap.sdk.LDAPConnection;
 import com.unboundid.ldap.sdk.LDAPConnectionOptions;
 import com.unboundid.ldap.sdk.LDAPConnectionPool;
@@ -16,6 +15,7 @@ import com.unboundid.ldap.sdk.SearchScope;
 import com.unboundid.util.ssl.SSLUtil;
 import com.unboundid.util.ssl.TrustAllTrustManager;
 import de.ebf.utils.Bundle;
+import de.ebf.utils.auth.ldap.config.LdapConfig;
 import java.security.GeneralSecurityException;
 import java.util.HashMap;
 import java.util.Map;
@@ -54,7 +54,7 @@ public class LdapUtil {
         Integer ldapPort = Integer.parseInt(ldapPortString);
         
 
-        if (ldapType.equals(LdapType.ActiveDirectory) && ldapPort != 636) {
+        if (ldapType.equals(LdapType.ActiveDirectory) && (ldapPort != 636 || ldapPort!= 3269)) {
             throw new Exception(Bundle.getString("ActiveDirectoryPortRequirements"));
         }
 
@@ -121,24 +121,40 @@ public class LdapUtil {
     */
     protected static LDAPConnection getUnpooledConnection(String user, String password, LdapConfig config) throws LDAPException{
         LDAPConnection conn = null;
-        LDAPConnectionOptions options = new LDAPConnectionOptions();
-        options.setConnectTimeoutMillis(10*1000);
-        options.setResponseTimeoutMillis(10*1000);
         if (config.getType().equals(LdapType.ActiveDirectory)){
             try {
                 SSLUtil sslUtil = new SSLUtil(new TrustAllTrustManager());
                 SSLSocketFactory sslSocketFactory = sslUtil.createSSLSocketFactory();
                 // Establish a secure connection using the socket factory.
                 conn = new LDAPConnection(sslSocketFactory);
-                conn.setConnectionOptions(options);
-                conn.connect(config.getServer(), config.getPort());
-                conn.bind(user, password);
             } catch (GeneralSecurityException ex) {
                 log.fatal(ex);
             }  
         } else {
-            conn = new LDAPConnection(config.getServer(), config.getPort(), user, password);
+            conn = new LDAPConnection();
+        }
+        if (conn!=null){
+            LDAPConnectionOptions options = new LDAPConnectionOptions();
+            options.setConnectTimeoutMillis(10*1000);
+            options.setResponseTimeoutMillis(10*1000);
             conn.setConnectionOptions(options);
+            try {
+                conn.connect(config.getServer(), config.getPort());
+            } catch (LDAPException e){
+                log.error("Error while connecting to "+config.getServer()+":"+config.getPort(), e);
+                //If a fallback LDAP server is configured, use it
+                String server2 = config.getServer2();
+                Integer port2 = config.getPort2();
+                if (!StringUtils.isEmpty(server2) && port2!=null){
+                    log.info("Falling back to "+server2+":"+port2);
+                    conn.connect(server2, port2);
+                } else {
+                    throw e;
+                }
+            }
+            if (conn.isConnected()){
+                conn.bind(config.getUsername(), config.getPassword());
+            }
         }
         return conn;
     }
@@ -190,7 +206,7 @@ public class LdapUtil {
     }
     
     private static String getConnectionPoolKey(String name, LdapConfig config) {
-        return name + config.getServer();
+        return name + "@" + config.getServer() +":"+ config.getPort();
     }
 
     /*
@@ -223,8 +239,8 @@ public class LdapUtil {
 
         return displayStr.toString();
     }
-
-
+    
+    
     //d130ff50-7963-424c-af64-3ecaa26e7262
     static byte[] UUIDStringToByteArray(String uuid) {
         uuid = uuid.replace("-", "");
@@ -264,5 +280,44 @@ public class LdapUtil {
         } else {
             return Integer.toHexString(value);
         }
+    }
+    
+    
+    //objectSid
+    public static String bytesToSid(byte[] SID) {
+        // Add the 'S' prefix
+        StringBuilder strSID = new StringBuilder("S-");
+
+   // bytes[0] : in the array is the version (must be 1 but might 
+        // change in the future)
+        strSID.append(SID[0]).append('-');
+
+        // bytes[2..7] : the Authority
+        StringBuilder tmpBuff = new StringBuilder();
+        for (int t = 2; t <= 7; t++) {
+            String hexString = Integer.toHexString(SID[t] & 0xFF);
+            tmpBuff.append(hexString);
+        }
+        strSID.append(Long.parseLong(tmpBuff.toString(), 16));
+
+        // bytes[1] : the sub authorities count
+        int count = SID[1];
+
+   // bytes[8..end] : the sub authorities (these are Integers - notice
+        // the endian)
+        for (int i = 0; i < count; i++) {
+            int currSubAuthOffset = i * 4;
+            tmpBuff.setLength(0);
+            tmpBuff.append(String.format("%02X%02X%02X%02X",
+                    (SID[11 + currSubAuthOffset] & 0xFF),
+                    (SID[10 + currSubAuthOffset] & 0xFF),
+                    (SID[9 + currSubAuthOffset] & 0xFF),
+                    (SID[8 + currSubAuthOffset] & 0xFF)));
+
+            strSID.append('-').append(Long.parseLong(tmpBuff.toString(), 16));
+        }
+
+        // That's it - we have the SID
+        return strSID.toString();
     }
 }

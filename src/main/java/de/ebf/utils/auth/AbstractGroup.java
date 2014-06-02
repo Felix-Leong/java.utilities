@@ -4,21 +4,25 @@
  */
 package de.ebf.utils.auth;
 
+import java.io.Serializable;
+
 /**
  *
  * @author Dominik
  */
-public abstract class AbstractGroup<User> implements Group {
+public abstract class AbstractGroup<User> implements Group, Serializable {
 
-   private String name;
+    private static final long serialVersionUID = 1L;
 
-   @Override
-   public String getName() {
-      return name;
-   }
+    private String name;
 
-   @Override
-   public void setName(String name) {
-      this.name = name;
-   }
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public void setName(String name) {
+        this.name = name;
+    }
 }

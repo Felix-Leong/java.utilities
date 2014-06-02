@@ -4,8 +4,8 @@
  */
 package de.ebf.utils.auth;
 
-import de.ebf.utils.auth.ldap.config.LdapConfig;
 import de.ebf.utils.auth.ldap.LdapException;
+import de.ebf.utils.auth.ldap.config.LdapConfig;
 
 /**
  *
