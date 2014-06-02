@@ -34,14 +34,10 @@ public class TestDBConnection {
         properties.setProperty("hibernate.dialect", dbConfig.getType().getDialect());
         properties.setProperty("hibernate.connection.username", dbConfig.getUsername());
         properties.setProperty("hibernate.connection.password", dbConfig.getPassword());
-
         properties.setProperty("hibernate.current_session_context_class", "thread");//bound the current session to this thread.
         
         Configuration configuration = new Configuration().setProperties(properties);
-        
         ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().applySettings(configuration.getProperties()).build();
-
-//        SessionFactory factory = new Configuration().setProperties(properties).buildSessionFactory();
         SessionFactory factory = configuration.buildSessionFactory(serviceRegistry);
         Session session = factory.getCurrentSession();
 
