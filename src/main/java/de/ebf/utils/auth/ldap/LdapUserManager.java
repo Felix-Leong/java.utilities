@@ -22,6 +22,8 @@ import de.ebf.utils.Bundle;
 import de.ebf.utils.auth.UserManager;
 import de.ebf.utils.auth.ldap.config.LdapConfig;
 import de.ebf.utils.auth.ldap.schema.ActiveDirectorySchema;
+import de.ebf.utils.auth.ldap.schema.DominoSchema;
+import de.ebf.utils.auth.ldap.schema.LdapSchema;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -193,6 +195,9 @@ public class LdapUserManager implements UserManager<LdapUser> {
                 Filter samAccountNameFilter     = Filter.createEqualityFilter(ActiveDirectorySchema.ATTR_SAM_ACCOUNT_NAME, userName);
                 Filter userPrincipalNameFilter  = Filter.createEqualityFilter(ActiveDirectorySchema.ATTR_USER_PRINCIPAL_NAME, userName);
                 filter = Filter.createORFilter(cnFilter, samAccountNameFilter, userPrincipalNameFilter);
+            } else if (config.getType().equals(LdapType.Domino)) {
+                Filter mailFilter = Filter.createEqualityFilter(DominoSchema.ATTR_LOGIN_MAIL, userName);
+                filter = Filter.createORFilter(cnFilter, mailFilter);
             } else {
                 filter = cnFilter;
             }
@@ -345,11 +350,6 @@ public class LdapUserManager implements UserManager<LdapUser> {
 //         user.setGroups(groups);
 //      }
         return user;
-    }
-
-    protected LdapUser getUserByAttribute(LDAPConnection connection, String attribute, String value, LdapConfig config) throws LdapException {
-        Filter filter = Filter.createEqualityFilter(attribute, value);
-        return getUserByFilter(connection, filter, config);
     }
     
     public List<LdapUser> getUsersByFilter(LDAPConnection connection, Filter filter, LdapConfig config) throws LdapException {

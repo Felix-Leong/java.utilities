@@ -13,7 +13,6 @@ import de.ebf.utils.auth.ldap.LdapUser;
 import de.ebf.utils.auth.ldap.LdapUserManager;
 import de.ebf.utils.auth.ldap.LdapUtil;
 import de.ebf.utils.auth.ldap.config.LdapConfig;
-import org.apache.commons.lang.StringUtils;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -33,9 +32,6 @@ public abstract class LDAPReadTest {
     
     protected LdapConfig config;
     
-    private static final String TEST_USER_NAME  = "Administrator";
-    private static final String TEST_GROUP_NAME = "Administrators";
-
     @Autowired
     LdapUserManager userManager;
     
@@ -59,25 +55,5 @@ public abstract class LDAPReadTest {
    @Test
    public void connect() throws Exception{
        LdapUtil.verifyConnection(config);
-   }
-   
-   @Test
-   public void getUser() throws LdapException{
-        LdapUser user = userManager.getUser(TEST_USER_NAME, config);
-        assert(user!=null);
-   }
-   
-   @Test
-   public void getGroup() throws LdapException{
-        LdapGroup group = groupManager.getGroup(TEST_GROUP_NAME, config);
-        assert(group!=null);
-   }
-   
-   @Test
-   public void getMember() throws LdapException{
-        LdapUser user = userManager.getUser(TEST_USER_NAME, config);
-        LdapGroup group = groupManager.getGroup(TEST_GROUP_NAME, config);
-        assert(group.getMembers()!=null && group.getMembers().size()>0);
-        assert(group.getMembers().contains(user));
    }
 }

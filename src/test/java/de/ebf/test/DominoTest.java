@@ -16,22 +16,21 @@ import org.junit.Test;
  *
  * @author dominik
  */
-public class ActiveDirectoryGlobalCatalogTest extends LDAPReadTest {
+public class DominoTest extends LDAPReadTest {
 
-    private static final String TEST_USER_NAME = "Administrator";
-    private static final String TEST_GROUP_NAME = "Administrators";
+    private static final String DOMINO_EMAIL_USER_NAME = "ldap@ebf-dev.de";
 
-    private static final String ACTIVE_DIRECTORY_SAM_ACCOUNT_NAME = "sAMAccountName.Test";
-    private static final String ACTIVE_DIRECTORY_USER_PRINCIPAL_NAME = "sAMAccountName.Test@tba.ebf.de";
+    private static final String TEST_USER_NAME = "Ldap Search";
+    private static final String TEST_GROUP_NAME = "LocalDomainAdmins";
 
-    public ActiveDirectoryGlobalCatalogTest() {
+    public DominoTest() {
         config = new LdapConfig();
-        config.setServer("10.4.6.12");
-        config.setPort(3269);
-        config.setBaseDN("dc=tba,dc=ebf,dc=de");
-        config.setUsername("cn=Administrator,cn=Users,dc=tba,dc=ebf,dc=de");
-        config.setPassword("Eo2WUgNw");
-        config.setType(LdapType.ActiveDirectory);
+        config.setServer("10.4.7.10");
+        config.setPort(1389);//1636 for SSL
+        config.setBaseDN("");
+        config.setUsername("CN=IBM Admin,O=EBF-DEV");
+        config.setPassword("domino");
+        config.setType(LdapType.Domino);
     }
 
     @Test
@@ -39,7 +38,7 @@ public class ActiveDirectoryGlobalCatalogTest extends LDAPReadTest {
         LdapUser user = userManager.getUser(TEST_USER_NAME, config);
         assert (user != null);
     }
-
+    
     @Test
     public void getGroup() throws LdapException {
         LdapGroup group = groupManager.getGroup(TEST_GROUP_NAME, config);
@@ -55,14 +54,8 @@ public class ActiveDirectoryGlobalCatalogTest extends LDAPReadTest {
     }
 
     @Test
-    public void getUserBySamAccountName() throws LdapException {
-        LdapUser user = userManager.getUser(ACTIVE_DIRECTORY_SAM_ACCOUNT_NAME, config);
-        assert (user != null);
-    }
-
-    @Test
-    public void getUserByUserPrinciplaName() throws LdapException {
-        LdapUser user = userManager.getUser(ACTIVE_DIRECTORY_USER_PRINCIPAL_NAME, config);
+    public void getUserByEmail() throws LdapException {
+        LdapUser user = userManager.getUser(DOMINO_EMAIL_USER_NAME, config);
         assert (user != null);
     }
 }

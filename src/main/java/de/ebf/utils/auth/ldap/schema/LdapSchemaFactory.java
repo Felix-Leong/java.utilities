@@ -31,6 +31,8 @@ public class LdapSchemaFactory {
             case OpenDS:
                 instances.put(type, new OpenDSSchema());
                 break;
+            case Domino:
+                instances.put(type, new DominoSchema());
         }
         return instances.get(type);
     }

@@ -12,5 +12,6 @@ package de.ebf.utils.auth.ldap;
  */
 public enum LdapType {
     OpenDS,
-    ActiveDirectory
+    ActiveDirectory,
+    Domino
 }

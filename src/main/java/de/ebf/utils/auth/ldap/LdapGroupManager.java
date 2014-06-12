@@ -233,14 +233,22 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
             String[] memberDNs = attr.getValues();
             for (String dn : memberDNs) {
                 //members can be users or groups
-                Filter userFilter = Filter.createEqualityFilter(config.getSchema().ATTR_OBJECTCLASS, config.getSchema().OBJECTCLASS_USER);
                 Filter dnFilter = Filter.createEqualityFilter(config.getSchema().ATTR_DN, dn);
-                Filter filter = Filter.createANDFilter(userFilter, dnFilter);
-                LdapUser user = userManager.getUserByFilter(connection, filter, config);
+                LdapUser user;
+                if (config.getType().equals(LdapType.Domino)){
+                    //Domino LDAP does not support queries by DN (!!!)
+                    user = userManager.getUser(LdapUtil.getCN(dn), config);
+                    //make sure this is the user we are looking for...
+                    if (!user.getDN().equals(dn)){
+                        user=null;
+                    }
+                } else {
+                    user = userManager.getUserByFilter(connection, dnFilter, config);
+                }
                 if (user == null) {
                     //so if it is not a user, check if it is a group
                     Filter groupFilter = Filter.createEqualityFilter(config.getSchema().ATTR_OBJECTCLASS, config.getSchema().OBJECTCLASS_GROUP);
-                    filter = Filter.createANDFilter(groupFilter, dnFilter);
+                    Filter filter = Filter.createANDFilter(groupFilter, dnFilter);
                     try {
                         SearchResult searchResult = connection.search(config.getBaseDN(), SearchScope.SUB, filter, config.getSchema().ATTR_ALL);
                         if (searchResult.getSearchEntries() != null && searchResult.getSearchEntries().size() > 0) {
