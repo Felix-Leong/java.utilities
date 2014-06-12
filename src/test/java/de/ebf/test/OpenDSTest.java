@@ -18,11 +18,11 @@ public class OpenDSTest extends LDAPWriteTest{
     //@BeforeClass
     public OpenDSTest(){
         config = new LdapConfig();
-        config.setServer("127.0.0.1");
+        config.setServer("10.4.6.12");
         config.setPort(1389);
         config.setBaseDN("dc=tba,dc=ebf,dc=de");
         config.setUsername("cn=Directory Manager");
-        config.setPassword("secret");
+        config.setPassword("GtJr4BlB");
         config.setType(LdapType.OpenDS);
     }
 }
