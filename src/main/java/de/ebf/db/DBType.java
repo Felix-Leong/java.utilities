@@ -16,16 +16,16 @@ public enum DBType {
           "org.hibernate.dialect.MySQLDialect",
           "jdbc:mysql://",
           "SELECT 1 from dual",
-          "SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE();",
-          "SELECT COLUMN_NAME, DATA_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='{0}';"),
+          "SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE()",
+          "SELECT COLUMN_NAME, DATA_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME = :tableName"),
     
     MSSQL("Miscrosoft SQL Server",
           "net.sourceforge.jtds.jdbc.Driver",
           "org.hibernate.dialect.SQLServerDialect",
           "jdbc:jtds:sqlserver://",
           "SELECT GETDATE()",
-          "SELECT TABLE_NAME FROM information_schema.TABLES;",
-          "SELECT TABLE_NAME, DATA_TYPE FROM information_schema.COLUMNS WHERE TABLE_NAME='{0}';"); 
+          "SELECT TABLE_NAME FROM information_schema.TABLES",
+          "SELECT TABLE_NAME, DATA_TYPE FROM information_schema.COLUMNS WHERE TABLE_NAME = :tableName"); 
 
     private String label;
     private String driverClass;
