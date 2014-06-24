@@ -5,6 +5,9 @@
  */
 package de.ebf.onpremise;
 
+import de.ebf.db.DBUtil;
+import de.ebf.db.DBType;
+import de.ebf.db.DBConfig;
 import de.ebf.utils.Bundle;
 import de.ebf.utils.FormUtils;
 import de.ebf.utils.MailUtils;
@@ -77,7 +80,7 @@ public class SetupWizardController {
 
         //test the db connection and set the messageDetail
         try {
-            TestDBConnection.testDB(dbConfig);
+            DBUtil.testDB(dbConfig);
         } catch (HibernateException e) {
             SetupWizardMessage msg =  new SetupWizardMessage(SetupWizardMessage.ERROR,Bundle.getString("SetupWizardMessage_DB_CONN_FAILED")+" "+e.getMessage());
             return msg;

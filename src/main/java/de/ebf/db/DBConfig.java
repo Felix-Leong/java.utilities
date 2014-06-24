@@ -1,4 +1,4 @@
-package de.ebf.onpremise;
+package de.ebf.db;
 
 import java.io.Serializable;
 
@@ -6,17 +6,18 @@ import java.io.Serializable;
  *
  * @author xz
  */
-public class DBConfig implements Serializable{
+public class DBConfig implements Serializable, DBInterface{
     
     private static final long serialVersionUID = 1L;
 
     private DBType type;
     private String host;
-    private int port;
+    private Integer port;
     private String dbName;
     private String username;
     private String password;
 
+    @Override
     public DBType getType() {
         return type;
     }
@@ -25,6 +26,7 @@ public class DBConfig implements Serializable{
         this.type = type;
     }
 
+    @Override
     public String getHost() {
         return host;
     }
@@ -33,7 +35,8 @@ public class DBConfig implements Serializable{
         this.host = host;
     }
 
-    public int getPort() {
+    @Override
+    public Integer getPort() {
         return port;
     }
 
@@ -41,6 +44,7 @@ public class DBConfig implements Serializable{
         this.port = port;
     }
 
+    @Override
     public String getDbName() {
         return dbName;
     }
@@ -49,6 +53,7 @@ public class DBConfig implements Serializable{
         this.dbName = dbName;
     }
 
+    @Override
     public String getUsername() {
         return username;
     }
@@ -57,6 +62,7 @@ public class DBConfig implements Serializable{
         this.username = username;
     }
 
+    @Override
     public String getPassword() {
         return password;
     }
@@ -65,8 +71,8 @@ public class DBConfig implements Serializable{
         this.password = password;
     }
     
+    @Override
     public String getUrl() {
         return this.getType().getUrlPrefix() + this.getHost() + ":" + this.getPort() + "/" + this.getDbName();
     }
-
 }

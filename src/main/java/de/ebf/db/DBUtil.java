@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.ebf.onpremise;
+package de.ebf.db;
 
 import java.util.List;
 import java.util.Properties;
@@ -20,11 +20,11 @@ import org.hibernate.service.ServiceRegistry;
  *
  * @author xz
  */
-public class TestDBConnection {
+public class DBUtil {
 
-    private static final Logger log = Logger.getLogger(TestDBConnection.class);
+    private static final Logger log = Logger.getLogger(DBUtil.class);
 
-    public static boolean testDB(DBConfig dbConfig) throws HibernateException {
+    public static void testDB(DBInterface dbConfig) throws HibernateException {
 
         boolean dbOK = false;
         Properties properties = new Properties();
@@ -46,11 +46,12 @@ public class TestDBConnection {
         List list = query.list();
         if (list != null && list.size() > 0) {
             dbOK = true;
-
         }
         tx.commit();
 
-        return dbOK;
+        if (!dbOK){
+            throw new HibernateException("Test query did not execute successfully.");
+        }
     }
 
 }
