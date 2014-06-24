@@ -12,6 +12,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.service.ServiceRegistry;
@@ -24,38 +25,36 @@ public class DBUtil {
 
     private static final Logger log = Logger.getLogger(DBUtil.class);
 
-    public static void testDB(DBInterface dbConfig) throws Exception {
-        
-        if (dbConfig.getType() == null){
+    public static void testDB(DBInterface db) throws Exception {
+        if (db.getType() == null){
             throw new Exception("Please choose a DB Type");
         }
 
-        boolean dbOK = false;
+        Session session = getSession(db);
+        Transaction tx = session.beginTransaction();
+        Query query = session.createSQLQuery(db.getType().getTestQuery());
+        List list = query.list();
+        if (list == null && list.size() <= 0) {
+            throw new Exception("Test query did not execute successfully.");
+        }
+        tx.commit();
+        
+    }
+    
+    public static Session getSession(DBInterface db){
         Properties properties = new Properties();
 
-        properties.setProperty("hibernate.connection.driver_class", dbConfig.getType().getDriverClass());
-        properties.setProperty("hibernate.connection.url", dbConfig.getUrl());
-        properties.setProperty("hibernate.dialect", dbConfig.getType().getDialect());
-        properties.setProperty("hibernate.connection.username", dbConfig.getUsername());
-        properties.setProperty("hibernate.connection.password", dbConfig.getPassword());
+        properties.setProperty("hibernate.connection.driver_class", db.getType().getDriverClass());
+        properties.setProperty("hibernate.connection.url", db.getUrl());
+        properties.setProperty("hibernate.dialect", db.getType().getDialect());
+        properties.setProperty("hibernate.connection.username", db.getUsername());
+        properties.setProperty("hibernate.connection.password", db.getPassword());
         properties.setProperty("hibernate.current_session_context_class", "thread");//bound the current session to this thread.
         
         Configuration configuration = new Configuration().setProperties(properties);
         ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().applySettings(configuration.getProperties()).build();
         SessionFactory factory = configuration.buildSessionFactory(serviceRegistry);
-        Session session = factory.getCurrentSession();
-
-        org.hibernate.Transaction tx = session.beginTransaction();
-        Query query = session.createSQLQuery(dbConfig.getType().getTestQuery());
-        List list = query.list();
-        if (list != null && list.size() > 0) {
-            dbOK = true;
-        }
-        tx.commit();
-
-        if (!dbOK){
-            throw new Exception("Test query did not execute successfully.");
-        }
+        return factory.getCurrentSession();
     }
 
 }
