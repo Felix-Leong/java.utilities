@@ -81,7 +81,7 @@ public class SetupWizardController {
         //test the db connection and set the messageDetail
         try {
             DBUtil.testDB(dbConfig);
-        } catch (HibernateException e) {
+        } catch (Exception e) {
             SetupWizardMessage msg =  new SetupWizardMessage(SetupWizardMessage.ERROR,Bundle.getString("SetupWizardMessage_DB_CONN_FAILED")+" "+e.getMessage());
             return msg;
         }

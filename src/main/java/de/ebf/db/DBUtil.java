@@ -24,7 +24,11 @@ public class DBUtil {
 
     private static final Logger log = Logger.getLogger(DBUtil.class);
 
-    public static void testDB(DBInterface dbConfig) throws HibernateException {
+    public static void testDB(DBInterface dbConfig) throws Exception {
+        
+        if (dbConfig.getType() == null){
+            throw new Exception("Please choose a DB Type");
+        }
 
         boolean dbOK = false;
         Properties properties = new Properties();
@@ -50,7 +54,7 @@ public class DBUtil {
         tx.commit();
 
         if (!dbOK){
-            throw new HibernateException("Test query did not execute successfully.");
+            throw new Exception("Test query did not execute successfully.");
         }
     }
 
