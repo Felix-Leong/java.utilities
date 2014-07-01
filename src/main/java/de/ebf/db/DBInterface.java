@@ -24,5 +24,7 @@ public interface DBInterface {
 
     String getUrl();
 
-    String getUsername();  
+    String getUsername();
+    
+    String getQuery();
 }

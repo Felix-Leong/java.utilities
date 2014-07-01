@@ -6,7 +6,7 @@ import java.io.Serializable;
  *
  * @author xz
  */
-public class DBConfig implements Serializable, DBInterface{
+public class DBConfig implements Serializable, DBInterface {
     
     private static final long serialVersionUID = 1L;
 
@@ -16,6 +16,7 @@ public class DBConfig implements Serializable, DBInterface{
     private String dbName;
     private String username;
     private String password;
+    private String query;
 
     @Override
     public DBType getType() {
@@ -74,5 +75,10 @@ public class DBConfig implements Serializable, DBInterface{
     @Override
     public String getUrl() {
         return this.getType().getUrlPrefix() + this.getHost() + ":" + this.getPort() + "/" + this.getDbName();
+    }
+    
+    @Override
+    public String getQuery() {
+        return this.query;
     }
 }
