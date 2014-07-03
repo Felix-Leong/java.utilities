@@ -20,7 +20,7 @@ public interface DBInterface {
 
     Integer getPort();
 
-    DBType getType();
+    DBType getDatabaseType();
 
     String getUrl();
 

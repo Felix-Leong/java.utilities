@@ -26,13 +26,13 @@ public class DBUtil {
     private static final Logger log = Logger.getLogger(DBUtil.class);
 
     public static void testDB(DBInterface db) throws Exception {
-        if (db.getType() == null){
+        if (db.getDatabaseType()== null){
             throw new Exception("Please choose a DB Type");
         }
 
         Session session = getSession(db);
         Transaction tx = session.beginTransaction();
-        Query query = session.createSQLQuery(db.getType().getTestQuery());
+        Query query = session.createSQLQuery(db.getDatabaseType().getTestQuery());
         List list = query.list();
         if (list == null && list.size() <= 0) {
             throw new Exception("Test query did not execute successfully.");
@@ -44,9 +44,9 @@ public class DBUtil {
     public static Session getSession(DBInterface db){
         Properties properties = new Properties();
 
-        properties.setProperty("hibernate.connection.driver_class", db.getType().getDriverClass());
+        properties.setProperty("hibernate.connection.driver_class", db.getDatabaseType().getDriverClass());
         properties.setProperty("hibernate.connection.url", db.getUrl());
-        properties.setProperty("hibernate.dialect", db.getType().getDialect());
+        properties.setProperty("hibernate.dialect", db.getDatabaseType().getDialect());
         properties.setProperty("hibernate.connection.username", db.getUsername());
         properties.setProperty("hibernate.connection.password", db.getPassword());
         properties.setProperty("hibernate.current_session_context_class", "thread");//bound the current session to this thread.

@@ -28,7 +28,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.hibernate.HibernateException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -323,8 +322,8 @@ public class SetupWizardController {
         HashMap<String, String> jdbcReplaceMap = new HashMap<>();
 
         //db
-        jdbcReplaceMap.put("${db.driverClassName}", dbConfig.getType().getDriverClass());
-        jdbcReplaceMap.put("${db.dialect}", dbConfig.getType().getDialect());
+        jdbcReplaceMap.put("${db.driverClassName}", dbConfig.getDatabaseType().getDriverClass());
+        jdbcReplaceMap.put("${db.dialect}", dbConfig.getDatabaseType().getDialect());
         jdbcReplaceMap.put("${db.databaseurl}", dbConfig.getUrl());
         jdbcReplaceMap.put("${db.username}", dbConfig.getUsername());
         jdbcReplaceMap.put("${db.password}", dbConfig.getPassword());

@@ -19,7 +19,7 @@ public class DBConfig implements Serializable, DBInterface {
     private String query;
 
     @Override
-    public DBType getType() {
+    public DBType getDatabaseType() {
         return type;
     }
 
@@ -74,7 +74,7 @@ public class DBConfig implements Serializable, DBInterface {
     
     @Override
     public String getUrl() {
-        return this.getType().getUrlPrefix() + this.getHost() + ":" + this.getPort() + "/" + this.getDbName();
+        return this.getDatabaseType().getUrlPrefix() + this.getHost() + ":" + this.getPort() + "/" + this.getDbName();
     }
     
     @Override
