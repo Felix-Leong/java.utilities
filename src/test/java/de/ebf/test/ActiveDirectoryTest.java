@@ -27,8 +27,8 @@ public class ActiveDirectoryTest extends LDAPWriteTest {
         config.setServer("10.4.6.12");
         config.setPort(636);
         config.setBaseDN("dc=tba,dc=ebf,dc=de");
-        config.setUsername("cn=Administrator,cn=Users,dc=tba,dc=ebf,dc=de");
-        config.setPassword("Eo2WUgNw");
+        config.setUsername("cn=LDAPTest,cn=Users,dc=tba,dc=ebf,dc=de");
+        config.setPassword("NjI9MkO0");
         config.setType(LdapType.ActiveDirectory);
     }
 
