@@ -20,5 +20,7 @@ public class BaseConstants {
     public static final String HTTP_REQUEST_HEADER_CLIENT_VERSION       = "X-Client-Version";
     public static final String HTTP_REQUEST_HEADER_CLIENT_DEVICE        = "X-Client-Device";
     public static final String HTTP_REQUEST_HEADER_API_VERSION          = "X-Api-Version";
+    public static final String HTT_REQUEST_HEADER_CLIENT_DEVICE_WIDTH   = "X-Client-Device-Width";
+    public static final String HTT_REQUEST_HEADER_CLIENT_DEVICE_HEIGHT  = "X-Client-Device-Height";
     
 }
