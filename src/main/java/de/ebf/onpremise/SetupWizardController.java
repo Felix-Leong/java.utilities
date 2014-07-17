@@ -5,12 +5,13 @@
  */
 package de.ebf.onpremise;
 
+import de.ebf.utils.mail.SMTPMailConfig;
 import de.ebf.db.DBUtil;
 import de.ebf.db.DBType;
 import de.ebf.db.DBConfig;
 import de.ebf.utils.Bundle;
 import de.ebf.utils.FormUtils;
-import de.ebf.utils.MailUtils;
+import de.ebf.utils.mail.MailUtils;
 import de.ebf.utils.auth.ldap.LdapType;
 import de.ebf.utils.auth.ldap.LdapUtil;
 import de.ebf.utils.auth.ldap.config.LdapConfig;
@@ -155,7 +156,7 @@ public class SetupWizardController {
         session.removeAttribute(SESSION_ATTR_MAILCONFIG);
 
         //validate and return the filled mailConfig
-        MailConfig mailConfig;
+        SMTPMailConfig mailConfig;
         try {
             mailConfig = validateMailParameters(request);
         } catch (Exception e) {
@@ -185,7 +186,7 @@ public class SetupWizardController {
         //check if all the properties object are stored in session
         DBConfig dbConfig = (DBConfig) session.getAttribute(SESSION_ATTR_DBCONFIG);
         LdapConfig ldapConfig = (LdapConfig) session.getAttribute(SESSION_ATTR_LDAPCONFIG);
-        MailConfig mailConfig = (MailConfig) session.getAttribute(SESSION_ATTR_MAILCONFIG);
+        SMTPMailConfig mailConfig = (SMTPMailConfig) session.getAttribute(SESSION_ATTR_MAILCONFIG);
         if(dbConfig==null || ldapConfig==null || mailConfig==null) {
             return new SetupWizardMessage(SetupWizardMessage.ERROR,Bundle.getString("SetupWizardMessage_SESSION_NOT_EXISTING"));
         }
@@ -235,14 +236,14 @@ public class SetupWizardController {
     }
         
     /**
-     * validate the mail parameters. If no eror, create a MailConfig and fill it
-     * with the parameters.
+     * validate the mail parameters. If no eror, create a SMTPMailConfig and fill it
+ with the parameters.
      *
      * @param request
      * @return
      * @throws Exception
      */
-    private MailConfig validateMailParameters(HttpServletRequest request) throws Exception {
+    private SMTPMailConfig validateMailParameters(HttpServletRequest request) throws Exception {
         String smtpHost = request.getParameter("smtpHost");
         String smtpPortStr = request.getParameter("smtpPort");
         String senderEmail = request.getParameter("senderEmail");
@@ -267,13 +268,13 @@ public class SetupWizardController {
         }
 
         //if no error, fill the fields
-        MailConfig mailConfig = new MailConfig();
-        mailConfig.setSmtpHost(smtpHost);
-        mailConfig.setSmtpPort(smtpPort);
+        SMTPMailConfig mailConfig = new SMTPMailConfig();
+        mailConfig.setHost(smtpHost);
+        mailConfig.setPort(smtpPort);
         mailConfig.setSenderEmail(senderEmail);
         mailConfig.setBccEmail(bccEmail);
         mailConfig.setSenderName(senderName);
-        mailConfig.setRequireAuth(requireAuth);
+        mailConfig.setRequireAuthentication(requireAuth);
         if (requireAuth) {
             mailConfig.setUsername(userName);
             mailConfig.setPassword(password);
@@ -290,22 +291,15 @@ public class SetupWizardController {
      * @param mailConfig
      * @throws Exception 
      */
-    private void sendTestingEmail(MailConfig mailConfig) throws Exception {
-        //send mail with the given properties
-        MailUtils.setSystemMailProperties(mailConfig.getSmtpHost(), mailConfig.getSmtpPort() + "", mailConfig.getUsername(), mailConfig.getPassword(),
-                mailConfig.getSenderEmail(), mailConfig.getSenderName(), mailConfig.getBccEmail());
-
+    private void sendTestingEmail(SMTPMailConfig mailConfig) throws Exception {
         String sender = mailConfig.getSenderEmail();
         ArrayList<String> recipients = new ArrayList<>();
         recipients.add(mailConfig.getBccEmail());
         String subject = "Testing email to verify the mail properties";
         String body = "This email is sent to verify the mail properties entered in onpremise-SetupWizard.";
 
-        //send testing mail
-        boolean success = MailUtils.sendMail(sender, recipients, subject, body);
-        if (!success) {
-            throw new Exception(Bundle.getString("EmailFailed"));
-        }
+        //send testing mail, throws exception in case of errors
+        MailUtils.sendMail(mailConfig, sender, recipients, subject, body);
     }
 
     /**
@@ -317,7 +311,7 @@ public class SetupWizardController {
      * @return
      * @throws IOException
      */
-    private boolean writePropertiesFiles(DBConfig dbConfig, LdapConfig ldapConfig, MailConfig mailConfig) throws IOException {
+    private boolean writePropertiesFiles(DBConfig dbConfig, LdapConfig ldapConfig, SMTPMailConfig mailConfig) throws IOException {
         HashMap<String, String> localSettingsReplaceMap = new HashMap<>();
         HashMap<String, String> jdbcReplaceMap = new HashMap<>();
 
@@ -342,8 +336,8 @@ public class SetupWizardController {
         }
 
         //mail
-        localSettingsReplaceMap.put("${smtp.server}", mailConfig.getSmtpHost());
-        localSettingsReplaceMap.put("${smtp.port}", mailConfig.getSmtpPort() + "");
+        localSettingsReplaceMap.put("${smtp.server}", mailConfig.getHost());
+        localSettingsReplaceMap.put("${smtp.port}", mailConfig.getPort() + "");
         localSettingsReplaceMap.put("${smtp.user}", mailConfig.getUsername());
         localSettingsReplaceMap.put("${smtp.pass}", mailConfig.getPassword());
         localSettingsReplaceMap.put("${smtp.user.mail}", mailConfig.getSenderEmail());
