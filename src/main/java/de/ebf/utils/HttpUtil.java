@@ -1,6 +1,7 @@
 package de.ebf.utils;
 
 import de.ebf.constants.BaseConstants;
+import de.ebf.data.Credentials;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
 import java.io.InputStream;
@@ -133,7 +134,7 @@ public class HttpUtil {
             URL urlRequest = new URL(URIUtil.encodeQuery(absoluteUrl));
             HttpURLConnection conn = (HttpURLConnection) urlRequest.openConnection();
             if (!StringUtils.isEmpty(user) && !StringUtils.isEmpty(pass)) {
-                conn.addRequestProperty("Authorization", "Basic " + Base64.encodeBase64String((user + ":" + pass).getBytes(BaseConstants.UTF8)));
+                conn.addRequestProperty(BaseConstants.HTTP_REQUEST_HEADER_AUTHORIZATION, PREFIX_BASIC + Base64.encodeBase64String((user + ":" + pass).getBytes(BaseConstants.UTF8)));
             }
             int contentLength = conn.getContentLength();
             int bufferLength = 128;
@@ -159,28 +160,43 @@ public class HttpUtil {
         }
     }
 
-   public static String getBaseUrl(HttpServletRequest request) {
-      return request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + getContextPath(request);
-   }
+    public static String getBaseUrl(HttpServletRequest request) {
+       return request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + getContextPath(request);
+    }
 
-   public static String getContextPath(HttpServletRequest request) {
-      return (request.getContextPath() == null) ? "" : request.getContextPath();
-   }
+    public static String getContextPath(HttpServletRequest request) {
+       return (request.getContextPath() == null) ? "" : request.getContextPath();
+    }
    
-    public static String getBasicAuthUsername(HttpServletRequest request) {
-        return getBasicAuthCredential(request, 0);
+    public static Credentials getAuthorizationCredentials(HttpServletRequest request) {
+        return getBasicAuthHeader(request, BaseConstants.HTTP_REQUEST_HEADER_AUTHORIZATION);
     }
     
-    public static String getBasicAuthPassword(HttpServletRequest request) {
-        return getBasicAuthCredential(request, 1);
+     public static Credentials getContainerAuthorizationCredentials(HttpServletRequest request) {
+        return getBasicAuthHeader(request, BaseConstants.HTTP_REQUEST_HEADER_CONTAINER_AUTHORIZATION);
     }
-   
-    private static String getBasicAuthCredential(HttpServletRequest request, int position) {
+     
+      private static Credentials getBasicAuthHeader(HttpServletRequest request, String headerName) {
+        String authorization = request.getHeader(headerName);
+        if (!StringUtils.isEmpty(authorization) && authorization.startsWith(PREFIX_BASIC)) {
+            String[] decodedAuthorization = decodeBasicAuth(authorization.substring(PREFIX_BASIC.length()));
+            if (decodedAuthorization != null && decodedAuthorization.length == 2) {
+                Credentials credentials = new Credentials();
+                credentials.setUsername(decodedAuthorization[0]);
+                credentials.setPassword(decodedAuthorization[1]);
+            }
+        }
+        return null;
+    }
+    
+    public static Credentials getXAuthorizationCredentials(HttpServletRequest request) {
         String authorization = request.getHeader("Authorization");
         if (!StringUtils.isEmpty(authorization) && authorization.startsWith(PREFIX_BASIC)) {
             String[] decodedAuthorization = decodeBasicAuth(authorization.substring(PREFIX_BASIC.length()));
             if (decodedAuthorization != null && decodedAuthorization.length == 2) {
-                return decodedAuthorization[position];
+                Credentials credentials = new Credentials();
+                credentials.setUsername(decodedAuthorization[0]);
+                credentials.setPassword(decodedAuthorization[1]);
             }
         }
         return null;
