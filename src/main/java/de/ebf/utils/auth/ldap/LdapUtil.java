@@ -153,7 +153,7 @@ public class LdapUtil {
                 }
             }
             if (conn.isConnected()){
-                conn.bind(config.getUsername(), config.getPassword());
+                conn.bind(user, password);
             }
         }
         return conn;
