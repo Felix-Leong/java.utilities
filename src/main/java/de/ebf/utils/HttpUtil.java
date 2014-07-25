@@ -172,11 +172,11 @@ public class HttpUtil {
         return getBasicAuthHeader(request, BaseConstants.HTTP_REQUEST_HEADER_AUTHORIZATION);
     }
     
-     public static Credentials getContainerAuthorizationCredentials(HttpServletRequest request) {
+    public static Credentials getContainerAuthorizationCredentials(HttpServletRequest request) {
         return getBasicAuthHeader(request, BaseConstants.HTTP_REQUEST_HEADER_CONTAINER_AUTHORIZATION);
     }
      
-      private static Credentials getBasicAuthHeader(HttpServletRequest request, String headerName) {
+    private static Credentials getBasicAuthHeader(HttpServletRequest request, String headerName) {
         String authorization = request.getHeader(headerName);
         if (!StringUtils.isEmpty(authorization) && authorization.startsWith(PREFIX_BASIC)) {
             String[] decodedAuthorization = decodeBasicAuth(authorization.substring(PREFIX_BASIC.length()));
@@ -184,6 +184,7 @@ public class HttpUtil {
                 Credentials credentials = new Credentials();
                 credentials.setUsername(decodedAuthorization[0]);
                 credentials.setPassword(decodedAuthorization[1]);
+                return credentials;
             }
         }
         return null;
