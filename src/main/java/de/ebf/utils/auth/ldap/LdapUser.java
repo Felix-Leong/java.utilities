@@ -26,6 +26,8 @@ public class LdapUser extends AbstractUser implements Comparable<LdapUser>, Seri
    
    //Active Directory specific
    private Integer primaryGroupId;
+   private String SAMAccountName;
+   private String UserPrincipalName;
 
    public void setPhone(String phone) {
       this.phone = phone;
@@ -106,8 +108,23 @@ public class LdapUser extends AbstractUser implements Comparable<LdapUser>, Seri
     public void setPrimaryGroupId(Integer primaryGroupId) {
         this.primaryGroupId = primaryGroupId;
     }
-   
 
+    public String getSAMAccountName() {
+        return SAMAccountName;
+    }
+
+    public void setSAMAccountName(String SAMAccountName) {
+        this.SAMAccountName = SAMAccountName;
+    }
+
+    public String getUserPrincipalName() {
+        return UserPrincipalName;
+    }
+
+    public void setUserPrincipalName(String UserPrincipalName) {
+        this.UserPrincipalName = UserPrincipalName;
+    }
+    
    @Override
    public int hashCode() {
       int hash = 7;

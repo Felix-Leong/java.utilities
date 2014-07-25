@@ -316,6 +316,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
 
     public LdapUser getLdapUser(SearchResultEntry entry, LdapConfig config) throws LdapException {
         LdapUser user = new LdapUser();
+        user.setDN(entry.getDN());
         user.setName(entry.getAttributeValue(config.getSchema().ATTR_CN));
         user.setFirstName(entry.getAttributeValue(config.getSchema().ATTR_FIRST_NAME));
         user.setLastName(entry.getAttributeValue(config.getSchema().ATTR_LAST_NAME));
@@ -323,15 +324,18 @@ public class LdapUserManager implements UserManager<LdapUser> {
         user.setMail(entry.getAttributeValue(config.getSchema().ATTR_MAIL));
         user.setPhone(entry.getAttributeValue(config.getSchema().ATTR_TELEPHONE_NUMBER));
         if (config.getType().equals(LdapType.ActiveDirectory)) {
-          //for some reason the objectGUID is stored in binary format in Active Directory
+            //for some reason the objectGUID is stored in binary format in Active Directory
             // Microsoft stores GUIDs in a binary format that differs from the RFC standard of UUIDs (RFC #4122).
             String uuid = LdapUtil.bytesToUUID(entry.getAttributeValueBytes(config.getSchema().ATTR_ENTRYUUID));
             user.setUUID(uuid);
             user.setPrimaryGroupId(entry.getAttributeValueAsInteger(ActiveDirectorySchema.ATTR_PRIMARY_GROUP_ID));
+            
+            user.setSAMAccountName(entry.getAttributeValue(ActiveDirectorySchema.ATTR_SAM_ACCOUNT_NAME));
+            user.setUserPrincipalName(entry.getAttributeValue(ActiveDirectorySchema.ATTR_USER_PRINCIPAL_NAME));
         } else {
+            //Domino and OpenDS store the GUID in clear text
             user.setUUID(entry.getAttributeValue(config.getSchema().ATTR_ENTRYUUID));
         }
-        user.setDN(entry.getDN());
         try {
             user.setContext(entry.getParentDNString());
         } catch (LDAPException ex) {
