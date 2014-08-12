@@ -40,15 +40,15 @@ public class LoginFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain) throws IOException, ServletException {
-        if (!isMainDispatcher) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
         if (request instanceof HttpServletRequest) {
             HttpServletRequest httpRequest = (HttpServletRequest) request;
             contextPath = HttpUtil.getContextPath(httpRequest);
             request.setAttribute("contextPath", contextPath);
+
+            if (!isMainDispatcher) {
+                filterChain.doFilter(request, response);
+                return;
+            }
 
             HttpSession session = httpRequest.getSession();
             String servletPath = httpRequest.getServletPath();
