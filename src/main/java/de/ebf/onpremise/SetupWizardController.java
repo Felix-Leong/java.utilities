@@ -167,7 +167,11 @@ public class SetupWizardController {
         try {
             sendTestingEmail(mailConfig);
         } catch (Exception e) {
-            return new SetupWizardMessage(SetupWizardMessage.ERROR,Bundle.getString("SetupWizardMessage_MAIL_SENDING_FAILED")+" "+e.getMessage());
+            String msg = Bundle.getString("SetupWizardMessage_MAIL_SENDING_FAILED");
+            if (!StringUtils.isEmpty(e.getMessage())){
+                msg+= " "+e.getMessage();
+            }
+            return new SetupWizardMessage(SetupWizardMessage.ERROR,msg);
         }
 
         //if mail testing is successful, put this attribute in session object
