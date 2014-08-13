@@ -19,7 +19,7 @@ public enum DBType {
           "SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE()",
           "SELECT COLUMN_NAME, DATA_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME = :tableName"),
     
-    MSSQL("Miscrosoft SQL Server",
+    MSSQL("Microsoft SQL Server",
           "net.sourceforge.jtds.jdbc.Driver",
           "org.hibernate.dialect.SQLServerDialect",
           "jdbc:jtds:sqlserver://",
