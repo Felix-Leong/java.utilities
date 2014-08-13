@@ -167,10 +167,11 @@ public class SetupWizardController {
         try {
             sendTestingEmail(mailConfig);
         } catch (Exception e) {
-            String msg = Bundle.getString("SetupWizardMessage_MAIL_SENDING_FAILED");
+            String msg = Bundle.getString("SetupWizardMessage_MAIL_SENDING_FAILED") + " "+e;
             if (!StringUtils.isEmpty(e.getMessage())){
                 msg+= " "+e.getMessage();
             }
+            log.error("Failed to send email", e);
             return new SetupWizardMessage(SetupWizardMessage.ERROR,msg);
         }
 
