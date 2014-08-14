@@ -241,14 +241,14 @@ public class SetupWizardController {
     }
         
     /**
-     * validate the mail parameters. If no eror, create a SMTPMailConfig and fill it
- with the parameters.
+     * validate the mail parameters. If no eror, create a SMTPMailConfig and fill it with the parameters.
      *
      * @param request
      * @return
      * @throws Exception
      */
     private SMTPMailConfig validateMailParameters(HttpServletRequest request) throws Exception {
+        String smtpProtocol = request.getParameter("smtpProtocol");
         String smtpHost = request.getParameter("smtpHost");
         String smtpPortStr = request.getParameter("smtpPort");
         String senderEmail = request.getParameter("senderEmail");
@@ -259,7 +259,7 @@ public class SetupWizardController {
         String password = request.getParameter("password");
         boolean requireAuth = (!StringUtils.isEmpty(requireAuthStr) && requireAuthStr.equals("on"));
 
-        if (StringUtils.isEmpty(smtpHost) || StringUtils.isEmpty(senderName) || StringUtils.isEmpty(senderEmail)) {
+        if (StringUtils.isEmpty(smtpProtocol) || StringUtils.isEmpty(smtpHost) || StringUtils.isEmpty(senderName) || StringUtils.isEmpty(senderEmail)) {
             throw new Exception(Bundle.getString("RequiredFieldsMustNotBeEmpty"));
         }
         if (requireAuth) {
@@ -274,6 +274,7 @@ public class SetupWizardController {
 
         //if no error, fill the fields
         SMTPMailConfig mailConfig = new SMTPMailConfig();
+        mailConfig.setProtocol(smtpProtocol);
         mailConfig.setHost(smtpHost);
         mailConfig.setPort(smtpPort);
         mailConfig.setSenderEmail(senderEmail);
