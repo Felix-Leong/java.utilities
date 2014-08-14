@@ -19,6 +19,7 @@ import org.hibernate.Transaction;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.service.ServiceRegistry;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.util.StringUtils;
 
 /**
@@ -66,6 +67,10 @@ public class DBUtil {
             return dataSource.getConnection().prepareStatement(query);
         }
         return null;
+    }
+    
+    public static NamedParameterJdbcTemplate getJdbcTemplate(DBInterface db){
+        return new NamedParameterJdbcTemplate(getDataSource(db));
     }
 
     public static DataSource getDataSource(DBInterface db) {
