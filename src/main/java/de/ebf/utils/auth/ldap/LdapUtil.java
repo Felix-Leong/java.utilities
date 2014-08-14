@@ -40,7 +40,6 @@ public class LdapUtil {
      * tenant keeps unchanged.
      *
      * @param request
-     * @param config
      * @throws Exception
      */
     public static void validateLdapParameters(HttpServletRequest request) throws Exception {
@@ -54,7 +53,7 @@ public class LdapUtil {
         Integer ldapPort = Integer.parseInt(ldapPortString);
         
 
-        if (ldapType.equals(LdapType.ActiveDirectory) && (ldapPort != 636 || ldapPort!= 3269)) {
+        if (ldapType.equals(LdapType.ActiveDirectory) && !(ldapPort != 636 || ldapPort!= 3269)) {
             throw new Exception(Bundle.getString("ActiveDirectoryPortRequirements"));
         }
 
