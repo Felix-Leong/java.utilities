@@ -24,9 +24,8 @@ enum ImportantFile {
     private String path;
 
     ImportantFile(String path) {
-        this.path = path.replace("${VirtualHost}", OnpremiseUtil.getVirtualHostDirPath());
-        this.path = path.replace("${WebAppRoot}", getWebAppRoot(OnpremiseUtil.getContextPath()));
-        
+        this.path = path.replace("${VirtualHost}", OnpremiseUtil.getVirtualHostDirPath())
+                .replace("${WebAppRoot}", getWebAppRoot(OnpremiseUtil.getContextPath()));
     }
     
     public String getFilePath() {
