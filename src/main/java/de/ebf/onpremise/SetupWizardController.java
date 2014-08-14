@@ -342,6 +342,7 @@ public class SetupWizardController {
         }
 
         //mail
+        localSettingsReplaceMap.put("${smtp.protocol}", mailConfig.getProtocol());
         localSettingsReplaceMap.put("${smtp.server}", mailConfig.getHost());
         localSettingsReplaceMap.put("${smtp.port}", mailConfig.getPort() + "");
         localSettingsReplaceMap.put("${smtp.user}", mailConfig.getUsername());
