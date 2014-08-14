@@ -4,11 +4,14 @@
  * and open the template in the editor.
  */
 package de.ebf.db;
-
+import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Properties;
+import javax.sql.DataSource;
+import net.sourceforge.jtds.jdbcx.JtdsDataSource;
 import org.apache.log4j.Logger;
-import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -16,6 +19,7 @@ import org.hibernate.Transaction;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.service.ServiceRegistry;
+import org.springframework.util.StringUtils;
 
 /**
  *
@@ -55,6 +59,38 @@ public class DBUtil {
         ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().applySettings(configuration.getProperties()).build();
         SessionFactory factory = configuration.buildSessionFactory(serviceRegistry);
         return factory.getCurrentSession();
+    }
+
+    public static PreparedStatement getPreparedStatement(final DataSource dataSource, final String query) throws SQLException {
+        if (!StringUtils.isEmpty(query)) {
+            return dataSource.getConnection().prepareStatement(query);
+        }
+        return null;
+    }
+
+    public static DataSource getDataSource(DBInterface db) {
+        DataSource dataSource = null;
+        switch (db.getDatabaseType()) {
+            case MySQL:
+                MysqlDataSource ds = new MysqlDataSource();
+                ds.setDatabaseName(db.getDbName());
+                ds.setServerName(db.getHost());
+                ds.setPort(db.getPort());
+                ds.setUser(db.getUsername());
+                ds.setPassword(db.getPassword());
+                dataSource = ds;
+                break;
+            case MSSQL:
+                JtdsDataSource jtds = new JtdsDataSource();
+                jtds.setDatabaseName(db.getDbName());
+                jtds.setServerName(db.getHost());
+                jtds.setPortNumber(db.getPort());
+                jtds.setUser(db.getUsername());
+                jtds.setPassword(db.getPassword());
+                dataSource = jtds;
+                break;
+        }
+        return dataSource;
     }
 
 }
