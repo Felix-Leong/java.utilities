@@ -29,7 +29,8 @@ public class OnpremiseUtil {
     private static ServletContext servletContext;
     private static boolean isPropertiesSetupFinished = false;
     private static String virutalHosAbsolutePath;
-    
+    private static String contextPath;
+
     public static boolean isPropertiesSetupFinished() {
         return isPropertiesSetupFinished;
     }
@@ -45,6 +46,17 @@ public class OnpremiseUtil {
 
     public static void setServletContext(ServletContext servletContext) {
         OnpremiseUtil.servletContext = servletContext;
+        if(servletContext!=null) {
+            OnpremiseUtil.contextPath = servletContext.getContextPath();
+        }
+    }
+    
+    public static String getContextPath() {
+        return contextPath;
+    }
+
+    public static void setContextPath(String contextPath) {
+        OnpremiseUtil.contextPath = contextPath;
     }
 
     public static synchronized boolean isSetupRequired() {
