@@ -191,15 +191,13 @@ public class LdapUserManager implements UserManager<LdapUser> {
             connection = LdapUtil.getConnection(config.getUsername(), config.getPassword(), config);
             Filter filter;
             Filter cnFilter = Filter.createEqualityFilter(config.getSchema().ATTR_CN, userName);
+            Filter mailFilter = Filter.createEqualityFilter(DominoSchema.ATTR_LOGIN_MAIL, userName);
             if (config.getType().equals(LdapType.ActiveDirectory)){
                 Filter samAccountNameFilter     = Filter.createEqualityFilter(ActiveDirectorySchema.ATTR_SAM_ACCOUNT_NAME, userName);
                 Filter userPrincipalNameFilter  = Filter.createEqualityFilter(ActiveDirectorySchema.ATTR_USER_PRINCIPAL_NAME, userName);
-                filter = Filter.createORFilter(cnFilter, samAccountNameFilter, userPrincipalNameFilter);
-            } else if (config.getType().equals(LdapType.Domino)) {
-                Filter mailFilter = Filter.createEqualityFilter(DominoSchema.ATTR_LOGIN_MAIL, userName);
-                filter = Filter.createORFilter(cnFilter, mailFilter);
+                filter = Filter.createORFilter(cnFilter, mailFilter, samAccountNameFilter, userPrincipalNameFilter);
             } else {
-                filter = cnFilter;
+                filter = Filter.createORFilter(cnFilter, mailFilter);
             }
             LdapUser user = getUserByFilter(connection, filter, config);
             return user;
