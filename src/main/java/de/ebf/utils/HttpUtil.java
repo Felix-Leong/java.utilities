@@ -190,19 +190,6 @@ public class HttpUtil {
         return null;
     }
     
-    public static Credentials getXAuthorizationCredentials(HttpServletRequest request) {
-        String authorization = request.getHeader("Authorization");
-        if (!StringUtils.isEmpty(authorization) && authorization.startsWith(PREFIX_BASIC)) {
-            String[] decodedAuthorization = decodeBasicAuth(authorization.substring(PREFIX_BASIC.length()));
-            if (decodedAuthorization != null && decodedAuthorization.length == 2) {
-                Credentials credentials = new Credentials();
-                credentials.setUsername(decodedAuthorization[0]);
-                credentials.setPassword(decodedAuthorization[1]);
-            }
-        }
-        return null;
-    }
-
     private static String[] decodeBasicAuth(final String encodedString) {
         final byte[] decodedBytes = Base64.decodeBase64(encodedString.getBytes());
         final String pair = new String(decodedBytes);
