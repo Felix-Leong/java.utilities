@@ -6,10 +6,7 @@
 
 package de.ebf.test;
 
-import de.ebf.utils.auth.ldap.LdapException;
-import de.ebf.utils.auth.ldap.LdapGroup;
 import de.ebf.utils.auth.ldap.LdapGroupManager;
-import de.ebf.utils.auth.ldap.LdapUser;
 import de.ebf.utils.auth.ldap.LdapUserManager;
 import de.ebf.utils.auth.ldap.LdapUtil;
 import de.ebf.utils.auth.ldap.config.LdapConfig;
