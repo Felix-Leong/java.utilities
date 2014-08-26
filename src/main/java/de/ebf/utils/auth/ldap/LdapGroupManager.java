@@ -4,6 +4,7 @@
  */
 package de.ebf.utils.auth.ldap;
 
+import com.squeakysand.commons.lang.StringUtils;
 import com.unboundid.ldap.sdk.AddRequest;
 import com.unboundid.ldap.sdk.Attribute;
 import com.unboundid.ldap.sdk.DN;
@@ -138,9 +139,12 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
             if (searchResults!=null && searchResults.getEntryCount() > 0) {
                 for (SearchResultEntry entry : searchResults.getSearchEntries()) {
                     String dn = entry.getAttributeValue(config.getSchema().ATTR_DN);
-                    // do not add object from the Builtin container (Active Directory) 
-                    if (!dn.contains("CN=Builtin")){
-                        groups.add(getLdapGroup(connection, entry, config));
+                    //Domino objects might not have a dn -- weirdos
+                    if (!StringUtils.isEmpty(dn)){
+                        // do not add object from the Builtin container (Active Directory) 
+                        if (!dn.contains("CN=Builtin")){
+                            groups.add(getLdapGroup(connection, entry, config));
+                        }
                     }
                 }
                 Collections.sort(groups);
