@@ -42,12 +42,11 @@ public class TaskScheduler {
         String startDateStr = (startDate == null) ? "now" : "at "+startDate;
         log.info("Scheduling "+callables.size()+" tasks starting "+startDateStr);
         for (Callable callable: callables){
-            ScheduledFuture future;
             if (intervalInMillis==null){
-                future = scheduledExecutorService.schedule(callable, delay, TimeUnit.MILLISECONDS);
+                scheduledExecutorService.schedule(callable, delay, TimeUnit.MILLISECONDS);
             } else {
                 Runnable runnable = new SilentRunnable(callable);
-                future = scheduledExecutorService.scheduleAtFixedRate(runnable, delay, intervalInMillis, TimeUnit.MILLISECONDS);
+                scheduledExecutorService.scheduleAtFixedRate(runnable, delay, intervalInMillis, TimeUnit.MILLISECONDS);
             }
         }
     }
