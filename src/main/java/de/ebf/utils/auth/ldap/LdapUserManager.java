@@ -190,7 +190,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
             connection = LdapUtil.getConnection(config.getUsername(), config.getPassword(), config);
             Filter filter;
             Filter cnFilter = Filter.createEqualityFilter(config.getSchema().ATTR_CN, userName);
-            Filter mailFilter = Filter.createEqualityFilter(DominoSchema.ATTR_LOGIN_MAIL, userName);
+            Filter mailFilter = Filter.createEqualityFilter(config.getSchema().ATTR_MAIL, userName);
             if (config.getType().equals(LdapType.ActiveDirectory)){
                 Filter samAccountNameFilter     = Filter.createEqualityFilter(ActiveDirectorySchema.ATTR_SAM_ACCOUNT_NAME, userName);
                 Filter userPrincipalNameFilter  = Filter.createEqualityFilter(ActiveDirectorySchema.ATTR_USER_PRINCIPAL_NAME, userName);
@@ -369,11 +369,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
             SearchResult searchResults = connection.search(config.getBaseDN(), SearchScope.SUB, searchFilter, config.getSchema().ATTR_ALL);
             if (searchResults.getEntryCount() > 0) {
                 for (SearchResultEntry entry : searchResults.getSearchEntries()) {
-                    String dn = entry.getAttributeValue(config.getSchema().ATTR_DN);
-                    //domino does not guarantee that dn is set
-                    if (!StringUtils.isEmpty(dn)){
-                        users.add(getLdapUser(entry, config));
-                    }
+                    users.add(getLdapUser(entry, config));
                 }
                 Collections.sort(users);
             }
