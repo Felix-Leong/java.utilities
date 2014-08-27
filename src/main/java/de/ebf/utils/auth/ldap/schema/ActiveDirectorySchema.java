@@ -16,11 +16,12 @@ import java.util.Arrays;
  */
 public class ActiveDirectorySchema extends LdapSchema {
     
-    //Active Diretory only attributes
+    //Active Directory specific attributes
     public static final String ATTR_USER_ACCOUNT_CONTROL    = "userAccountControl"; //exists only in AD
     public static final String ATTR_PRIMARY_GROUP_ID        = "primaryGroupId";
     public static final String ATTR_SAM_ACCOUNT_NAME        = "sAMAccountName";
     public static final String ATTR_USER_PRINCIPAL_NAME     = "userPrincipalName";
+    public static final String OBJECTCLASS_COMPUTER         = "computer";
     
     public ActiveDirectorySchema(){
         super();

@@ -23,7 +23,6 @@ import de.ebf.utils.auth.UserManager;
 import de.ebf.utils.auth.ldap.config.LdapConfig;
 import de.ebf.utils.auth.ldap.schema.ActiveDirectorySchema;
 import de.ebf.utils.auth.ldap.schema.DominoSchema;
-import de.ebf.utils.auth.ldap.schema.LdapSchema;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -358,17 +357,23 @@ public class LdapUserManager implements UserManager<LdapUser> {
         List<LdapUser> users = new ArrayList<>();
         try {
             Filter userFilter = Filter.createEqualityFilter(config.getSchema().ATTR_OBJECTCLASS, config.getSchema().OBJECTCLASS_USER);
-            Filter searchFilter = Filter.createANDFilter(userFilter, filter);
+            Filter searchFilter;
+            if (config.getType().equals(LdapType.ActiveDirectory)){
+                //for some reason computer objects are also user objects in AD
+                Filter notComputerFilter = Filter.createNOTFilter(Filter.createEqualityFilter(config.getSchema().ATTR_OBJECTCLASS, ActiveDirectorySchema.OBJECTCLASS_COMPUTER));
+                Filter userButNotComputerFilter = Filter.createANDFilter(userFilter, notComputerFilter);
+                searchFilter = Filter.createANDFilter(userButNotComputerFilter, filter);
+            } else {
+                searchFilter = Filter.createANDFilter(userFilter, filter);
+            }
             SearchResult searchResults = connection.search(config.getBaseDN(), SearchScope.SUB, searchFilter, config.getSchema().ATTR_ALL);
             if (searchResults.getEntryCount() > 0) {
                 for (SearchResultEntry entry : searchResults.getSearchEntries()) {
                     String dn = entry.getAttributeValue(config.getSchema().ATTR_DN);
-                    // do not add object from the Builtin container (Active Directory) or the LDAP agent account - disabled 2014-05-20: group members should be visible
-//                    if (!dn.contains("CN=Builtin")){
-//                        if (!dn.equalsIgnoreCase(config.getUsername())){
-                            users.add(getLdapUser(entry, config));
-//                        }
-//                    }
+                    //domino does not guarantee that dn is set
+                    if (!StringUtils.isEmpty(dn)){
+                        users.add(getLdapUser(entry, config));
+                    }
                 }
                 Collections.sort(users);
             }
