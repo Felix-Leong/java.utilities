@@ -138,13 +138,10 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
             
             if (searchResults!=null && searchResults.getEntryCount() > 0) {
                 for (SearchResultEntry entry : searchResults.getSearchEntries()) {
-                    String dn = entry.getAttributeValue(config.getSchema().ATTR_DN);
-                    //Domino objects might not have a dn -- weirdos
-                    if (!StringUtils.isEmpty(dn)){
-                        // do not add object from the Builtin container (Active Directory) 
-                        if (!dn.contains("CN=Builtin")){
-                            groups.add(getLdapGroup(connection, entry, config));
-                        }
+                    String dn = entry.getDN();
+                    // do not add object from the Builtin container (Active Directory) 
+                    if (!dn.contains("CN=Builtin")){
+                        groups.add(getLdapGroup(connection, entry, config));
                     }
                 }
                 Collections.sort(groups);
@@ -243,7 +240,7 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
                     //Domino LDAP does not support queries by DN (!!!)
                     user = userManager.getUser(LdapUtil.getCN(dn), config);
                     //make sure this is the user we are looking for...
-                    if (!user.getDN().equals(dn)){
+                    if (user!=null && !user.getDN().equals(dn)){
                         user=null;
                     }
                 } else {
