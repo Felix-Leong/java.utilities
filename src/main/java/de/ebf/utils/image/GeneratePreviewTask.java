@@ -27,7 +27,6 @@ public class GeneratePreviewTask{
     private File outputDir;
     private ImageSize imageSize;
     private static TaskScheduler scheduler;
-    private ProgressCallback callback;
     
     //hide constructor, use builder pattern
     private GeneratePreviewTask(){};
@@ -81,17 +80,12 @@ public class GeneratePreviewTask{
     private void setImageSize(ImageSize imageSize) {
         this.imageSize = imageSize;
     }
-
-    private void setCallback(ProgressCallback callback) {
-        this.callback = callback;
-    }
     
     public static class Builder{
         
         private List<File> files;
         private File outputDir;
         private ImageSize imageSize;
-        private ProgressCallback callback;
 
         public Builder withInputFiles(List<File> files){
             this.files = files;
@@ -110,11 +104,6 @@ public class GeneratePreviewTask{
             this.imageSize = imageSize;
             return this;
         }
-
-        public Builder withProgressCallback(ProgressCallback callback){
-            this.callback = callback;
-            return this;
-        }
         
         public GeneratePreviewTask build(){
             GeneratePreviewTask task = new GeneratePreviewTask();
@@ -124,7 +113,6 @@ public class GeneratePreviewTask{
             task.setFiles(files);
             task.setOutputDir(outputDir);
             task.setImageSize(imageSize);
-            task.setCallback(callback);
             return task;
         }
     }

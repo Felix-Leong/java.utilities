@@ -30,7 +30,6 @@ public class GeneratePreviewTest {
     
     private static final Logger log = Logger.getLogger(GeneratePreviewTest.class);
     private static final ImageSize imageSize = new ImageSize(200.0, 200.0);
-    private final TestProgressCallback callback = new TestProgressCallback();
     private static final File outDir = new File(System.getProperty("java.io.tmpdir"));
     
     private GeneratePreviewTask getTask(String... extensions) throws IOException {
@@ -42,7 +41,6 @@ public class GeneratePreviewTest {
             .withInputFiles(files)
             .withOutputDir(outDir)
             .withImageSize(imageSize)
-            .withProgressCallback(callback)
             .build();
         return task;
     }
