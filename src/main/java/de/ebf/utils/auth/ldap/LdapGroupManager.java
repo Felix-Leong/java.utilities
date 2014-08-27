@@ -4,7 +4,6 @@
  */
 package de.ebf.utils.auth.ldap;
 
-import com.squeakysand.commons.lang.StringUtils;
 import com.unboundid.ldap.sdk.AddRequest;
 import com.unboundid.ldap.sdk.Attribute;
 import com.unboundid.ldap.sdk.DN;
@@ -31,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
