@@ -187,5 +187,11 @@
             <version>5.0.1</version> 
             <type>jar</type>
         </dependency> 
+        <dependency> 
+            <groupId>net.sourceforge</groupId> 
+            <artifactId>jacob</artifactId> 
+            <version>1.18-M2</version> 
+            <type>jar</type>
+        </dependency>
     </dependencies>
 </project>
