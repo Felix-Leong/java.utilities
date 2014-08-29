@@ -73,7 +73,6 @@ public class GeneratePreviewTask{
         public Object call() throws Exception {
             byte[] previewImage = ImageUtil.getPreviewImageByteArray(file, imageSize);
             String fileHash = DigestUtils.shaHex(IOUtils.toByteArray(new FileInputStream(file)));
-            log.info(fileHash);
             File previewImageFile = new File(outputDir, fileHash);
             FileUtils.writeByteArrayToFile(previewImageFile, previewImage);
             return previewImageFile;
