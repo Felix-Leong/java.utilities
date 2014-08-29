@@ -8,8 +8,10 @@ package de.ebf.office;
 
 import com.jacob.activeX.ActiveXComponent;
 import com.jacob.com.Dispatch;
+import com.jacob.com.LibraryLoader;
 import com.jacob.com.Variant;
 import java.io.File;
+import java.io.IOException;
 import org.apache.tika.Tika;
 
 /**
@@ -18,14 +20,34 @@ import org.apache.tika.Tika;
  */
 public class Office2PDF implements Office2PDFInterface {
     
+    private static Office2PDF instance;
+    
+    public static Office2PDF getInstance() throws IOException{
+        if (instance == null){
+            instance = new Office2PDF();
+        }
+        return instance;
+    }
+    
+    private Office2PDF() throws IOException{
+        loadLibrary();
+    }
+    
+    private static void loadLibrary() throws IOException {
+        String libFile = "amd64".equals(System.getProperty("os.arch")) ? "/jacob-1.18-M2-x64.dll" : "/jacob-1.18-M2-x86.dll";
+        String libPath = Office2PDF.class.getResource(libFile).getPath();
+        System.setProperty(LibraryLoader.JACOB_DLL_PATH, libPath);
+        LibraryLoader.loadJacobLibrary();
+    }
+    
     private enum OfficeType{
         
         word("Word.Application", 17),
         excel("Excel.Application", 0),
         ppt("PowerPoint.Application", 32);
         
-        private String oleName;
-        private int pdfMagicNumber;
+        private final String oleName;
+        private final int pdfMagicNumber;
         
         OfficeType(String oleName, int pdfMagicNumber){
             this.oleName = oleName;
@@ -159,7 +181,7 @@ public class Office2PDF implements Office2PDFInterface {
      *        document. Note that no checks are made on the value passed to
      *        this argument.
      */
-    public void closeDoc(int saveOption) {
+    private void closeDoc(int saveOption) {
         //Object args = {new Integer(saveOption)};
         switch(type){
             case word:

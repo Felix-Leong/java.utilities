@@ -8,9 +8,12 @@ package de.ebf.test;
 
 import de.ebf.office.Office2PDF;
 import de.ebf.office.Office2PDFInterface;
+import de.ebf.test.util.TestUtil;
 import java.io.File;
+import java.io.IOException;
 import org.apache.log4j.Logger;
 import org.apache.tika.Tika;
+import org.junit.Assert;
 import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -35,13 +38,17 @@ public class Office2PDFTest {
     
     @BeforeClass
     public static void setUp() {
-        office2PDF = new Office2PDF();
+        try {
+            office2PDF = Office2PDF.getInstance();
+        } catch (IOException ex) {
+            log.fatal(ex);
+            Assert.fail("Cannot instantiate Office2PDF "+ex);
+        }
     }
     
     @Before
     public void windowsOnly() {
-        String os = System.getProperty("os.name");
-        org.junit.Assume.assumeTrue(os.startsWith("Windows"));
+        TestUtil.assertWindowsOnly();
     }
     
     @Test

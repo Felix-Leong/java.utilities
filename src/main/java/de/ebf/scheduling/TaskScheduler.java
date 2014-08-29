@@ -9,8 +9,10 @@ package de.ebf.scheduling;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import org.jboss.logging.Logger;
 
@@ -26,11 +28,19 @@ public class TaskScheduler {
     
     private static ScheduledExecutorService scheduledExecutorService;
     
-    public void scheduleForImmediateExecution(List<Callable> callables) throws Exception{
+    public void scheduleForSynchronousExecution(List<Callable> callables){
+        scheduleAtFixedRate(callables, null, null, false);
+    }
+    
+    public void scheduleForImmediateExecution(List<Callable> callables){
         scheduleAtFixedRate(callables, null, null);
     }
     
-    public void scheduleAtFixedRate(List<Callable> callables, Date startDate, Long intervalInMillis) throws Exception{
+    public void scheduleAtFixedRate(List<Callable> callables, Date startDate, Long intervalInMillis){
+        scheduleAtFixedRate(callables, startDate, intervalInMillis, Boolean.TRUE);
+    }
+    
+    public void scheduleAtFixedRate(List<Callable> callables, Date startDate, Long intervalInMillis, Boolean async){
         initScheduler();
         Long delay = 0L;
         Date now = new Date();
@@ -41,7 +51,14 @@ public class TaskScheduler {
         log.info("Scheduling "+callables.size()+" tasks starting "+startDateStr);
         for (Callable callable: callables){
             if (intervalInMillis==null){
-                scheduledExecutorService.schedule(callable, delay, TimeUnit.MILLISECONDS);
+                ScheduledFuture schedule = scheduledExecutorService.schedule(callable, delay, TimeUnit.MILLISECONDS);
+                if (!async){
+                    try {
+                        schedule.get();
+                    } catch (InterruptedException | ExecutionException e){
+                        log.error(e);
+                    }
+                }
             } else {
                 Runnable runnable = new SilentRunnable(callable);
                 scheduledExecutorService.scheduleAtFixedRate(runnable, delay, intervalInMillis, TimeUnit.MILLISECONDS);

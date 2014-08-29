@@ -5,6 +5,8 @@
  */
 package de.ebf.utils.image;
 
+
+import de.ebf.office.Office2PDF;
 import java.awt.AlphaComposite;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
@@ -12,23 +14,22 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
+import org.apache.log4j.Logger;
 import org.apache.tika.Tika;
 import org.icepdf.core.exceptions.PDFException;
 import org.icepdf.core.pobjects.Document;
 import org.icepdf.core.pobjects.Page;
 import org.icepdf.core.util.GraphicsRenderingHints;
 import org.springframework.util.StringUtils;
-
 /**
  *
  * @author dominik
  */
 public class ImageUtil {
+    
+    private static final Logger log = Logger.getLogger(ImageUtil.class);
 
-    private static final Pattern    PATTERN_PDF_CONTENT_TYPE            = Pattern.compile("application/pdf");
-    private static final Pattern    PATTERN_IMAGE_CONTENT_TYPE          = Pattern.compile("image/jpeg|image/pjpeg|image/png|image/x-png|image/gif|image/bmp|image/x-ms-bmp");
     private static final int        PREVIEW_IMAGE_TYPE                  = BufferedImage.TYPE_INT_ARGB;
     private static final String     PREVIEW_IMAGE_INFORMAL_FORMAT_NAME  = "png";
     
@@ -43,12 +44,30 @@ public class ImageUtil {
             if (StringUtils.isEmpty(contentType)) {
                 throw new Exception("Cannot determine content type of file " + file);
             }
-            if (PATTERN_IMAGE_CONTENT_TYPE.matcher(contentType).matches()) {
-                return createImagePreview(file, targetSize);
-            } else if (PATTERN_PDF_CONTENT_TYPE.matcher(contentType).matches()) {
-                return createPdfPreview(file, targetSize);
+            switch (contentType){
+                case  "application/pdf":
+                    return createPdfPreview(file, targetSize);
+                case "image/jpeg":
+                case "image/pjpeg":
+                case "image/png":
+                case "image/x-png":
+                case "image/gif":
+                case "image/bmp":
+                case "image/x-ms-bmp":
+                    return createImagePreview(file, targetSize);
+                case "application/msword":
+                case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+                case "application/vnd.ms-excel":
+                case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+                case "application/vnd.ms-powerpoint":
+                case "application/vnd.openxmlformats-officedocument.presentationml.presentation":                   
+                    File pdfFile = Office2PDF.getInstance().convert2PDF(file);
+                    BufferedImage previewImage = createPdfPreview(pdfFile, targetSize);
+                    pdfFile.delete();
+                    return previewImage;
+                default:
+                   throw new Exception("Unsupported content type " + contentType);
             }
-            throw new Exception("Unsupported content type " + contentType);
         }
         throw new IllegalArgumentException("file parameter needs to be a file");
     }

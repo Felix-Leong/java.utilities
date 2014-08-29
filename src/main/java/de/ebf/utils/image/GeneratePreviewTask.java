@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
+import org.apache.log4j.Logger;
 import org.apache.tika.io.IOUtils;
 
 /**
@@ -22,6 +23,8 @@ import org.apache.tika.io.IOUtils;
  * @author dominik
  */
 public class GeneratePreviewTask{
+    
+    private static final Logger log = Logger.getLogger(GeneratePreviewTask.class);
     
     private List<File> files;
     private File outputDir;
@@ -31,11 +34,19 @@ public class GeneratePreviewTask{
     //hide constructor, use builder pattern
     private GeneratePreviewTask(){};
     
-    public void scheduleForImmediateExecution() throws Exception{
+    
+    public void scheduleForSynchronousExecution(){
+        scheduleAtFixedRate(null, null, false);
+    }
+    
+    public void scheduleForImmediateExecution(){
         scheduleAtFixedRate(null, null);
     }
     
-    public void scheduleAtFixedRate(Date startDate, Long intervalInMillis) throws Exception{
+    private void scheduleAtFixedRate(Date startDate, Long intervalInMillis){
+        scheduleAtFixedRate(startDate, intervalInMillis, Boolean.TRUE);
+    }
+    private void scheduleAtFixedRate(Date startDate, Long intervalInMillis, Boolean async){
         if (scheduler == null){
             scheduler = new TaskScheduler();
         }
@@ -43,7 +54,7 @@ public class GeneratePreviewTask{
         for (File file: files){
             callables.add(new GeneratePreviewCallable(file, imageSize, outputDir));
         }
-        scheduler.scheduleAtFixedRate(callables, startDate, intervalInMillis);
+        scheduler.scheduleAtFixedRate(callables, startDate, intervalInMillis, async);
     }
     
     private class GeneratePreviewCallable implements Callable{
@@ -62,6 +73,7 @@ public class GeneratePreviewTask{
         public Object call() throws Exception {
             byte[] previewImage = ImageUtil.getPreviewImageByteArray(file, imageSize);
             String fileHash = DigestUtils.shaHex(IOUtils.toByteArray(new FileInputStream(file)));
+            log.info(fileHash);
             File previewImageFile = new File(outputDir, fileHash);
             FileUtils.writeByteArrayToFile(previewImageFile, previewImage);
             return previewImageFile;
