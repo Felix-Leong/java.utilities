@@ -84,6 +84,7 @@ public class ImageUtil {
     }
 
     private static BufferedImage createPdfPreview(File file, ImageSize targetSize) throws Exception {
+        //System.getProperties().put("sun.java2d.d3d", false);
         // open the file
         Document document = new Document();
         document.setFile(file.getAbsolutePath());
