@@ -8,6 +8,7 @@ package de.ebf.utils.image;
 
 import de.ebf.office.Office2PDF;
 import java.awt.AlphaComposite;
+import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
@@ -19,6 +20,7 @@ import org.apache.log4j.Logger;
 import org.apache.tika.Tika;
 import org.icepdf.core.exceptions.PDFException;
 import org.icepdf.core.pobjects.Document;
+import org.icepdf.core.pobjects.PDimension;
 import org.icepdf.core.pobjects.Page;
 import org.icepdf.core.util.GraphicsRenderingHints;
 import org.springframework.util.StringUtils;
@@ -96,7 +98,25 @@ public class ImageUtil {
         // Paint each pages content to an image and
         // write the image to file
         if (document.getNumberOfPages() > 0) {
-            BufferedImage image = (BufferedImage) document.getPageImage(0, GraphicsRenderingHints.PRINT, Page.BOUNDARY_CROPBOX, rotation, scale);
+            //BufferedImage image = (BufferedImage) document.getPageImage(0, GraphicsRenderingHints.PRINT, Page.BOUNDARY_CROPBOX, rotation, scale);
+            
+            Page page = document.getPageTree().getPage(0);
+            page.init();
+            PDimension sz = page.getSize(Page.BOUNDARY_CROPBOX, rotation, scale);
+
+            int pageWidth = (int) sz.getWidth();
+            int pageHeight = (int) sz.getHeight();
+
+            BufferedImage image = new BufferedImage(pageWidth, pageHeight, BufferedImage.TYPE_INT_RGB);
+            try {
+                Graphics g = image.createGraphics();
+
+                page.paint(g, GraphicsRenderingHints.PRINT,  Page.BOUNDARY_CROPBOX, rotation, scale);
+                g.dispose();
+            } finally {
+                image.flush();
+            }
+            
             return resizeImage(image, targetSize);
         } else {
             throw new PDFException("Couldn't get first page of PDF file: " + file.getName());
