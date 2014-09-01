@@ -38,17 +38,13 @@ public class Office2PDFTest {
     
     @BeforeClass
     public static void setUp() {
+        TestUtil.assertWindowsOnly();
         try {
             office2PDF = Office2PDF.getInstance();
         } catch (IOException ex) {
             log.fatal(ex);
             Assert.fail("Cannot instantiate Office2PDF "+ex);
         }
-    }
-    
-    @Before
-    public void windowsOnly() {
-        TestUtil.assertWindowsOnly();
     }
     
     @Test
