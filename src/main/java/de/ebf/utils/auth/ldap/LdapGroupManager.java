@@ -72,9 +72,13 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
 
     @Override
     public LdapGroup getGroup(String groupName, LdapConfig config) throws LdapException {
-        Filter filter = Filter.createEqualityFilter(config.getSchema().ATTR_CN, groupName);
-        LdapGroup group = getGroupByFilter(filter, config);
-        return group;
+        Filter filter = Filter.createEqualityFilter(config.getSchema().ATTR_CN, groupName);       
+        return getGroupByFilter(filter, config);
+    }
+    
+    public LdapGroup getGroupByApproximateMatch(String groupName, LdapConfig config) throws LdapException {
+        Filter filter = Filter.createApproximateMatchFilter(config.getSchema().ATTR_CN, groupName); 
+        return getGroupByFilter(filter, config);
     }
 
     public LdapGroup getGroupByUUID(String UUID, LdapConfig config) throws LdapException {

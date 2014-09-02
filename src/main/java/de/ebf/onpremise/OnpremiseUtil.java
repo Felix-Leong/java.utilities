@@ -123,6 +123,7 @@ public class OnpremiseUtil {
     public static void addMainDispatcherServlet() {
         log.info("Starting to add the MainDispatcherServlet...........");
         Dynamic dynamic = servletContext.addServlet("MainDispatcher", DispatcherServlet.class);//MainDispatcherServlet.class);
+        dynamic.setLoadOnStartup(0);
         dynamic.addMapping("/");
         
         LoginFilter.setMainDispatcher(true);
@@ -136,6 +137,7 @@ public class OnpremiseUtil {
     public static void addSetupWizardDispatcherServlet() {
         log.info("Starting to add the SetupWizardDispatcher...........");
         Dynamic dynamic = servletContext.addServlet("SetupWizardDispatcher", DispatcherServlet.class);//SetupWizardDispatcherServlet.class);
+        dynamic.setLoadOnStartup(0);
         dynamic.addMapping("/");
         
         LoginFilter.setMainDispatcher(false);
