@@ -76,9 +76,9 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
         return getGroupByFilter(filter, config);
     }
     
-    public LdapGroup getGroupByApproximateMatch(String groupName, LdapConfig config) throws LdapException {
+    public List<LdapGroup> getGroupByApproximateMatch(String groupName, LdapConfig config) throws LdapException {
         Filter filter = Filter.createApproximateMatchFilter(config.getSchema().ATTR_CN, groupName); 
-        return getGroupByFilter(filter, config);
+        return getGroupsByFilter(filter, config);
     }
 
     public LdapGroup getGroupByUUID(String UUID, LdapConfig config) throws LdapException {
