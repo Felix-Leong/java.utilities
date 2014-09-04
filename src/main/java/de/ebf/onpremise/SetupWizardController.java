@@ -66,7 +66,6 @@ public class SetupWizardController {
     @RequestMapping("configDBSubmit")
     @ResponseBody
     protected SetupWizardMessage handleConfigDBSubmit(HttpServletRequest request, HttpServletResponse response) {
-
         HttpSession session = request.getSession(true);
         //remove this session attribute if any.
         session.removeAttribute(SESSION_ATTR_DBCONFIG);
@@ -82,6 +81,7 @@ public class SetupWizardController {
         try {
             DBUtil.testDB(dbConfig);
         } catch (Exception e) {
+            log.error("Failed to test database connection.", e);
             SetupWizardMessage msg =  new SetupWizardMessage(SetupWizardMessage.ERROR,Bundle.getString("SetupWizardMessage_DB_CONN_FAILED")+" "+e.getMessage());
             return msg;
         }
@@ -94,7 +94,6 @@ public class SetupWizardController {
     @RequestMapping("configLdapSubmit")
     @ResponseBody
     protected SetupWizardMessage handleConfigLdapSubmit(HttpServletRequest request, HttpServletResponse response){
-
         HttpSession session = request.getSession(false);
         if (session == null) {
             return new SetupWizardMessage(SetupWizardMessage.ERROR,Bundle.getString("SetupWizardMessage_SESSION_NOT_EXISTING"));
@@ -118,6 +117,7 @@ public class SetupWizardController {
         String ldapBaseDN = request.getParameter("ldapBaseDN");
         LdapType ldapType = LdapType.valueOf(ldapTypeString);
         Integer ldapPort = Integer.parseInt(ldapPortString);
+        String viaSSL = request.getParameter("requireSSL");
         
         LdapConfig config = new LdapConfig();
         config.setType(ldapType);
@@ -126,6 +126,7 @@ public class SetupWizardController {
         config.setUsername(ldapUser);
         config.setPassword(ldapPass);
         config.setBaseDN(ldapBaseDN);
+        config.setViaSSL((viaSSL==null)?Boolean.FALSE:Boolean.TRUE);
       
         if (!StringUtils.isEmpty(ldapServer2) && !StringUtils.isEmpty(ldapPortString)){
             config.setServer2(ldapServer2);
@@ -137,6 +138,7 @@ public class SetupWizardController {
         try {
             LdapUtil.verifyConnection(config);
         } catch (Exception e) {
+            log.error("Failed to test LDAP data.", e);
             return new SetupWizardMessage(SetupWizardMessage.ERROR, Bundle.getString("SetupWizardMessage_LDAP_CONN_FAILED")+" "+e.getMessage());
         }
         

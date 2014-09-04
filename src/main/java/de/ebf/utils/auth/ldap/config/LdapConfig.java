@@ -23,6 +23,7 @@ public class LdapConfig implements Serializable {
     private LdapType type;
     private String server;
     private Integer port;
+    private Boolean viaSSL;
     private String username;
     private String password;
     private String baseDN;
@@ -97,5 +98,12 @@ public class LdapConfig implements Serializable {
 
     public void setPort2(Integer port2) {
         this.port2 = port2;
+    }
+    public Boolean isViaSSL() {
+        return viaSSL;
+    }
+
+    public void setViaSSL(Boolean viaSSL) {
+        this.viaSSL = viaSSL;
     }
 }
