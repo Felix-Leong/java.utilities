@@ -120,7 +120,8 @@ public class LdapUtil {
     */
     protected static LDAPConnection getUnpooledConnection(String user, String password, LdapConfig config) throws LDAPException{
         LDAPConnection conn = null;
-        if (config.getType().equals(LdapType.ActiveDirectory)){
+        //Defaultly, to connect to Active Directory, ports 636 and 3269 are via SSL, ports 389 and 3268 are without SSl. 
+        if (config.getType().equals(LdapType.ActiveDirectory) && (config.isViaSSL()!=null && config.isViaSSL().booleanValue())){
             try {
                 SSLUtil sslUtil = new SSLUtil(new TrustAllTrustManager());
                 SSLSocketFactory sslSocketFactory = sslUtil.createSSLSocketFactory();
