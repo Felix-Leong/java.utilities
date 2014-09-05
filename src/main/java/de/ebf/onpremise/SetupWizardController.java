@@ -48,6 +48,13 @@ public class SetupWizardController {
     private static final String SESSION_ATTR_LDAPCONFIG = "ldapConfig";
     private static final String SESSION_ATTR_MAILCONFIG = "mailConfig";
     
+    /*For the convienience of development and debug. When it is set "false", 
+      the data will not be verified against the connection, and immediately
+      go to next step. */
+    private boolean testDBConnection    = true;
+    private boolean testLDAPConnection  = true;
+    private boolean testMailConnection  = true;
+    
     
     @RequestMapping(method = RequestMethod.GET)
     protected ModelAndView handleSetupStarting(HttpServletRequest request, HttpServletResponse response) {
@@ -79,7 +86,9 @@ public class SetupWizardController {
 
         //test the db connection and set the messageDetail
         try {
-            DBUtil.testDB(dbConfig);
+            if(testDBConnection) {
+                DBUtil.testDB(dbConfig);
+            }
         } catch (Exception e) {
             log.error("Failed to test database connection.", e);
             SetupWizardMessage msg =  new SetupWizardMessage(SetupWizardMessage.ERROR,Bundle.getString("SetupWizardMessage_DB_CONN_FAILED")+" "+e.getMessage());
@@ -136,7 +145,9 @@ public class SetupWizardController {
         
         //verify the ldap connection
         try {
-            LdapUtil.verifyConnectionWithQuickBind(config);
+            if(testLDAPConnection) {
+                LdapUtil.verifyConnectionWithQuickBind(config);
+            }
         } catch (Exception e) {
             log.error("Failed to test LDAP data.", e);
             return new SetupWizardMessage(SetupWizardMessage.ERROR, Bundle.getString("SetupWizardMessage_LDAP_CONN_FAILED")+" "+e.getMessage());
@@ -167,7 +178,9 @@ public class SetupWizardController {
 
         //send testing email to verify the mail properties
         try {
-            sendTestingEmail(mailConfig);
+            if(testMailConnection) {
+                sendTestingEmail(mailConfig);
+            }
         } catch (Exception e) {
             String msg = Bundle.getString("SetupWizardMessage_MAIL_SENDING_FAILED") + " "+e;
             if (!StringUtils.isEmpty(e.getMessage())){
