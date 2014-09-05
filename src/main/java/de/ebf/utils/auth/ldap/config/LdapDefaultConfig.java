@@ -33,10 +33,14 @@ public class LdapDefaultConfig extends LdapConfig {
             instance.setBaseDN(Config.getInstance().getString("ldap.context"));
             instance.setUsername(Config.getInstance().getString("ldap.user"));
             instance.setPassword(Config.getInstance().getString("ldap.pass"));
+            String viaSSL = Config.getInstance().getString("ldap.viaSSL");
+            if(viaSSL!=null && viaSSL.trim().equalsIgnoreCase("true")){
+                instance.setViaSSL(Boolean.TRUE);
+            }
             
             //fallback LDAP server
-            String host2 = Config.getInstance().getString("ldap.host2");
-            String port2 = Config.getInstance().getString("ldap.port2");
+            String host2 = Config.getString("ldap.host2");
+            String port2 = Config.getString("ldap.port2");
             if (!StringUtils.isEmpty(host2)){
                 instance.setServer2(host2);
             }

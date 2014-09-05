@@ -29,4 +29,19 @@ public class Config {
     public static PropertiesConfiguration getInstance(){
         return instance;
     }
+    
+    /**
+     * Return an empty string in case of "java.lang.IllegalStateException: Infinite loop in property interpolation of ${ldap.host2}", 
+     * @param key
+     * @return 
+     */
+    public static String getString(String key) {
+        String value = "";
+        try {
+            value = getInstance().getString(key);
+        }catch(IllegalStateException e) {
+            //ignore
+        }
+        return value;
+    }
 }
