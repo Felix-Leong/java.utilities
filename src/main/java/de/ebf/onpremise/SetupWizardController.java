@@ -136,7 +136,7 @@ public class SetupWizardController {
         
         //verify the ldap connection
         try {
-            LdapUtil.verifyConnection(config);
+            LdapUtil.verifyConnectionWithQuickBind(config);
         } catch (Exception e) {
             log.error("Failed to test LDAP data.", e);
             return new SetupWizardMessage(SetupWizardMessage.ERROR, Bundle.getString("SetupWizardMessage_LDAP_CONN_FAILED")+" "+e.getMessage());
@@ -341,6 +341,12 @@ public class SetupWizardController {
         if (!StringUtils.isEmpty(ldapConfig.getServer2()) && ldapConfig.getPort2()!=null){
             localSettingsReplaceMap.put("${ldap.host2}", ldapConfig.getServer2());
             localSettingsReplaceMap.put("${ldap.port2}", ldapConfig.getPort2().toString());
+        }
+        
+        if (ldapConfig.isViaSSL() != null && ldapConfig.isViaSSL().booleanValue()) {
+            localSettingsReplaceMap.put("${ldap.viaSSL}", "true");
+        } else {
+            localSettingsReplaceMap.put("${ldap.viaSSL}", "false");
         }
 
         //mail
