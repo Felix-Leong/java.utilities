@@ -62,6 +62,13 @@ public class LdapUtil {
         }
     }
     
+    /**
+     * This method tries to create a connection, do a bind, and then search all the groups. Please note:
+     * if the server has too many groups, it will cause timeout exception if timeout is set too short. 
+     * (For example 139.3.62.2 has 50-80K groups)
+     * @param config
+     * @throws Exception 
+     */
     public static void verifyConnection(LdapConfig config) throws Exception{
         LDAPConnection conn = null;
         try {
@@ -78,6 +85,22 @@ public class LdapUtil {
             if (!searchResult.getResultCode().equals(ResultCode.SUCCESS) || searchResult.getEntryCount()<=0){
                 throw new LdapException("The specified base DN does not contain any groups.");
             }
+        } finally {
+            release(conn);
+        }
+    }
+    
+    /**
+     * This method tries to create a connection and do a bind to verify if the given Ldap data is correct.
+     * @param config
+     * @throws Exception 
+     */
+    public static void verifyConnectionWithQuickBind(LdapConfig config) throws Exception{
+        LDAPConnection conn = null;
+        try {
+            conn = getConnection(config);
+            conn.connect(config.getServer(), config.getPort());
+            conn.bind(config.getUsername(), config.getPassword());
         } finally {
             release(conn);
         }
@@ -135,8 +158,9 @@ public class LdapUtil {
         }
         if (conn!=null){
             LDAPConnectionOptions options = new LDAPConnectionOptions();
-            options.setConnectTimeoutMillis(10*1000);
-            options.setResponseTimeoutMillis(10*1000);
+            int timeout = 30*1000;// 10*1000
+            options.setConnectTimeoutMillis(timeout);
+            options.setResponseTimeoutMillis(timeout);
             conn.setConnectionOptions(options);
             try {
                 conn.connect(config.getServer(), config.getPort());
