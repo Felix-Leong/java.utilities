@@ -344,4 +344,17 @@ public class LdapUtil {
         // That's it - we have the SID
         return strSID.toString();
     }
+    
+    /**
+     * 
+     */
+    public static void closeAllLDAPConnectionPools() {
+        for(LDAPConnectionPool pool:poolMap.values()) {
+            if(pool!=null && !pool.isClosed()) {
+                pool.close();//This will close all the connection in this pool.
+            }
+        }
+    }
+            
+            
 }

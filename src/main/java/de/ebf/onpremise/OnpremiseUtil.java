@@ -6,7 +6,7 @@
 package de.ebf.onpremise;
 
 import de.ebf.filter.LoginFilter;
-import de.ebf.listener.TomcatUndeployListener;
+import de.ebf.listener.TomcatShutdownListener;
 import de.ebf.utils.Config;
 import java.io.File;
 import java.io.IOException;
@@ -149,7 +149,7 @@ public class OnpremiseUtil {
      */
     public static void restartWebApplication(){
         try {
-            TomcatUndeployListener.setDeleteContextFile(false);
+            TomcatShutdownListener.setDeleteContextFile(false);
             //touch the web.xml to ask tomcat to restart this web application
             FileUtils.touch(ImportantFile.WEB_XML.getFile());
         } catch (IOException ex) {
