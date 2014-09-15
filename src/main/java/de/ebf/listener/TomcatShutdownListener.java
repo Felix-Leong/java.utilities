@@ -44,12 +44,11 @@ public class TomcatShutdownListener implements ServletContextListener {
 
     @Override
     public void contextDestroyed(final ServletContextEvent event) {
-        //Remove the old deployment descriptor from Tomcat foler in development mode to avoid two times of app-starting.
+        //Remove the old deployment descriptor from Tomcat folder in development mode to avoid two times of app-starting.
         removeOldDeploymentDescriptor(event);
 
         //Close all LDAP connections in connection pools to prevent memory leak.
         LdapUtil.closeAllLDAPConnectionPools();
-        log.info("Closed all the LDAP Connection Pools.");
 
         //Deregister jdbc driver to solve the error log in catalina.log. 
         deregisterJdbcDrivers();
