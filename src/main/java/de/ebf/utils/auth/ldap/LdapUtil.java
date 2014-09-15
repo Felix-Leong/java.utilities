@@ -19,6 +19,8 @@ import de.ebf.utils.auth.ldap.config.LdapConfig;
 import java.security.GeneralSecurityException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.net.ssl.SSLSocketFactory;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.lang.StringUtils;
@@ -33,6 +35,10 @@ public class LdapUtil {
     private static final Logger log = Logger.getLogger(LdapUtil.class);
  
     private static final Map<String, LDAPConnectionPool> poolMap = new HashMap<>();
+    
+        
+    private static final Pattern invalidCharsPattern = Pattern.compile("(#|_|!|\"|'|\\$|\\*|%|&|\\(|\\)|\\+|\\.|:|<|>|=|\\{|\\}|~|\\/|\\^|\\?|\\|)");
+    private static final String invalidCharsReplaceString = "\\\\$1";
 
     /**
      * Validate the ldap-related parameters in request. If successful, these
@@ -355,6 +361,11 @@ public class LdapUtil {
             }
         }
         log.info("Closed all the LDAP Connection Pools.");
+    }
+    
+    public static String escapeCN(String cn){
+        Matcher matcher2 = invalidCharsPattern.matcher(cn);
+        return matcher2.replaceAll(invalidCharsReplaceString);
     }
             
             
