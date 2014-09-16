@@ -158,7 +158,7 @@ public class LdapUtil {
         }
         if (conn!=null){
             LDAPConnectionOptions options = new LDAPConnectionOptions();
-            int timeout = 30*1000;// 10*1000
+            int timeout = 10*1000;
             options.setConnectTimeoutMillis(timeout);
             options.setResponseTimeoutMillis(timeout);
             conn.setConnectionOptions(options);
@@ -354,6 +354,7 @@ public class LdapUtil {
                 pool.close();//This will close all the connection in this pool.
             }
         }
+        log.info("Closed all the LDAP Connection Pools.");
     }
             
             
