@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -77,7 +76,9 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
     }
     
     public List<LdapGroup> getGroupByApproximateMatch(String groupName, LdapConfig config) throws LdapException {
-        Filter filter = Filter.createApproximateMatchFilter(config.getSchema().ATTR_CN, groupName); 
+        //does not work reliably with special chars, e.g. #ebf
+        //Filter filter = Filter.createApproximateMatchFilter(config.getSchema().ATTR_CN, groupName); 
+        Filter filter = Filter.createEqualityFilter(config.getSchema().ATTR_CN, groupName); 
         return getGroupsByFilter(filter, config);
     }
 
