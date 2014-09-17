@@ -10,6 +10,7 @@ import de.ebf.utils.auth.ldap.LdapType;
 import de.ebf.utils.auth.ldap.schema.LdapSchema;
 import de.ebf.utils.auth.ldap.schema.LdapSchemaFactory;
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  *
@@ -106,4 +107,60 @@ public class LdapConfig implements Serializable {
     public void setViaSSL(Boolean viaSSL) {
         this.viaSSL = viaSSL;
     }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 79 * hash + Objects.hashCode(this.type);
+        hash = 79 * hash + Objects.hashCode(this.server);
+        hash = 79 * hash + Objects.hashCode(this.port);
+        hash = 79 * hash + Objects.hashCode(this.viaSSL);
+        hash = 79 * hash + Objects.hashCode(this.username);
+        hash = 79 * hash + Objects.hashCode(this.password);
+        hash = 79 * hash + Objects.hashCode(this.baseDN);
+        hash = 79 * hash + Objects.hashCode(this.server2);
+        hash = 79 * hash + Objects.hashCode(this.port2);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final LdapConfig other = (LdapConfig) obj;
+        if (this.type != other.type) {
+            return false;
+        }
+        if (!Objects.equals(this.server, other.server)) {
+            return false;
+        }
+        if (!Objects.equals(this.port, other.port)) {
+            return false;
+        }
+        if (!Objects.equals(this.viaSSL, other.viaSSL)) {
+            return false;
+        }
+        if (!Objects.equals(this.username, other.username)) {
+            return false;
+        }
+        if (!Objects.equals(this.password, other.password)) {
+            return false;
+        }
+        if (!Objects.equals(this.baseDN, other.baseDN)) {
+            return false;
+        }
+        if (!Objects.equals(this.server2, other.server2)) {
+            return false;
+        }
+        if (!Objects.equals(this.port2, other.port2)) {
+            return false;
+        }
+        return true;
+    }
+    
+    
 }

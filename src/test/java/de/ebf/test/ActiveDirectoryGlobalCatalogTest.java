@@ -36,34 +36,34 @@ public class ActiveDirectoryGlobalCatalogTest extends LDAPReadTest {
     }
 
     @Test
-    public void getUser() throws LdapException {
-        LdapUser user = userManager.getUser(TEST_USER_NAME, config);
+    public void test02_getUser() throws LdapException {
+        LdapUser user = ldapUserManager.getUser(TEST_USER_NAME, config);
         assert (user != null);
     }
 
     @Test
-    public void getGroup() throws LdapException {
-        LdapGroup group = groupManager.getGroup(TEST_GROUP_NAME, config);
+    public void test03_getGroup() throws LdapException {
+        LdapGroup group = ldapGroupManager.getGroup(TEST_GROUP_NAME, config);
         assert (group != null);
     }
 
     @Test
-    public void getMember() throws LdapException {
-        LdapUser user = userManager.getUser(TEST_USER_NAME, config);
-        LdapGroup group = groupManager.getGroup(TEST_GROUP_NAME, config);
+    public void test04_getMember() throws LdapException {
+        LdapUser user = ldapUserManager.getUser(TEST_USER_NAME, config);
+        LdapGroup group = ldapGroupManager.getGroup(TEST_GROUP_NAME, config);
         assert (group.getMembers() != null && group.getMembers().size() > 0);
         assert (group.getMembers().contains(user));
     }
 
     @Test
-    public void getUserBySamAccountName() throws LdapException {
-        LdapUser user = userManager.getUser(ACTIVE_DIRECTORY_SAM_ACCOUNT_NAME, config);
+    public void test05_getUserBySamAccountName() throws LdapException {
+        LdapUser user = ldapUserManager.getUser(ACTIVE_DIRECTORY_SAM_ACCOUNT_NAME, config);
         assert (user != null);
     }
 
     @Test
-    public void getUserByUserPrinciplaName() throws LdapException {
-        LdapUser user = userManager.getUser(ACTIVE_DIRECTORY_USER_PRINCIPAL_NAME, config);
+    public void test06_getUserByUserPrinciplaName() throws LdapException {
+        LdapUser user = ldapUserManager.getUser(ACTIVE_DIRECTORY_USER_PRINCIPAL_NAME, config);
         assert (user != null);
     }
 }

@@ -7,6 +7,7 @@
        xmlns:util="http://www.springframework.org/schema/util"
        xmlns:mvc="http://www.springframework.org/schema/mvc"
        xmlns:task="http://www.springframework.org/schema/task"
+       xmlns:ehcache="http://ehcache-spring-annotations.googlecode.com/svn/schema/ehcache-spring"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
         http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
         http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
@@ -14,12 +15,28 @@
         http://www.springframework.org/schema/lang http://www.springframework.org/schema/lang/spring-lang.xsd
         http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
         http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd
-        http://www.springframework.org/schema/mvc
- 		http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd
-       http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-3.1.xsd">
+        http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd
+        http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-3.1.xsd
+        http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd
+        http://ehcache-spring-annotations.googlecode.com/svn/schema/ehcache-spring http://ehcache-spring-annotations.googlecode.com/svn/schema/ehcache-spring/ehcache-spring-1.2.xsd
+">
 
+    <!-- 
+        EHCACHE CONFIGURATION 
+        In order to simplify ehcache configuration we create missing caches automatically based on the defaultCache configured in ehcache.xml
+        We also do not include the method name in the cache-key generation routine so that we can use @TriggersRemove to clear single entries more easily
+        see also https://code.google.com/p/ehcache-spring-annotations/wiki/UsingTriggersRemove
+    -->
+    <bean id="NoMethodHashCodeCacheKeyGenerator" class="de.ebf.cache.NoMethodHashCodeCacheKeyGenerator"/>			
+    <ehcache:annotation-driven cache-manager="cacheManager" create-missing-caches="true" default-cache-key-generator="NoMethodHashCodeCacheKeyGenerator"/>
+    <bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean">
+        <property name="configLocation"  value="classpath:ehcache.xml"/>
+    </bean>
+    
    <!-- ENABLE SPRING ANNOTATIONS IN THE WHOLE PACKAGE -->
    <context:annotation-config />
    <context:component-scan base-package="de.ebf"/>
+   
+   
 	
 </beans>

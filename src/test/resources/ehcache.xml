@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ehcache 
+    xsi:noNamespaceSchemaLocation="ehcache.xsd" 
+    updateCheck="true" 
+    monitoring="autodetect" 
+    dynamicConfig="true"
+    maxBytesLocalHeap="150M">
+    
+    <diskStore path="java.io.tmpdir"/>	
+    
+    <!--    
+    we use create-missing-caches="true", which uses the defaultCache to create non-existing caches
+    Make sure to give each method a separate cacheName
+    -->
+    <defaultCache 
+        eternal="false"
+        diskPersistent="false"/>
+   
+</ehcache>

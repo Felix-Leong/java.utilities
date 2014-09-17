@@ -4,6 +4,8 @@
  */
 package de.ebf.utils.auth.ldap;
 
+import com.googlecode.ehcache.annotations.Cacheable;
+import com.googlecode.ehcache.annotations.TriggersRemove;
 import com.unboundid.ldap.sdk.AddRequest;
 import com.unboundid.ldap.sdk.Attribute;
 import com.unboundid.ldap.sdk.DN;
@@ -23,7 +25,7 @@ import com.unboundid.ldap.sdk.ResultCode;
 import com.unboundid.ldap.sdk.SearchResult;
 import com.unboundid.ldap.sdk.SearchResultEntry;
 import com.unboundid.ldap.sdk.SearchScope;
-import de.ebf.utils.auth.GroupManager;
+import de.ebf.cache.CacheName;
 import de.ebf.utils.auth.ldap.config.LdapConfig;
 import de.ebf.utils.auth.ldap.schema.ActiveDirectorySchema;
 import java.util.ArrayList;
@@ -39,15 +41,16 @@ import org.springframework.stereotype.Component;
  * @author Dominik
  */
 @Component
-public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
+public class LdapGroupManager implements LdapGroupManagerI {
 
     private static final int ACTIVE_DIRECTORY_DOMAIN_USERS_GROUP_TOKEN_SUFFIX = 513;
     
     @Autowired
-    LdapUserManager userManager;
+    LdapUserManagerI ldapUserManager;
     private static final Logger log = Logger.getLogger(LdapGroupManager.class);
 
     @Override
+    @TriggersRemove(cacheName={CacheName.getGroup, CacheName.getAllGroups}, removeAll=true)
     public LdapGroup createGroup(LdapGroup group, LdapConfig config) throws LdapException {
         LDAPConnection connection = null;
         try {
@@ -70,18 +73,20 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
     }
 
     @Override
+    @Cacheable(cacheName=CacheName.getGroup)
     public LdapGroup getGroup(String groupName, LdapConfig config) throws LdapException {
         Filter filter = Filter.createEqualityFilter(config.getSchema().ATTR_CN, groupName);       
         return getGroupByFilter(filter, config);
     }
     
-    public List<LdapGroup> getGroupByApproximateMatch(String groupName, LdapConfig config) throws LdapException {
-        //does not work reliably with special chars, e.g. #ebf
-        //Filter filter = Filter.createApproximateMatchFilter(config.getSchema().ATTR_CN, groupName); 
-        Filter filter = Filter.createEqualityFilter(config.getSchema().ATTR_CN, groupName); 
+    @Override
+    @Cacheable(cacheName=CacheName.getGroup)
+    public List<LdapGroup> getGroupsByApproximateMatch(String groupName, LdapConfig config) throws LdapException {
+        Filter filter = Filter.createEqualityFilter(config.getSchema().ATTR_CN, groupName);       
         return getGroupsByFilter(filter, config);
     }
-
+    
+    @Override
     public LdapGroup getGroupByUUID(String UUID, LdapConfig config) throws LdapException {
         Filter filter;
         if (config.getType().equals(LdapType.ActiveDirectory)) {
@@ -95,6 +100,7 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
     }
 
     @Override
+    @TriggersRemove(cacheName={CacheName.getAllGroups, CacheName.getGroup}, removeAll=true)
     public LdapGroup updateGroup(LdapGroup group, LdapConfig config) throws LdapException {
         LDAPConnection connection = null;
         try {
@@ -126,6 +132,7 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
     }
 
     @Override
+    @Cacheable(cacheName=CacheName.getAllGroups)
     public List<LdapGroup> getAllGroups(LdapConfig config) throws LdapException {
         List<LdapGroup> groups = new ArrayList<>();
         LDAPConnection connection = null;
@@ -160,6 +167,7 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
     }
 
     @Override
+    @TriggersRemove(cacheName={CacheName.getAllGroups, CacheName.getGroup}, removeAll=true)
     public Boolean deleteGroup(LdapGroup group, LdapConfig config) throws LdapException {
         LDAPConnection connection = null;
         try {
@@ -243,13 +251,13 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
                 LdapUser user;
                 if (config.getType().equals(LdapType.Domino)){
                     //Domino LDAP does not support queries by DN (!!!)
-                    user = userManager.getUser(LdapUtil.getCN(dn), config);
+                    user = ldapUserManager.getUser(LdapUtil.getCN(dn), config);
                     //make sure this is the user we are looking for...
                     if (user!=null && !user.getDN().equals(dn)){
                         user=null;
                     }
                 } else {
-                    user = userManager.getUserByFilter(connection, dnFilter, config);
+                    user = ldapUserManager.getUserByFilter(connection, dnFilter, config);
                 }
                 if (user == null) {
                     //so if it is not a user, check if it is a group
@@ -284,7 +292,7 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
                     try {
                         searchResults = connection.search(config.getBaseDN(), SearchScope.SUB, filter, config.getSchema().ATTR_ALL);
                         for (SearchResultEntry memberEntry : searchResults.getSearchEntries()) {
-                            LdapUser ldapUser = userManager.getLdapUser(memberEntry, config);
+                            LdapUser ldapUser = ldapUserManager.getLdapUser(memberEntry, config);
                             members.add(ldapUser);
                         }
                     } catch (LDAPSearchException ex) {
@@ -299,6 +307,7 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
     }
 
     @Override
+    @TriggersRemove(cacheName={CacheName.getAllGroups, CacheName.getGroup}, removeAll=true)
     public LdapGroup removeUserFromGroup(LdapUser user, LdapGroup group, LdapConfig config) throws LdapException {
         LDAPConnection connection = null;
         try {
@@ -324,6 +333,7 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
     }
 
     @Override
+    @TriggersRemove(cacheName={CacheName.getAllGroups, CacheName.getGroup}, removeAll=true)
     public LdapGroup addUserToGroup(LdapUser user, LdapGroup group, LdapConfig config) throws LdapException {
         LDAPConnection connection = null;
         try {
@@ -342,6 +352,7 @@ public class LdapGroupManager implements GroupManager<LdapGroup, LdapUser> {
         }
     }
 
+    @Override
     public List<LdapGroup> getGroupsForUser(LdapUser user, LdapConfig config) throws LdapException {
         List<LdapGroup> groups = getAllGroups(config);
         Iterator<LdapGroup> it = groups.iterator();

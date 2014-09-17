@@ -34,18 +34,18 @@ public class ActiveDirectoryTest extends LDAPWriteTest {
     }
 
     @Test
-    public void getAdminMember() throws LdapException {
-        LdapUser user = userManager.getUser(ACTIVE_DIRECTORY_ADMIN_USER_NAME, config);
-        LdapGroup group = groupManager.getGroup(ACTIVE_DIRECTORY_ADMIN_GROUP_NAME, config);
+    public void test11_getAdminMember() throws LdapException {
+        LdapUser user = ldapUserManager.getUser(ACTIVE_DIRECTORY_ADMIN_USER_NAME, config);
+        LdapGroup group = ldapGroupManager.getGroup(ACTIVE_DIRECTORY_ADMIN_GROUP_NAME, config);
         assert (group.getMembers() != null && group.getMembers().size() > 0);
         assert (group.getMembers().contains(user));
     }
     
     //Group membership for the domain admins group is determined differently
     @Test
-    public void getDomainUsersMember() throws LdapException {
-        LdapUser user = userManager.getUser(ACTIVE_DIRECTORY_ADMIN_USER_NAME, config);
-        LdapGroup group = groupManager.getGroup(ACTIVE_DIRECTORY_DOMAIN_USERS_GROUP_NAME, config);
+    public void test12_getDomainUsersMember() throws LdapException {
+        LdapUser user = ldapUserManager.getUser(ACTIVE_DIRECTORY_ADMIN_USER_NAME, config);
+        LdapGroup group = ldapGroupManager.getGroup(ACTIVE_DIRECTORY_DOMAIN_USERS_GROUP_NAME, config);
         assert (group.getMembers() != null && group.getMembers().size() > 0);
         assert (group.getMembers().contains(user));
     }

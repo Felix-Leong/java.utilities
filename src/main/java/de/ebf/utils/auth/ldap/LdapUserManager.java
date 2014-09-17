@@ -1,5 +1,7 @@
 package de.ebf.utils.auth.ldap;
 
+import com.googlecode.ehcache.annotations.Cacheable;
+import com.googlecode.ehcache.annotations.TriggersRemove;
 import com.unboundid.ldap.sdk.AddRequest;
 import com.unboundid.ldap.sdk.DN;
 import com.unboundid.ldap.sdk.DeleteRequest;
@@ -18,33 +20,34 @@ import com.unboundid.ldap.sdk.ResultCode;
 import com.unboundid.ldap.sdk.SearchResult;
 import com.unboundid.ldap.sdk.SearchResultEntry;
 import com.unboundid.ldap.sdk.SearchScope;
+import de.ebf.cache.CacheName;
 import de.ebf.utils.Bundle;
-import de.ebf.utils.auth.UserManager;
 import de.ebf.utils.auth.ldap.config.LdapConfig;
 import de.ebf.utils.auth.ldap.schema.ActiveDirectorySchema;
-import de.ebf.utils.auth.ldap.schema.DominoSchema;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import net.sf.ehcache.CacheManager;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 /**
  *
  * @author dwissk
  */
 @Component
-public class LdapUserManager implements UserManager<LdapUser> {
-
+public class LdapUserManager implements LdapUserManagerI {
+    
     private static final Logger log = Logger.getLogger(LdapUserManager.class);
+    
     @Autowired
-    private LdapGroupManager groupManager;
-
+    private LdapGroupManagerI ldapGroupManager;
+    
     @Override
+    @TriggersRemove(cacheName=CacheName.getAllUsers, removeAll=true)
     public LdapUser createUser(LdapUser user, LdapConfig config) throws LdapException {
         LDAPConnection connection = null;
         try {
@@ -80,6 +83,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
     }
 
     @Override
+    @TriggersRemove(cacheName={CacheName.getUser, CacheName.getAllUsers}, removeAll=true)
     public LdapUser updateUser(LdapUser user, LdapConfig config) throws LdapException {
         LDAPConnection connection = null;
         try {
@@ -98,7 +102,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
             if (!oldDN.equals(newDN)) {
 
                 //get all groups for current user before renaming user. Otherwise group.getMembers() will already contain renamed users
-                List<LdapGroup> allGroups = groupManager.getGroupsForUser(oldUser, config);
+                List<LdapGroup> allGroups = ldapGroupManager.getGroupsForUser(oldUser, config);
                 
                 //update user DN
                 ModifyDNRequest modifyDNRequest = new ModifyDNRequest(oldDN, newDN.getRDN(), true, newDN.getParent());
@@ -107,7 +111,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
                     throw new LdapException("Updating user DN returned LDAP result code " + ldapResult.getResultCode());
                 }
 
-                //List<LdapGroup> allGroups = groupManager.getAllGroups(oldContext);
+                //List<LdapGroup> allGroups = ldapGroupManager.getAllGroups(oldContext);
                 if (config.getType().equals(LdapType.OpenDS)){
                     //also update all dn membership values, since OpenDS doesn't take care of this
                     for (LdapGroup ldapGroup : allGroups) {
@@ -153,6 +157,8 @@ public class LdapUserManager implements UserManager<LdapUser> {
                 resetPassword(user, user.getPassword(), config);
             }
             
+            //removeUserFromCache(oldUser, config);
+            
             return getUserByUUID(user.getUUID(), config);
         } catch (LDAPException e) {
             throw new LdapException(e);
@@ -184,6 +190,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
     }
 
     @Override
+    @Cacheable(cacheName=CacheName.getUser, cacheNull=false)
     public LdapUser getUser(String userName, LdapConfig config) throws LdapException {
         LDAPConnection connection = null;
         try {
@@ -208,6 +215,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
     }
 
     @Override
+    @Cacheable(cacheName=CacheName.getAllUsers)
     public List<LdapUser> getAllUsers(LdapConfig config) throws LdapException {
         List<LdapUser> users = new ArrayList<>();
         LDAPConnection connection = null;
@@ -224,6 +232,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
     }
 
     @Override
+    @TriggersRemove(cacheName={CacheName.getUser}, removeAll=true)
     public LdapUser resetPassword(LdapUser user, String newPassword, LdapConfig config) throws LdapException {
         LDAPConnection connection = null;
         try {
@@ -242,6 +251,9 @@ public class LdapUserManager implements UserManager<LdapUser> {
             LdapUtil.release(connection);
             user = authenticate(user.getName(), newPassword, config);
             LdapUtil.removeConnection(user.getName(), config);
+            
+            //removeUserFromCache(user, config);
+            
             return user;
         } catch (LDAPException e) {
             if (e.getResultCode().equals(ResultCode.UNWILLING_TO_PERFORM)){
@@ -259,13 +271,14 @@ public class LdapUserManager implements UserManager<LdapUser> {
     }
 
     @Override
+    @TriggersRemove(cacheName={CacheName.getUser, CacheName.getAllUsers}, removeAll=true)
     public boolean deleteUser(LdapUser user, LdapConfig config) throws LdapException {
         LDAPConnection connection = null;
         try {
             connection = LdapUtil.getConnection(config);
-            List<LdapGroup> groups = groupManager.getGroupsForUser(user, config);
+            List<LdapGroup> groups = ldapGroupManager.getGroupsForUser(user, config);
             for (LdapGroup group : groups) {
-                groupManager.removeUserFromGroup(user, group, config);
+                ldapGroupManager.removeUserFromGroup(user, group, config);
             }
             DeleteRequest deleteRequest = new DeleteRequest(user.getDN());
             LDAPResult ldapResult = connection.delete(deleteRequest);
@@ -277,6 +290,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
         }
     }
 
+    @Override
     public LdapUser getUserByUUID(String UUID, LdapConfig config) throws LdapException {
         LDAPConnection connection = null;
         try {
@@ -297,6 +311,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
         }
     }
 
+    @Override
     public List<LdapUser> getUsersByMail(String mail, LdapConfig config) throws LdapException {
         LDAPConnection connection = null;
         try {
@@ -311,6 +326,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
         }
     }
 
+    @Override
     public LdapUser getLdapUser(SearchResultEntry entry, LdapConfig config) throws LdapException {
         LdapUser user = new LdapUser();
         user.setDN(entry.getDN());
@@ -339,20 +355,10 @@ public class LdapUserManager implements UserManager<LdapUser> {
             throw new LdapException(ex);
         }
 
-// isMemberOf does not seem to work in OpenDS
-//      Attribute attr = entry.getAttribute(LdapUtil.ATTR_MEMBER_OF);
-//      if (attr != null) {
-//         String[] groupDNs = attr.getValues();
-//         List<LdapGroup> groups = new ArrayList<>(groupDNs.length);
-//         for (int i = 0; i < groupDNs.length; i++) {
-//            LdapGroup ldapGroup = groupManager.getGroup(LdapUtil.getCN(groupDNs[i]));
-//            groups.add(ldapGroup);
-//         }
-//         user.setGroups(groups);
-//      }
         return user;
     }
     
+    @Override
     public List<LdapUser> getUsersByFilter(LDAPConnection connection, Filter filter, LdapConfig config) throws LdapException {
         List<LdapUser> users = new ArrayList<>();
         try {
@@ -379,6 +385,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
         return users;
     }
 
+    @Override
     public LdapUser getUserByFilter(LDAPConnection connection, Filter filter, LdapConfig config) throws LdapException {
         List<LdapUser> users = getUsersByFilter(connection, filter, config);
         if (users.size() == 1) {
@@ -389,6 +396,7 @@ public class LdapUserManager implements UserManager<LdapUser> {
         return null;
     }
     
+    @Override
     public String getAttribute(LdapUser user, String attributeName, LdapConfig config) throws LdapException{
         LDAPConnection connection = null;
         try {
