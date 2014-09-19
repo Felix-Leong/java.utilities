@@ -12,31 +12,41 @@ public class FormUtils {
             + "([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\."
             + "([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\."
             + "([01]?\\d\\d?|2[0-4]\\d|25[0-5])$";
+    
+    private static final String URL_PATTERN = "^(https?|ftp|file)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]";
 
     private final static Pattern emailPattern;
     private final static Pattern ipPattern;
+    private final static Pattern urlPattern;
 
-    private static Matcher emailMatcher;
-    private static Matcher ipMatcher;
 
     static {
-        emailPattern = Pattern.compile(EMAIL_PATTERN);
-        ipPattern = Pattern.compile(IPADDRESS_PATTERN);
+        emailPattern    = Pattern.compile(EMAIL_PATTERN);
+        ipPattern       = Pattern.compile(IPADDRESS_PATTERN);
+        urlPattern      = Pattern.compile(URL_PATTERN);
     }
 
     public static boolean isEmail(String email) {
         if (StringUtils.isEmpty(email)) {
             return false;
         }
-        emailMatcher = emailPattern.matcher(email);
-        return emailMatcher.matches();
+        Matcher matcher = emailPattern.matcher(email);
+        return matcher.matches();
     }
 
     public static boolean isIP(String ip) {
         if (StringUtils.isEmpty(ip)) {
             return false;
         }
-        ipMatcher = ipPattern.matcher(ip);
-        return ipMatcher.matches();
+        Matcher matcher = ipPattern.matcher(ip);
+        return matcher.matches();
+    }
+    
+    public static boolean isURL(String url) {
+        if (StringUtils.isEmpty(url)) {
+            return false;
+        }
+        Matcher matcher = urlPattern.matcher(url);
+        return matcher.matches();
     }
 }
