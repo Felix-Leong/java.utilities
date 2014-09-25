@@ -29,7 +29,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import net.sf.ehcache.CacheManager;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -401,7 +400,7 @@ public class LdapUserManager implements LdapUserManagerI {
         LDAPConnection connection = null;
         try {
             connection = LdapUtil.getConnection(config);
-            Filter userFilter = Filter.createEqualityFilter(config.getSchema().ATTR_DN, user.getDN());
+            Filter userFilter = Filter.createEqualityFilter(config.getSchema().ATTR_ENTRYUUID, user.getUUID());
             SearchResult searchResults = connection.search(config.getBaseDN(), SearchScope.SUB, userFilter, attributeName);
             if (searchResults.getEntryCount() == 1) {
                 return searchResults.getSearchEntries().get(0).getAttributeValue(attributeName);
