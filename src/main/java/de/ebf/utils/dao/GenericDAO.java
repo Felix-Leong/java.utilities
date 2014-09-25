@@ -2,7 +2,7 @@ package de.ebf.utils.dao;
 
 import de.ebf.utils.GenericsUtils;
 import java.io.Serializable;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
@@ -26,7 +26,6 @@ public abstract class GenericDAO<T extends Serializable> extends GenericsUtils<T
       return (T) session.get(getGenericSuperClass(GenericDAO.class), id);
    }
 
-   @SuppressWarnings("unchecked")
    @Override
    public List<T> findAll() {
       Session session = sessionFactory.getCurrentSession();
@@ -34,7 +33,7 @@ public abstract class GenericDAO<T extends Serializable> extends GenericsUtils<T
       criteria.setResultTransformer(CriteriaSpecification.DISTINCT_ROOT_ENTITY);
       List<T> results = criteria.list();
       if (results == null) {
-         return Collections.EMPTY_LIST;
+         return new ArrayList<>();
       }
       return results;
    }
