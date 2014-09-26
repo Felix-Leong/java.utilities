@@ -27,6 +27,7 @@ import de.ebf.utils.auth.ldap.schema.ActiveDirectorySchema;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.apache.commons.lang.StringUtils;
@@ -344,6 +345,13 @@ public class LdapUserManager implements LdapUserManagerI {
             
             user.setSAMAccountName(entry.getAttributeValue(ActiveDirectorySchema.ATTR_SAM_ACCOUNT_NAME));
             user.setUserPrincipalName(entry.getAttributeValue(ActiveDirectorySchema.ATTR_USER_PRINCIPAL_NAME));
+            
+            //see also LdapGroupManager.getGroupsForUser()
+            String[] groupDNArray = entry.getAttributeValues(ActiveDirectorySchema.ATTR_MEMBER_OF);
+            if (groupDNArray !=null){
+                List<String> groupDNs = Arrays.asList(groupDNArray);
+                user.setGroupDNs(groupDNs);
+            }
         } else {
             //Domino and OpenDS store the GUID in clear text
             user.setUUID(entry.getAttributeValue(config.getSchema().ATTR_ENTRYUUID));

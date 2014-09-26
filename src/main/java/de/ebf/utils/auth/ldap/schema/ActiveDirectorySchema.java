@@ -22,6 +22,7 @@ public class ActiveDirectorySchema extends LdapSchema {
     public static final String ATTR_SAM_ACCOUNT_NAME        = "sAMAccountName";
     public static final String ATTR_USER_PRINCIPAL_NAME     = "userPrincipalName";
     public static final String OBJECTCLASS_COMPUTER         = "computer";
+    public static final String ATTR_MEMBER_OF               = "memberOf";
     
     public ActiveDirectorySchema(){
         super();
@@ -31,7 +32,6 @@ public class ActiveDirectorySchema extends LdapSchema {
         this.ATTR_UID                   = "objectSid";
         this.ATTR_DN                    = "distinguishedName";
         this.ATTR_MEMBERS               = "member";
-        //this.ATTR_IS_MEMBER_OF          = "memberOf";
         this.ATTR_USER_PW               = "unicodePwd";
         
         super.updateAttributes();
@@ -40,6 +40,7 @@ public class ActiveDirectorySchema extends LdapSchema {
         allAttributes.add(ATTR_PRIMARY_GROUP_ID);
         allAttributes.add(ATTR_SAM_ACCOUNT_NAME);
         allAttributes.add(ATTR_USER_PRINCIPAL_NAME);
+        allAttributes.add(ATTR_MEMBER_OF);
         allAttributes.toArray(ATTR_ALL);
     }
 }

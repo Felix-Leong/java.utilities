@@ -25,6 +25,7 @@ public class LdapUser extends AbstractUser implements Comparable<LdapUser>, Seri
    private String context;
    
    //Active Directory specific
+   private List<String> groupDNs;
    private Integer primaryGroupId;
    private String SAMAccountName;
    private String UserPrincipalName;
@@ -69,6 +70,14 @@ public class LdapUser extends AbstractUser implements Comparable<LdapUser>, Seri
       this.DN = DN;
    }
 
+   public List<String> getGroupDNs() {
+      return (groupDNs== null) ? new ArrayList<String>() : groupDNs;
+   }
+
+   public void setGroupDNs(List<String> groupDNs) {
+      this.groupDNs = groupDNs;
+   }
+   
    public List<LdapGroup> getGroups() {
       return (groups == null) ? new ArrayList<LdapGroup>() : groups;
    }

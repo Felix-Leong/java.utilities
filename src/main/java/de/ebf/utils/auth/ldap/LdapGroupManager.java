@@ -354,13 +354,30 @@ public class LdapGroupManager implements LdapGroupManagerI {
 
     @Override
     public List<LdapGroup> getGroupsForUser(LdapUser user, LdapConfig config) throws LdapException {
-        List<LdapGroup> groups = getAllGroups(config);
-        Iterator<LdapGroup> it = groups.iterator();
-        while (it.hasNext()) {
-            LdapGroup group = it.next();
-            if (!group.getMembers().contains(user)) {
-                it.remove();
-            }
+        /* 
+            //http://publib.boulder.ibm.com/infocenter/wsdoc400/v6r0/index.jsp?topic=/com.ibm.websphere.iseries.doc/info/ae/ae/csec_directindirectldap.html
+            Several popular LDAP servers enable user objects to contain information about the groups to which they belong (such as Microsoft Active Directory Server, or eDirectory). 
+            Some LDAP servers enable only Group objects, such as the Lotus Domino LDAP server to contain information about users. The LDAP server does not enable the User object to contain information about groups. For this type of LDAP server, group membership searches are performed by locating the user on the member list of groups. 
+        */
+        List<LdapGroup> groups;
+        switch (config.getType()){
+            case ActiveDirectory:
+                groups = new ArrayList<>();
+                for (String groupDN: user.getGroupDNs()){
+                    Filter filter = Filter.createEqualityFilter(config.getSchema().ATTR_DN, groupDN);
+                    groups.add(getGroupByFilter(filter, config));
+                }
+                break;
+            default:
+                groups = getAllGroups(config);
+                Iterator<LdapGroup> it = groups.iterator();
+                while (it.hasNext()) {
+                    LdapGroup group = it.next();
+                    if (!group.getMembers().contains(user)) {
+                        it.remove();
+                    }
+                }
+                break;
         }
         return groups;
     }
