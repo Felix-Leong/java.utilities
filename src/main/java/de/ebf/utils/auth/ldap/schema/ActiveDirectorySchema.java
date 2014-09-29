@@ -41,6 +41,6 @@ public class ActiveDirectorySchema extends LdapSchema {
         allAttributes.add(ATTR_SAM_ACCOUNT_NAME);
         allAttributes.add(ATTR_USER_PRINCIPAL_NAME);
         allAttributes.add(ATTR_MEMBER_OF);
-        allAttributes.toArray(ATTR_ALL);
+        ATTR_ALL = allAttributes.toArray(ATTR_ALL);
     }
 }
