@@ -294,13 +294,7 @@ public class LdapUserManager implements LdapUserManagerI {
     public LdapUser getUserByUUID(String UUID, LdapConfig config) throws LdapException {
         LDAPConnection connection = null;
         try {
-            Filter filter;
-            connection = LdapUtil.getConnection(config);
-            if (config.getType().equals(LdapType.ActiveDirectory)) {
-                filter = Filter.createEqualityFilter(config.getSchema().ATTR_ENTRYUUID, LdapUtil.UUIDStringToByteArray(UUID));
-            } else {
-                filter = Filter.createEqualityFilter(config.getSchema().ATTR_ENTRYUUID, UUID);
-            }
+            Filter filter = createUUIDFilter(UUID, config);
             connection = LdapUtil.getConnection(config);
             LdapUser user = getUserByFilter(connection, filter, config);
             return user;
@@ -408,7 +402,7 @@ public class LdapUserManager implements LdapUserManagerI {
         LDAPConnection connection = null;
         try {
             connection = LdapUtil.getConnection(config);
-            Filter userFilter = Filter.createEqualityFilter(config.getSchema().ATTR_ENTRYUUID, user.getUUID());
+            Filter userFilter = createUUIDFilter(user.getUUID(), config);
             SearchResult searchResults = connection.search(config.getBaseDN(), SearchScope.SUB, userFilter, attributeName);
             if (searchResults.getEntryCount() == 1) {
                 return searchResults.getSearchEntries().get(0).getAttributeValue(attributeName);
@@ -430,5 +424,15 @@ public class LdapUserManager implements LdapUserManagerI {
             log.error(ex);
         }
         return null;
+    }
+
+    private Filter createUUIDFilter(String UUID, LdapConfig config) {
+        Filter filter;
+        if (config.getType().equals(LdapType.ActiveDirectory)) {
+            filter = Filter.createEqualityFilter(config.getSchema().ATTR_ENTRYUUID, LdapUtil.UUIDStringToByteArray(UUID));
+        } else {
+            filter = Filter.createEqualityFilter(config.getSchema().ATTR_ENTRYUUID, UUID);
+        }
+        return filter;
     }
 }
