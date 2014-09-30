@@ -22,6 +22,7 @@ import com.unboundid.ldap.sdk.ModifyDNRequest;
 import com.unboundid.ldap.sdk.ModifyRequest;
 import com.unboundid.ldap.sdk.RDN;
 import com.unboundid.ldap.sdk.ResultCode;
+import com.unboundid.ldap.sdk.SearchRequest;
 import com.unboundid.ldap.sdk.SearchResult;
 import com.unboundid.ldap.sdk.SearchResultEntry;
 import com.unboundid.ldap.sdk.SearchScope;
@@ -44,6 +45,8 @@ import org.springframework.stereotype.Component;
 public class LdapGroupManager implements LdapGroupManagerI {
 
     private static final int ACTIVE_DIRECTORY_DOMAIN_USERS_GROUP_TOKEN_SUFFIX = 513;
+    
+    private static final int LDAP_QUERY_SIZE_LIMIT = 0; //default: 1000; 0=no CLIENT side size limt. AD still has a server side limit of 1000
     
     @Autowired
     LdapUserManagerI ldapUserManager;
@@ -264,7 +267,9 @@ public class LdapGroupManager implements LdapGroupManagerI {
                     Filter groupFilter = Filter.createEqualityFilter(config.getSchema().ATTR_OBJECTCLASS, config.getSchema().OBJECTCLASS_GROUP);
                     Filter filter = Filter.createANDFilter(groupFilter, dnFilter);
                     try {
-                        SearchResult searchResult = connection.search(config.getBaseDN(), SearchScope.SUB, filter, config.getSchema().ATTR_ALL);
+                        SearchRequest request = new SearchRequest(config.getBaseDN(), SearchScope.SUB, filter, config.getSchema().ATTR_ALL);
+                        request.setSizeLimit(LDAP_QUERY_SIZE_LIMIT);
+                        SearchResult searchResult = connection.search(request);
                         if (searchResult.getSearchEntries() != null && searchResult.getSearchEntries().size() > 0) {
                             for (SearchResultEntry groupEntry : searchResult.getSearchEntries()) {
                                 //recurse through member groups
@@ -288,10 +293,11 @@ public class LdapGroupManager implements LdapGroupManagerI {
                     Filter userFilter = Filter.createEqualityFilter(config.getSchema().ATTR_OBJECTCLASS, config.getSchema().OBJECTCLASS_USER);
                     Filter primaryGroupIdFilter = Filter.createEqualityFilter(ActiveDirectorySchema.ATTR_PRIMARY_GROUP_ID, ACTIVE_DIRECTORY_DOMAIN_USERS_GROUP_TOKEN_SUFFIX+"");
                     Filter filter = Filter.createANDFilter(userFilter, primaryGroupIdFilter);
-                    SearchResult searchResults;
                     try {
-                        searchResults = connection.search(config.getBaseDN(), SearchScope.SUB, filter, config.getSchema().ATTR_ALL);
-                        for (SearchResultEntry memberEntry : searchResults.getSearchEntries()) {
+                        SearchRequest request = new SearchRequest(config.getBaseDN(), SearchScope.SUB, filter, config.getSchema().ATTR_ALL);
+                        request.setSizeLimit(LDAP_QUERY_SIZE_LIMIT);
+                        SearchResult searchResult = connection.search(request);
+                        for (SearchResultEntry memberEntry : searchResult.getSearchEntries()) {
                             LdapUser ldapUser = ldapUserManager.getLdapUser(memberEntry, config);
                             members.add(ldapUser);
                         }
