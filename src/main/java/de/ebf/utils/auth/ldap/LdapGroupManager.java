@@ -64,7 +64,7 @@ public class LdapGroupManager implements LdapGroupManagerI {
             connection = LdapUtil.getConnection(config);
             LDAPResult ldapResult = connection.add(addRequest);
             if (ldapResult.getResultCode() == (ResultCode.SUCCESS)) {
-                return getGroup(group.getName(), config);
+                return getGroup(group.getName(), false, config);
             } else {
                 throw new LdapException("Adding group returned LDAP result code " + ldapResult.getResultCode());
             }
@@ -77,20 +77,20 @@ public class LdapGroupManager implements LdapGroupManagerI {
 
     @Override
     @Cacheable(cacheName=CacheName.getGroup)
-    public LdapGroup getGroup(String groupName, LdapConfig config) throws LdapException {
+    public LdapGroup getGroup(String groupName, Boolean includeUsers, LdapConfig config) throws LdapException {
         Filter filter = Filter.createEqualityFilter(config.getSchema().ATTR_CN, groupName);       
-        return getGroupByFilter(filter, config);
+        return getGroupByFilter(filter, includeUsers, config);
     }
     
     @Override
     @Cacheable(cacheName=CacheName.getGroup)
-    public List<LdapGroup> getGroupsByApproximateMatch(String groupName, LdapConfig config) throws LdapException {
+    public List<LdapGroup> getGroupsByApproximateMatch(String groupName, Boolean includeUsers, LdapConfig config) throws LdapException {
         Filter filter = Filter.createEqualityFilter(config.getSchema().ATTR_CN, groupName);       
-        return getGroupsByFilter(filter, config);
+        return getGroupsByFilter(filter, includeUsers, config);
     }
     
     @Override
-    public LdapGroup getGroupByUUID(String UUID, LdapConfig config) throws LdapException {
+    public LdapGroup getGroupByUUID(String UUID, Boolean includeUsers, LdapConfig config) throws LdapException {
         Filter filter;
         if (config.getType().equals(LdapType.ActiveDirectory)) {
             byte[] objectGUIDByte = LdapUtil.UUIDStringToByteArray(UUID);
@@ -98,7 +98,7 @@ public class LdapGroupManager implements LdapGroupManagerI {
         } else {
             filter = Filter.createEqualityFilter(config.getSchema().ATTR_ENTRYUUID, UUID);
         }
-        LdapGroup group = getGroupByFilter(filter, config);
+        LdapGroup group = getGroupByFilter(filter, includeUsers, config);
         return group;    
     }
 
@@ -107,7 +107,7 @@ public class LdapGroupManager implements LdapGroupManagerI {
     public LdapGroup updateGroup(LdapGroup group, LdapConfig config) throws LdapException {
         LDAPConnection connection = null;
         try {
-            LdapGroup oldGroup = getGroupByUUID(group.getUUID(), config);
+            LdapGroup oldGroup = getGroupByUUID(group.getUUID(), false, config);
             connection = LdapUtil.getConnection(config);
             
             DN oldDN = new DN(oldGroup.getDN());
@@ -125,7 +125,7 @@ public class LdapGroupManager implements LdapGroupManagerI {
                     throw new LdapException("Renaming group returned LDAP result code " + ldapResult.getResultCode());
                 }
             }
-            group = getGroupByUUID(group.getUUID(), config);
+            group = getGroupByUUID(group.getUUID(), !group.getMembers().isEmpty(), config);
             return group;
         } catch (LDAPException e) {
             throw new LdapException(e);
@@ -136,7 +136,7 @@ public class LdapGroupManager implements LdapGroupManagerI {
 
     @Override
     @Cacheable(cacheName=CacheName.getAllGroups)
-    public List<LdapGroup> getAllGroups(LdapConfig config) throws LdapException {
+    public List<LdapGroup> getAllGroups(Boolean includeUsers, LdapConfig config) throws LdapException {
         List<LdapGroup> groups = new ArrayList<>();
         LDAPConnection connection = null;
         try {
@@ -156,7 +156,7 @@ public class LdapGroupManager implements LdapGroupManagerI {
                     String dn = entry.getDN();
                     // do not add object from the Builtin container (Active Directory) 
                     if (!dn.contains("CN=Builtin")){
-                        groups.add(getLdapGroup(connection, entry, config));
+                        groups.add(getLdapGroup(connection, entry, includeUsers, config));
                     }
                 }
                 Collections.sort(groups);
@@ -185,7 +185,7 @@ public class LdapGroupManager implements LdapGroupManagerI {
         }
     }
 
-    private List<LdapGroup> getGroupsByFilter(Filter filter, LdapConfig config) throws LdapException {
+    private List<LdapGroup> getGroupsByFilter(Filter filter, Boolean includeUsers, LdapConfig config) throws LdapException {
         List<LdapGroup> groups = new ArrayList<>();
         LDAPConnection conn = null;
         try {
@@ -202,7 +202,7 @@ public class LdapGroupManager implements LdapGroupManagerI {
 //            }
             SearchResult searchResults = conn.search(config.getBaseDN(), SearchScope.SUB, searchFilter, config.getSchema().ATTR_ALL);
             if (searchResults.getEntryCount() > 0) {
-                groups.add(getLdapGroup(conn, searchResults.getSearchEntries().get(0), config));
+                groups.add(getLdapGroup(conn, searchResults.getSearchEntries().get(0), includeUsers, config));
             }
         } catch (LDAPException e) {
             throw new LdapException(e);
@@ -212,8 +212,8 @@ public class LdapGroupManager implements LdapGroupManagerI {
         return groups;
     }
 
-    private LdapGroup getGroupByFilter(Filter filter, LdapConfig config) throws LdapException {
-        List<LdapGroup> groups = getGroupsByFilter(filter, config);
+    private LdapGroup getGroupByFilter(Filter filter, Boolean includeUsers, LdapConfig config) throws LdapException {
+        List<LdapGroup> groups = getGroupsByFilter(filter, includeUsers, config);
         if (groups.size() == 1) {
             return groups.get(0);
         } else if (groups.size() > 1) {
@@ -222,7 +222,7 @@ public class LdapGroupManager implements LdapGroupManagerI {
         return null;
     }
 
-    private LdapGroup getLdapGroup(LDAPConnection connection, SearchResultEntry entry, LdapConfig config) throws LdapException {
+    private LdapGroup getLdapGroup(LDAPConnection connection, SearchResultEntry entry, Boolean includeUsers, LdapConfig config) throws LdapException {
         LdapGroup group = new LdapGroup();
         group.setName(entry.getAttributeValue(config.getSchema().ATTR_CN));
         if (config.getType().equals(LdapType.ActiveDirectory)) {
@@ -239,7 +239,9 @@ public class LdapGroupManager implements LdapGroupManagerI {
         } catch (LDAPException ex) {
             throw new LdapException(ex);
         }
-        group.setMembers(getUserMembers(connection, entry, config));
+        if (includeUsers){
+            group.setMembers(getUserMembers(connection, entry, config));
+        }
         return group;
     }
 
@@ -330,7 +332,7 @@ public class LdapGroupManager implements LdapGroupManagerI {
             if (ldapResult.getResultCode() != (ResultCode.SUCCESS)) {
                 throw new LdapException("Removing user from group returned LDAP result code " + ldapResult.getResultCode());
             }
-            return getGroup(group.getName(), config);
+            return getGroup(group.getName(), true, config);
         } catch (LDAPException e) {
             throw new LdapException(e);
         } finally {
@@ -350,16 +352,16 @@ public class LdapGroupManager implements LdapGroupManagerI {
             if (ldapResult.getResultCode() != (ResultCode.SUCCESS)) {
                 throw new LdapException("Adding user to group returned LDAP result code " + ldapResult.getResultCode());
             }
-            return getGroup(group.getName(), config);
+            return getGroup(group.getName(), true, config);
         } catch (LDAPException e) {
             throw new LdapException(e);
         } finally {
             LdapUtil.release(connection);
         }
     }
-
+    
     @Override
-    public List<LdapGroup> getGroupsForUser(LdapUser user, LdapConfig config) throws LdapException {
+    public List<LdapGroup> getGroupsForUser(LdapUser user, Boolean includeUsers, LdapConfig config) throws LdapException {
         /* 
             //http://publib.boulder.ibm.com/infocenter/wsdoc400/v6r0/index.jsp?topic=/com.ibm.websphere.iseries.doc/info/ae/ae/csec_directindirectldap.html
             Several popular LDAP servers enable user objects to contain information about the groups to which they belong (such as Microsoft Active Directory Server, or eDirectory). 
@@ -371,11 +373,11 @@ public class LdapGroupManager implements LdapGroupManagerI {
                 groups = new ArrayList<>();
                 for (String groupDN: user.getGroupDNs()){
                     Filter filter = Filter.createEqualityFilter(config.getSchema().ATTR_DN, groupDN);
-                    groups.add(getGroupByFilter(filter, config));
+                    groups.add(getGroupByFilter(filter, includeUsers, config));
                 }
                 break;
             default:
-                groups = getAllGroups(config);
+                groups = getAllGroups(includeUsers, config);
                 Iterator<LdapGroup> it = groups.iterator();
                 while (it.hasNext()) {
                     LdapGroup group = it.next();

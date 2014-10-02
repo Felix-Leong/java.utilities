@@ -108,7 +108,7 @@ public abstract class LDAPWriteTest {
     
     @Test
     public void test06_updateGroup() throws LdapException{
-        LdapGroup group = ldapGroupManager.getGroup(TEST_GROUP_NAME, config);
+        LdapGroup group = ldapGroupManager.getGroup(TEST_GROUP_NAME, false, config);
         group.setName("junitTestGroup2");
         group = ldapGroupManager.updateGroup(group, config);
         assert(group.getName().equals("junitTestGroup2"));
@@ -120,7 +120,7 @@ public abstract class LDAPWriteTest {
     @Test
     public void test07_addUserToGoup() throws LdapException{
         LdapUser user = ldapUserManager.getUser(TEST_USER_NAME, config);
-        LdapGroup group = ldapGroupManager.getGroup(TEST_GROUP_NAME, config);
+        LdapGroup group = ldapGroupManager.getGroup(TEST_GROUP_NAME, true, config);
         group = ldapGroupManager.addUserToGroup(user, group, config);
         assert(group.getMembers().contains(user));
     }
@@ -128,16 +128,16 @@ public abstract class LDAPWriteTest {
     @Test 
     public void test08_removeUserFromGroup() throws LdapException{
         LdapUser user = ldapUserManager.getUser(TEST_USER_NAME, config);
-        LdapGroup group = ldapGroupManager.getGroup(TEST_GROUP_NAME, config);
+        LdapGroup group = ldapGroupManager.getGroup(TEST_GROUP_NAME, true, config);
         group = ldapGroupManager.removeUserFromGroup(user, group, config);
         assert(!group.getMembers().contains(user));
     }
     
     @Test
     public void test09_deleteGroup() throws LdapException{
-        LdapGroup group = ldapGroupManager.getGroup(TEST_GROUP_NAME, config);
+        LdapGroup group = ldapGroupManager.getGroup(TEST_GROUP_NAME, false, config);
         ldapGroupManager.deleteGroup(group, config);
-        assert(ldapGroupManager.getGroupByUUID(group.getUUID(), config) == null);
+        assert(ldapGroupManager.getGroupByUUID(group.getUUID(), false, config) == null);
     }
 
     @Test

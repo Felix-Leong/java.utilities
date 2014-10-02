@@ -102,7 +102,7 @@ public class LdapUserManager implements LdapUserManagerI {
             if (!oldDN.equals(newDN)) {
 
                 //get all groups for current user before renaming user. Otherwise group.getMembers() will already contain renamed users
-                List<LdapGroup> allGroups = ldapGroupManager.getGroupsForUser(oldUser, config);
+                List<LdapGroup> allGroups = ldapGroupManager.getGroupsForUser(oldUser, true, config);
                 
                 //update user DN
                 ModifyDNRequest modifyDNRequest = new ModifyDNRequest(oldDN, newDN.getRDN(), true, newDN.getParent());
@@ -276,7 +276,7 @@ public class LdapUserManager implements LdapUserManagerI {
         LDAPConnection connection = null;
         try {
             connection = LdapUtil.getConnection(config);
-            List<LdapGroup> groups = ldapGroupManager.getGroupsForUser(user, config);
+            List<LdapGroup> groups = ldapGroupManager.getGroupsForUser(user, true, config);
             for (LdapGroup group : groups) {
                 ldapGroupManager.removeUserFromGroup(user, group, config);
             }

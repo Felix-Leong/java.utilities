@@ -15,11 +15,11 @@ public interface GroupManager<Group, User> {
 
    public Group createGroup(Group group, LdapConfig config) throws AuthException;
 
-   public Group getGroup(String UUID, LdapConfig config) throws AuthException;
+   public Group getGroup(String UUID, Boolean includeUsers, LdapConfig config) throws AuthException;
 
    public Group updateGroup(Group group, LdapConfig config) throws AuthException;
 
-   public List<Group> getAllGroups(LdapConfig config) throws AuthException;
+   public List<Group> getAllGroups(Boolean includeUsers, LdapConfig config) throws AuthException;
 
    public Boolean deleteGroup(Group group, LdapConfig config) throws AuthException;
 

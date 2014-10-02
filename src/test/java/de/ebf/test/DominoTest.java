@@ -41,14 +41,14 @@ public class DominoTest extends LDAPReadTest {
     
     @Test
     public void test03_getGroup() throws LdapException {
-        LdapGroup group = ldapGroupManager.getGroup(TEST_GROUP_NAME, config);
+        LdapGroup group = ldapGroupManager.getGroup(TEST_GROUP_NAME, false, config);
         assert (group != null);
     }
 
     @Test
     public void test04_getMember() throws LdapException {
         LdapUser user = ldapUserManager.getUser(TEST_USER_NAME, config);
-        LdapGroup group = ldapGroupManager.getGroup(TEST_GROUP_NAME, config);
+        LdapGroup group = ldapGroupManager.getGroup(TEST_GROUP_NAME, true, config);
         assert (group.getMembers() != null && group.getMembers().size() > 0);
         assert (group.getMembers().contains(user));
     }
