@@ -146,7 +146,7 @@ public class SetupWizardController {
         //verify the ldap connection
         try {
             if(testLDAPConnection) {
-                LdapUtil.verifyConnectionWithQuickBind(config);
+                LdapUtil.verifyConnection(config);
             }
         } catch (Exception e) {
             log.error("Failed to test LDAP data.", e);

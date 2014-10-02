@@ -4,14 +4,11 @@
  */
 package de.ebf.utils.auth.ldap;
 
-import com.unboundid.ldap.sdk.Filter;
+import com.unboundid.ldap.sdk.DN;
 import com.unboundid.ldap.sdk.LDAPConnection;
 import com.unboundid.ldap.sdk.LDAPConnectionOptions;
 import com.unboundid.ldap.sdk.LDAPConnectionPool;
 import com.unboundid.ldap.sdk.LDAPException;
-import com.unboundid.ldap.sdk.ResultCode;
-import com.unboundid.ldap.sdk.SearchResult;
-import com.unboundid.ldap.sdk.SearchScope;
 import com.unboundid.util.ssl.SSLUtil;
 import com.unboundid.util.ssl.TrustAllTrustManager;
 import de.ebf.utils.Bundle;
@@ -19,6 +16,7 @@ import de.ebf.utils.auth.ldap.config.LdapConfig;
 import java.security.GeneralSecurityException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 import javax.naming.ldap.Rdn;
 import javax.net.ssl.SSLSocketFactory;
 import javax.servlet.http.HttpServletRequest;
@@ -38,6 +36,8 @@ public class LdapUtil {
 //    private static final Pattern invalidCharsPattern = Pattern.compile("(#|_|!|\"|'|\\$|\\*|%|&|\\(|\\)|\\+|\\.|:|<|>|=|\\{|\\}|~|\\/|\\^|\\?|\\|)");
 //    private static final String invalidCharsReplaceString = "\\\\$1";
 
+    private static final Pattern invalidDNCharsPattern = Pattern.compile(".*(\\/|\\\\|\\[|\\]|:|;|\\||\\+|\\*|\\?|>|<|@|\"){1,}.*");
+    
     /**
      * Validate the ldap-related parameters in request. If successful, these
      * validated values will be written in specified tenant. If any error, the
@@ -76,35 +76,27 @@ public class LdapUtil {
     public static void verifyConnection(LdapConfig config) throws Exception{
         LDAPConnection conn = null;
         try {
+            //verify DN
+            verifyDN(config.getUsername());                     
             conn = getConnection(config);
             conn.connect(config.getServer(), config.getPort());
             conn.bind(config.getUsername(), config.getPassword());
-            Filter userFilter = Filter.createEqualityFilter(config.getSchema().ATTR_OBJECTCLASS, config.getSchema().OBJECTCLASS_USER);
-            SearchResult searchResult = conn.search(config.getBaseDN(), SearchScope.SUB, userFilter, config.getSchema().ATTR_CN);
-            if (!searchResult.getResultCode().equals(ResultCode.SUCCESS) || searchResult.getEntryCount()<=0){
-                throw new LdapException("The specified base DN does not contain any users.");
-            }
-            Filter groupFilter = Filter.createEqualityFilter(config.getSchema().ATTR_OBJECTCLASS, config.getSchema().OBJECTCLASS_GROUP);
-            searchResult = conn.search(config.getBaseDN(), SearchScope.SUB, groupFilter, config.getSchema().ATTR_CN);
-            if (!searchResult.getResultCode().equals(ResultCode.SUCCESS) || searchResult.getEntryCount()<=0){
-                throw new LdapException("The specified base DN does not contain any groups.");
-            }
-        } finally {
-            release(conn);
-        }
-    }
-    
-    /**
-     * This method tries to create a connection and do a bind to verify if the given Ldap data is correct.
-     * @param config
-     * @throws Exception 
-     */
-    public static void verifyConnectionWithQuickBind(LdapConfig config) throws Exception{
-        LDAPConnection conn = null;
-        try {
-            conn = getConnection(config);
-            conn.connect(config.getServer(), config.getPort());
-            conn.bind(config.getUsername(), config.getPassword());
+            
+            //this may throw a sizelimit exceeded exception in large LDAP systems.
+//            Filter userFilter = Filter.createEqualityFilter(config.getSchema().ATTR_OBJECTCLASS, config.getSchema().OBJECTCLASS_USER);
+//            SearchRequest request = new SearchRequest(config.getBaseDN(), SearchScope.SUB, userFilter, config.getSchema().ATTR_CN);
+//            request.setSizeLimit(1);
+//            SearchResult searchResult = conn.search(request);
+//            if (!searchResult.getResultCode().equals(ResultCode.SUCCESS) || searchResult.getEntryCount()<=0){
+//                throw new LdapException("The specified base DN does not contain any users.");
+//            }
+//            Filter groupFilter = Filter.createEqualityFilter(config.getSchema().ATTR_OBJECTCLASS, config.getSchema().OBJECTCLASS_GROUP);
+//            request = new SearchRequest(config.getBaseDN(), SearchScope.SUB, groupFilter, config.getSchema().ATTR_CN);
+//            request.setSizeLimit(1);
+//            searchResult = conn.search(request);
+//            if (!searchResult.getResultCode().equals(ResultCode.SUCCESS) || searchResult.getEntryCount()<=0){
+//                throw new LdapException("The specified base DN does not contain any groups.");
+//            }
         } finally {
             release(conn);
         }
@@ -365,7 +357,13 @@ public class LdapUtil {
         return Rdn.escapeValue(cn);
 //        Matcher matcher2 = invalidCharsPattern.matcher(cn);
 //        return matcher2.replaceAll(invalidCharsReplaceString);
+    }            
+
+    private static void verifyDN(String username) throws LDAPException, LdapException {
+        if (invalidDNCharsPattern.matcher(username).matches()){
+            throw new LdapException("Username must not contain any of the following characters: /\\[]:;|+*?><@\"");
+        }
+        DN.normalize(username);
     }
-            
             
 }
