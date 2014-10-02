@@ -154,15 +154,12 @@ public class LdapUser extends AbstractUser implements Comparable<LdapUser>, Seri
       if (!Objects.equals(this.DN, other.DN)) {
          return false;
       }
-      if (!Objects.equals(this.UUID, other.UUID)) {
-         return false;
-      }
-      return true;
+      return Objects.equals(this.UUID, other.UUID);
    }
 
    @Override
    public int compareTo(LdapUser o) {
-      return super.getName().compareToIgnoreCase(o.getName());
+      return DN.compareToIgnoreCase(o.DN);
    }
    
    @Override

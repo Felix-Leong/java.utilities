@@ -20,6 +20,7 @@ public class LdapGroup extends AbstractGroup implements Comparable<LdapGroup>, S
 
    private String UUID;
    private String DN;
+   private List<String> memberDNs;
    private List<LdapUser> members;
    private String context;
    
@@ -41,6 +42,14 @@ public class LdapGroup extends AbstractGroup implements Comparable<LdapGroup>, S
    public void setDN(String DN) {
       this.DN = DN;
    }
+   
+    public List<String> getMemberDNs() {
+        return (memberDNs == null) ? new ArrayList<String>() : memberDNs;
+    }
+
+    public void setMemberDNs(List<String> memberDNs) {
+        this.memberDNs = memberDNs;
+    }
 
    public List<LdapUser> getMembers() {
       return (members == null) ? new ArrayList<LdapUser>() : members;

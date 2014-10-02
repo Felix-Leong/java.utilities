@@ -30,6 +30,7 @@ import de.ebf.cache.CacheName;
 import de.ebf.utils.auth.ldap.config.LdapConfig;
 import de.ebf.utils.auth.ldap.schema.ActiveDirectorySchema;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -225,6 +226,11 @@ public class LdapGroupManager implements LdapGroupManagerI {
     private LdapGroup getLdapGroup(LDAPConnection connection, SearchResultEntry entry, Boolean includeUsers, LdapConfig config) throws LdapException {
         LdapGroup group = new LdapGroup();
         group.setName(entry.getAttributeValue(config.getSchema().ATTR_CN));
+        group.setDN(entry.getDN());
+        String[] memberDNs = entry.getAttributeValues(config.getSchema().ATTR_MEMBERS);
+        if (memberDNs!=null){
+                group.setMemberDNs(Arrays.asList(memberDNs));
+        }
         if (config.getType().equals(LdapType.ActiveDirectory)) {
             String uuid = LdapUtil.bytesToUUID(entry.getAttributeValueBytes(config.getSchema().ATTR_ENTRYUUID));
             group.setUUID(uuid);
@@ -233,7 +239,6 @@ public class LdapGroupManager implements LdapGroupManagerI {
         } else {
             group.setUUID(entry.getAttributeValue(config.getSchema().ATTR_ENTRYUUID));
         }
-        group.setDN(entry.getDN());
         try {
             group.setContext(entry.getParentDNString());
         } catch (LDAPException ex) {
@@ -377,11 +382,12 @@ public class LdapGroupManager implements LdapGroupManagerI {
                 }
                 break;
             default:
+                //always include users
                 groups = getAllGroups(includeUsers, config);
                 Iterator<LdapGroup> it = groups.iterator();
                 while (it.hasNext()) {
                     LdapGroup group = it.next();
-                    if (!group.getMembers().contains(user)) {
+                    if (!group.getMemberDNs().contains(user.getDN())) {
                         it.remove();
                     }
                 }
