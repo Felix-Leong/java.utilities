@@ -327,7 +327,6 @@ public class LdapUserManager implements LdapUserManagerI {
         user.setName(entry.getAttributeValue(config.getSchema().ATTR_CN));
         user.setFirstName(entry.getAttributeValue(config.getSchema().ATTR_FIRST_NAME));
         user.setLastName(entry.getAttributeValue(config.getSchema().ATTR_LAST_NAME));
-        user.setUid(entry.getAttributeValue(config.getSchema().ATTR_UID));
         user.setMail(entry.getAttributeValue(config.getSchema().ATTR_MAIL));
         user.setPhone(entry.getAttributeValue(config.getSchema().ATTR_TELEPHONE_NUMBER));
         if (config.getType().equals(LdapType.ActiveDirectory)) {
@@ -335,8 +334,19 @@ public class LdapUserManager implements LdapUserManagerI {
             // Microsoft stores GUIDs in a binary format that differs from the RFC standard of UUIDs (RFC #4122).
             String uuid = LdapUtil.bytesToUUID(entry.getAttributeValueBytes(config.getSchema().ATTR_ENTRYUUID));
             user.setUUID(uuid);
+            
+            String sid = LdapUtil.bytesToSid(entry.getAttributeValueBytes(config.getSchema().ATTR_UID));
+            user.setUid(sid);
+            
             user.setPrimaryGroupId(entry.getAttributeValueAsInteger(ActiveDirectorySchema.ATTR_PRIMARY_GROUP_ID));
             
+            //we cannot query AD by the primaryGroupId, only by objectSid. Therefore, we construct the primaryGroupObjectSid here
+            //see also http://www.morgantechspace.com/2013/10/difference-between-rid-and-sid-in.html
+            String uid = user.getUid();
+            if (uid!=null && user.getPrimaryGroupId()!=null){
+                String domainSid = uid.substring(0, uid.lastIndexOf("-"));
+                user.setPrimaryGroupObjectSid(domainSid+"-"+user.getPrimaryGroupId());
+            }
             user.setSAMAccountName(entry.getAttributeValue(ActiveDirectorySchema.ATTR_SAM_ACCOUNT_NAME));
             user.setUserPrincipalName(entry.getAttributeValue(ActiveDirectorySchema.ATTR_USER_PRINCIPAL_NAME));
             
@@ -349,6 +359,7 @@ public class LdapUserManager implements LdapUserManagerI {
         } else {
             //Domino and OpenDS store the GUID in clear text
             user.setUUID(entry.getAttributeValue(config.getSchema().ATTR_ENTRYUUID));
+            user.setUid(entry.getAttributeValue(config.getSchema().ATTR_UID));
         }
         try {
             user.setContext(entry.getParentDNString());
@@ -370,7 +381,7 @@ public class LdapUserManager implements LdapUserManagerI {
                 Filter notComputerFilter = Filter.createNOTFilter(Filter.createEqualityFilter(config.getSchema().ATTR_OBJECTCLASS, ActiveDirectorySchema.OBJECTCLASS_COMPUTER));
                 Filter userButNotComputerFilter = Filter.createANDFilter(userFilter, notComputerFilter);
                 searchFilter = Filter.createANDFilter(userButNotComputerFilter, filter);
-            } else {
+            } else { 
                 searchFilter = Filter.createANDFilter(userFilter, filter);
             }
             SearchResult searchResults = connection.search(config.getBaseDN(), SearchScope.SUB, searchFilter, config.getSchema().ATTR_ALL);

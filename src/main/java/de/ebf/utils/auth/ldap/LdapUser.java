@@ -27,6 +27,7 @@ public class LdapUser extends AbstractUser implements Comparable<LdapUser>, Seri
    //Active Directory specific
    private List<String> groupDNs;
    private Integer primaryGroupId;
+   private String primaryGroupObjectSid;
    private String SAMAccountName;
    private String UserPrincipalName;
 
@@ -118,6 +119,14 @@ public class LdapUser extends AbstractUser implements Comparable<LdapUser>, Seri
         this.primaryGroupId = primaryGroupId;
     }
 
+    public String getPrimaryGroupObjectSid() {
+        return primaryGroupObjectSid;
+    }
+
+    public void setPrimaryGroupObjectSid(String primaryGroupObjectSid) {
+        this.primaryGroupObjectSid = primaryGroupObjectSid;
+    }
+    
     public String getSAMAccountName() {
         return SAMAccountName;
     }

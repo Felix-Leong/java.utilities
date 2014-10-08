@@ -380,6 +380,10 @@ public class LdapGroupManager implements LdapGroupManagerI {
                     Filter filter = Filter.createEqualityFilter(config.getSchema().ATTR_DN, groupDN);
                     groups.add(getGroupByFilter(filter, includeUsers, config));
                 }
+                if (user.getPrimaryGroupObjectSid()!=null){
+                    Filter getByPrimaryGroupFilter = Filter.createEqualityFilter(config.getSchema().ATTR_UID, user.getPrimaryGroupObjectSid());
+                    groups.add(getGroupByFilter(getByPrimaryGroupFilter, includeUsers, config));
+                }
                 break;
             default:
                 //always include users
