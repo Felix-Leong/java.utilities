@@ -6,8 +6,9 @@ import org.apache.log4j.Logger;
 
 public class FormatUtils {
 	
-	public static final SimpleDateFormat DATE_FORMAT_METRIC = new SimpleDateFormat("yyyy-MM-dd");
+	public static final SimpleDateFormat DATE_FORMAT_METRIC     = new SimpleDateFormat("yyyy-MM-dd");
 	public static final SimpleDateFormat DATETIME_FORMAT_METRIC = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        public static final SimpleDateFormat DATETIME_FORMAT_ISO    = new SimpleDateFormat("YYYY-MM-DD hh:mm:ssTZD");
 	
 	private static final String DEFAULT_COUNTRY_CODE = "49";
 	
