@@ -25,7 +25,15 @@ public enum DBType {
           "jdbc:jtds:sqlserver://",
           "SELECT GETDATE()",
           "SELECT TABLE_NAME FROM information_schema.TABLES",
-          "SELECT TABLE_NAME, DATA_TYPE FROM information_schema.COLUMNS WHERE TABLE_NAME = :tableName"); 
+          "SELECT TABLE_NAME, DATA_TYPE FROM information_schema.COLUMNS WHERE TABLE_NAME = :tableName"),
+    
+    HSQL("HSQL",
+         "org.hsqldb.jdbcDriver",
+         "org.hibernate.dialect.HSQLDialect",
+         "jdbc:hsqldb:mem:",
+         "SELECT GETDATE()",
+         "SELECT TABLE_NAME FROM information_schema.TABLES",
+        "SELECT TABLE_NAME, DATA_TYPE FROM information_schema.COLUMNS WHERE TABLE_NAME = :tableName");
 
     private String label;
     private String driverClass;
