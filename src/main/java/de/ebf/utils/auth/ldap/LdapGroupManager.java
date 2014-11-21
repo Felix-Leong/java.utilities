@@ -86,7 +86,7 @@ public class LdapGroupManager implements LdapGroupManagerI {
     @Override
     @Cacheable(cacheName=CacheName.getGroup)
     public List<LdapGroup> getGroupsByApproximateMatch(String groupName, Boolean includeUsers, LdapConfig config) throws LdapException {
-        Filter filter = Filter.createEqualityFilter(config.getSchema().ATTR_CN, groupName);       
+        Filter filter = Filter.createSubstringFilter(config.getSchema().ATTR_CN, groupName, null, null);
         return getGroupsByFilter(filter, includeUsers, config);
     }
     
@@ -202,8 +202,8 @@ public class LdapGroupManager implements LdapGroupManagerI {
                 searchFilter = Filter.createANDFilter(groupFilter, filter);
 //            }
             SearchResult searchResults = conn.search(config.getBaseDN(), SearchScope.SUB, searchFilter, config.getSchema().ATTR_ALL);
-            if (searchResults.getEntryCount() > 0) {
-                groups.add(getLdapGroup(conn, searchResults.getSearchEntries().get(0), includeUsers, config));
+            for (int i=0; i<searchResults.getEntryCount(); i++){
+                groups.add(getLdapGroup(conn, searchResults.getSearchEntries().get(i), includeUsers, config));
             }
         } catch (LDAPException e) {
             throw new LdapException(e);
