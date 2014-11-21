@@ -13,6 +13,25 @@
         <version>0.3.0</version>
     </parent>
     
+    <repositories>
+        <repository>
+            <id>ebf-releases</id>
+            <url>http://cindy.ebf.de:8081/nexus/content/repositories/releases/</url>
+            <snapshots>
+                <updatePolicy>always</updatePolicy>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>ebf-snapshots</id>
+            <url>http://cindy.ebf.de:8081/nexus/content/repositories/snapshots/</url>
+            <snapshots>
+                <updatePolicy>always</updatePolicy>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+    
     <properties>
         <org.springframework.version>4.0.7.RELEASE</org.springframework.version>
         <org.hibernate.version>4.3.1.Final</org.hibernate.version>
