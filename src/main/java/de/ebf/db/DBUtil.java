@@ -55,6 +55,10 @@ public class DBUtil {
         properties.setProperty("hibernate.connection.username", db.getUsername());
         properties.setProperty("hibernate.connection.password", db.getPassword());
         properties.setProperty("hibernate.current_session_context_class", "thread");//bound the current session to this thread.
+        properties.setProperty("hibernate.c3p0.min_size", "5");
+        properties.setProperty("hibernate.c3p0.max_size", "20");
+        properties.setProperty("hibernate.c3p0.timeout", "1800");
+        properties.setProperty("hibernate.c3p0.max_statements", "50");
         
         Configuration configuration = new Configuration().setProperties(properties);
         ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().applySettings(configuration.getProperties()).build();
